@@ -19,7 +19,7 @@ import {
   isValidCoordinate,
   parseCoordinateString
 } from '../js/geolocation.js';
-import { COORD_FORMATS, DATE_FORMATS, TIME_FORMATS } from '../js/config.js';
+import { VERSION, COORD_FORMATS, DATE_FORMATS, TIME_FORMATS } from '../js/config.js';
 import { BUILT_IN_MODELS, PRESET_CATEGORIES, STANDARD_FIELD_DEFS } from '../js/templates.js';
 import { StampCameraTool } from '../js/tools/stamp-camera/tool.js';
 import { getOfflineLocation } from '../js/geocoder.js';
@@ -343,7 +343,8 @@ assert(tool.numbering.startNumber === 5, 'Contador avançado para 5 após lote d
 
 const backup = storage.getBackupData(tool);
 assert(backup.schema === 1, 'Backup gerado com Schema 1');
-assert(backup.version === 'v.1.1.9', 'Backup com versão atualizada v.1.1.9');
+assert(backup.version === 'v.1.2.0', 'Backup com versão atualizada v.1.2.0');
+assert(VERSION === 'v.1.2.0', 'Constante VERSION definida como v.1.2.0');
 assert(backup.config && backup.data && backup.counter, 'Estrutura completa de backup exportada sem fotos');
 
 const legacyData = {

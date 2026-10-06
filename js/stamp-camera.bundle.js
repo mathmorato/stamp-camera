@@ -11,11 +11,12 @@
    * Versão: 1.0.0
    * 100% Client-side - Nenhuma informação é enviada para servidores externos.
    */
-  const PNITE_VERSION = "v.1.1.9";
+  const VERSION = "v.1.2.0";
+  const PNITE_VERSION = VERSION; // Compatibilidade retroativa
   const APP_CONFIG = {
     name: 'STAMP-CAMERA',
     subtitle: 'Carimbo técnico e geográfico para fotografias',
-    version: PNITE_VERSION,
+    version: VERSION,
     defaultLanguage: 'pt-BR',
     supportedLanguages: ['pt-BR', 'en', 'es'],
     defaultTheme: 'dark',
@@ -4021,7 +4022,7 @@
     if (!data || typeof data !== 'object') {
       return {
         schema: CURRENT_SCHEMA_VERSION,
-        version: PNITE_VERSION,
+        version: VERSION,
         config: { ...DEFAULT_STAMP_SETTINGS },
         models: [],
         data: { location: {}, activeFields: [] },
@@ -4035,7 +4036,7 @@
   
     if (schema < 1) {
       result.schema = CURRENT_SCHEMA_VERSION;
-      result.version = result.version || PNITE_VERSION;
+      result.version = result.version || VERSION;
       result.config = result.config || result.settings || { ...DEFAULT_STAMP_SETTINGS };
       result.models = Array.isArray(result.models) ? result.models : (result.customPresets || []);
       result.data = result.data || {};
@@ -4169,7 +4170,7 @@
         if (!this.isStorageAvailable()) return false;
         const payload = {
           schema: CURRENT_SCHEMA_VERSION,
-          version: PNITE_VERSION,
+          version: VERSION,
           updatedAt: Date.now(),
           config: state.config || state.settings || {},
           models: state.models || this.getCustomPresets() || [],
@@ -4416,7 +4417,7 @@
       const customModels = this.getCustomPresets();
       return {
         schema: CURRENT_SCHEMA_VERSION,
-        version: PNITE_VERSION,
+        version: VERSION,
         exportedAt: new Date().toISOString(),
         config: tool ? { ...tool.settings } : { ...DEFAULT_STAMP_SETTINGS },
         models: customModels,
@@ -4487,7 +4488,7 @@
   
           const mergedState = {
             schema: CURRENT_SCHEMA_VERSION,
-            version: PNITE_VERSION,
+            version: VERSION,
             config: currentTool ? currentTool.settings : (migrated.config || {}),
             models: mergedModels,
             data: {

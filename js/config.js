@@ -4,12 +4,13 @@
  * 100% Client-side - Nenhuma informação é enviada para servidores externos.
  */
 
-export const PNITE_VERSION = "v.1.1.9";
+export const VERSION = "v.1.2.0";
+export const PNITE_VERSION = VERSION; // Compatibilidade retroativa
 
 export const APP_CONFIG = {
   name: 'STAMP-CAMERA',
   subtitle: 'Carimbo técnico e geográfico para fotografias',
-  version: PNITE_VERSION,
+  version: VERSION,
   defaultLanguage: 'pt-BR',
   supportedLanguages: ['pt-BR', 'en', 'es'],
   defaultTheme: 'dark',

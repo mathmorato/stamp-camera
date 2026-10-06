@@ -11,7 +11,7 @@
  * - Solicitação de persistência com navigator.storage.persist()
  */
 
-import { PNITE_VERSION, DEFAULT_STAMP_SETTINGS, DEFAULT_NUMBERING } from './config.js';
+import { VERSION, DEFAULT_STAMP_SETTINGS, DEFAULT_NUMBERING } from './config.js';
 
 export const CURRENT_SCHEMA_VERSION = 1;
 
@@ -39,7 +39,7 @@ export function migrate(data) {
   if (!data || typeof data !== 'object') {
     return {
       schema: CURRENT_SCHEMA_VERSION,
-      version: PNITE_VERSION,
+      version: VERSION,
       config: { ...DEFAULT_STAMP_SETTINGS },
       models: [],
       data: { location: {}, activeFields: [] },
@@ -53,7 +53,7 @@ export function migrate(data) {
 
   if (schema < 1) {
     result.schema = CURRENT_SCHEMA_VERSION;
-    result.version = result.version || PNITE_VERSION;
+    result.version = result.version || VERSION;
     result.config = result.config || result.settings || { ...DEFAULT_STAMP_SETTINGS };
     result.models = Array.isArray(result.models) ? result.models : (result.customPresets || []);
     result.data = result.data || {};
@@ -188,7 +188,7 @@ export const storage = {
       if (!this.isStorageAvailable()) return false;
       const payload = {
         schema: CURRENT_SCHEMA_VERSION,
-        version: PNITE_VERSION,
+        version: VERSION,
         updatedAt: Date.now(),
         config: state.config || state.settings || {},
         models: state.models || this.getCustomPresets() || [],
@@ -435,7 +435,7 @@ export const storage = {
     const customModels = this.getCustomPresets();
     return {
       schema: CURRENT_SCHEMA_VERSION,
-      version: PNITE_VERSION,
+      version: VERSION,
       exportedAt: new Date().toISOString(),
       config: tool ? { ...tool.settings } : { ...DEFAULT_STAMP_SETTINGS },
       models: customModels,
@@ -506,7 +506,7 @@ export const storage = {
 
         const mergedState = {
           schema: CURRENT_SCHEMA_VERSION,
-          version: PNITE_VERSION,
+          version: VERSION,
           config: currentTool ? currentTool.settings : (migrated.config || {}),
           models: mergedModels,
           data: {

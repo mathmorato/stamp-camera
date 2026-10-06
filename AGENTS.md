@@ -34,7 +34,7 @@ A versão deverá seguir obrigatoriamente o formato:
 Exemplo:
 `v.1.0.0`
 
-A versão deverá estar visível no rodapé da aplicação e na constante central `const PNITE_VERSION = "v.X.Y.Z";`.
+A versão deverá estar visível no rodapé da aplicação e na constante central `const VERSION = "v.X.Y.Z";`.
 
 ### 25.2. Regra de Incremento
 A ordem de crescimento será:
@@ -65,7 +65,7 @@ A ordem de crescimento será:
 
 ## 26. REGRA ABSOLUTA DE VERSIONAMENTO
 TODA alteração no projeto deve gerar uma nova versão sem exceções.
-- Manter constante central no código: `const PNITE_VERSION = "v.X.Y.Z";`
+- Manter constante central no código: `const VERSION = "v.X.Y.Z";`
 - Exibir a versão na interface (rodapé e/ou área de configurações/informações).
 - Atualizar badges ou cabeçalhos de documentação.
 
