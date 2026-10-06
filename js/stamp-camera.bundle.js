@@ -11,7 +11,7 @@
    * Versão: 1.0.0
    * 100% Client-side - Nenhuma informação é enviada para servidores externos.
    */
-  const PNITE_VERSION = "v.1.1.1";
+  const PNITE_VERSION = "v.1.1.2";
   const APP_CONFIG = {
     name: 'STAMP-CAMERA',
     subtitle: 'Carimbo técnico e geográfico para fotografias',
@@ -50,7 +50,7 @@
     CUSTOM: 'custom'
   };
   const LABEL_MODES = {
-    ICONS: 'icons',      // Somente ícones inline (ex: 📍 -15.8699, 📅 22/11/2022)
+    ICONS: 'icons',      // Somente ícones line art (ex: data, hora, coordenadas)
     TEXT: 'text',        // Rótulos de texto (ex: Coordenadas: -15.8699, Data: 22/11/2022)
     NONE: 'none'         // Sem rótulos ou ícones (apenas os valores)
   };
@@ -170,9 +170,11 @@
     dateFormat: DATE_FORMATS.BR,
     timeFormat: TIME_FORMATS.FULL,
     customCoordTemplate: '{lat}, {lon}',
-    labelMode: LABEL_MODES.ICONS,          // Padrão: Somente ícones inline!
+    labelMode: LABEL_MODES.ICONS,          // Padrão: Somente ícones line art!
     inlineLayout: STAMP_LAYOUTS.MULTILINE,  // 'multiline' ou 'single_line'
-    inlineSeparator: ' • '
+    inlineSeparator: ' • ',
+    showOriginStampBadge: false,           // Exibe [EXIF] / [MANUAL] no carimbo
+    preserveExif: true                     // Preserva/reinjeta EXIF na exportação JPEG
   };
   const DEFAULT_NUMBERING = {
     enabled: false,
@@ -3880,8 +3882,8 @@
     },
     {
       id: 'model_6_inline_banner',
-      name: 'Modelo 6 - Faixa Inline com Ícones',
-      description: 'Linha única contínua com ícones inline (📍 📅 🕒 🏙️) em formato compacto.',
+      name: 'Modelo 6 - Faixa com Ícones Line Art',
+      description: 'Linha única contínua com ícones line art em formato compacto.',
       position: STAMP_POSITIONS.BOTTOM_CENTER,
       backgroundType: 'semitransparent',
       backgroundColor: '#0F172A',
@@ -5741,16 +5743,40 @@
     }
   
     /**
+     * Retorna o selo de origem (EXIF ou MANUAL) para um campo específico
+     */
+    getFieldOriginBadge(fieldId) {
+      if (['lat', 'lon', 'coordinates', 'latitude', 'longitude'].includes(fieldId)) {
+        return this.location.sources.latitude === 'AUTO' ? 'EXIF' : 'MANUAL';
+      }
+      if (['date', 'time', 'datetime'].includes(fieldId)) {
+        return this.location.sources.date === 'AUTO' ? 'EXIF' : 'MANUAL';
+      }
+      if (fieldId === 'altitude') {
+        return this.location.sources.altitude === 'AUTO' ? 'EXIF' : 'MANUAL';
+      }
+      return null;
+    }
+  
+    /**
      * Constrói a lista de linhas prontas para desenho no carimbo
      */
     getStampRenderLines() {
       const lines = [];
+      const showOrigin = !!this.settings.showOriginStampBadge;
   
       for (const field of this.activeFields) {
         if (!field.enabled) continue;
   
-        const val = this.getFieldValue(field.id, field);
+        let val = this.getFieldValue(field.id, field);
         if (val) {
+          if (showOrigin) {
+            const badge = this.getFieldOriginBadge(field.id);
+            if (badge) {
+              val = `${val} [${badge}]`;
+            }
+          }
+  
           lines.push({
             id: field.id,
             label: field.label,
@@ -5944,6 +5970,38 @@
       this.rangeExportQuality = document.getElementById('rangeExportQuality');
       this.valExportQuality = document.getElementById('valExportQuality');
       this.qualityGroup = document.getElementById('qualityGroup');
+      this.checkPreserveExif = document.getElementById('checkPreserveExif');
+      this.exportExifNote = document.getElementById('exportExifNote');
+  
+      // Selo de Origem no Carimbo
+      this.checkOriginStampBadge = document.getElementById('checkOriginStampBadge');
+  
+      // GPS e Câmera Móvel
+      this.btnDeviceGps = document.getElementById('btnDeviceGps');
+      this.btnCaptureCamera = document.getElementById('btnCaptureCamera');
+      this.cameraInput = document.getElementById('cameraInput');
+      this.btnPlaceholderCamera = document.getElementById('btnPlaceholderCamera');
+      this.btnPlaceholderBatch = document.getElementById('btnPlaceholderBatch');
+  
+      // Processamento em Lote
+      this.btnBatchModal = document.getElementById('btnBatchModal');
+      this.btnOpenBatchFromExport = document.getElementById('btnOpenBatchFromExport');
+      this.batchModal = document.getElementById('batchModal');
+      this.btnCloseBatchModal = document.getElementById('btnCloseBatchModal');
+      this.btnAddBatchFiles = document.getElementById('btnAddBatchFiles');
+      this.batchFileInput = document.getElementById('batchFileInput');
+      this.batchListContainer = document.getElementById('batchListContainer');
+      this.batchCountText = document.getElementById('batchCountText');
+      this.batchBadge = document.getElementById('batchBadge');
+      this.btnClearBatch = document.getElementById('btnClearBatch');
+      this.btnExportBatchZip = document.getElementById('btnExportBatchZip');
+      this.batchProgressWrapper = document.getElementById('batchProgressWrapper');
+      this.batchProgressFill = document.getElementById('batchProgressFill');
+      this.batchProgressText = document.getElementById('batchProgressText');
+      this.batchPrefix = document.getElementById('batchPrefix');
+      this.batchStartNum = document.getElementById('batchStartNum');
+      this.batchPreserveExif = document.getElementById('batchPreserveExif');
+      this.batchPhotos = [];
   
       // Numeração automática
       this.checkAutoNumber = document.getElementById('checkAutoNumber');
@@ -6191,6 +6249,81 @@
           alert('Modelo salvo com sucesso no navegador!');
         }
       });
+  
+      // Selo de Origem [EXIF] / [MANUAL] no Carimbo
+      if (this.checkOriginStampBadge) {
+        this.checkOriginStampBadge.addEventListener('change', (e) => {
+          this.tool.settings.showOriginStampBadge = e.target.checked;
+          this.app.requestRender();
+        });
+      }
+  
+      // Preservação de EXIF e aviso dinâmico na exportação
+      if (this.checkPreserveExif) {
+        this.checkPreserveExif.addEventListener('change', (e) => {
+          this.tool.settings.preserveExif = e.target.checked;
+          this.updateExportExifNote();
+        });
+      }
+  
+      if (this.selectExportFormat) {
+        this.selectExportFormat.addEventListener('change', () => {
+          this.updateExportExifNote();
+        });
+      }
+      this.updateExportExifNote();
+  
+      // Captura de GPS do Dispositivo em Tempo Real
+      if (this.btnDeviceGps) {
+        this.btnDeviceGps.addEventListener('click', () => {
+          this.captureDeviceGps();
+        });
+      }
+  
+      // Captura pela Câmera no Celular
+      if (this.btnCaptureCamera && this.cameraInput) {
+        this.btnCaptureCamera.addEventListener('click', () => this.cameraInput.click());
+      }
+      if (this.btnPlaceholderCamera && this.cameraInput) {
+        this.btnPlaceholderCamera.addEventListener('click', () => this.cameraInput.click());
+      }
+      if (this.cameraInput) {
+        this.cameraInput.addEventListener('change', (e) => {
+          if (e.target.files && e.target.files[0]) {
+            this.handleCameraCapture(e.target.files[0]);
+          }
+        });
+      }
+  
+      // Modal e Fila de Processamento em Lote
+      if (this.btnBatchModal) {
+        this.btnBatchModal.addEventListener('click', () => this.openBatchModal());
+      }
+      if (this.btnPlaceholderBatch) {
+        this.btnPlaceholderBatch.addEventListener('click', () => this.openBatchModal());
+      }
+      if (this.btnOpenBatchFromExport) {
+        this.btnOpenBatchFromExport.addEventListener('click', () => this.openBatchModal());
+      }
+      if (this.btnCloseBatchModal) {
+        this.btnCloseBatchModal.addEventListener('click', () => this.closeBatchModal());
+      }
+      if (this.btnAddBatchFiles && this.batchFileInput) {
+        this.btnAddBatchFiles.addEventListener('click', () => this.batchFileInput.click());
+      }
+      if (this.batchFileInput) {
+        this.batchFileInput.addEventListener('change', (e) => {
+          if (e.target.files && e.target.files.length > 0) {
+            this.addBatchFiles(e.target.files);
+          }
+        });
+      }
+      if (this.btnClearBatch) {
+        this.btnClearBatch.addEventListener('click', () => this.clearBatch());
+      }
+      if (this.btnExportBatchZip) {
+        this.btnExportBatchZip.addEventListener('click', () => this.processAndExportBatchZip());
+      }
     }
   
     /**
@@ -6467,8 +6600,9 @@
     updateSourceBadges() {
       const updateBadge = (badgeElem, source) => {
         if (!badgeElem) return;
-        badgeElem.textContent = source;
-        badgeElem.className = `badge badge-${source.toLowerCase()}`;
+        const isAuto = source === 'AUTO';
+        badgeElem.textContent = isAuto ? 'EXIF' : 'MANUAL';
+        badgeElem.className = `badge ${isAuto ? 'badge-auto' : 'badge-manual'}`;
       };
   
       updateBadge(this.badgeLat, this.tool.location.sources.latitude);
@@ -6853,6 +6987,400 @@
   
       this.updateSourceBadges();
     }
+  
+    /**
+     * Atualiza o aviso de metadados EXIF da aba de exportação
+     */
+    updateExportExifNote() {
+      if (!this.exportExifNote) return;
+      const format = this.selectExportFormat ? this.selectExportFormat.value : 'image/jpeg';
+      const preserve = this.checkPreserveExif ? this.checkPreserveExif.checked : true;
+  
+      if (format === 'image/jpeg') {
+        if (preserve) {
+          this.exportExifNote.textContent = '✓ Os metadados originais da câmera (GPS, data, modelo) serão regravados no arquivo JPEG gerado.';
+          this.exportExifNote.style.color = 'var(--text-muted)';
+        } else {
+          this.exportExifNote.textContent = '⚠️ Metadados EXIF desativados. A imagem exportada não conterá dados de GPS ou câmera.';
+          this.exportExifNote.style.color = '#eab308';
+        }
+      } else {
+        this.exportExifNote.textContent = '⚠️ Atenção: Os formatos PNG e WebP descartam metadados EXIF por padrão da web. Para preservar os dados EXIF intactos no arquivo, selecione JPEG.';
+        this.exportExifNote.style.color = '#eab308';
+      }
+    }
+  
+    /**
+     * Captura as coordenadas de GPS do dispositivo móvel do usuário
+     */
+    async captureDeviceGps() {
+      if (!navigator.geolocation) {
+        alert('Geolocalização não é suportada neste navegador.');
+        return;
+      }
+  
+      if (this.btnDeviceGps) {
+        this.btnDeviceGps.disabled = true;
+        this.btnDeviceGps.innerHTML = `<span>Obtendo GPS...</span>`;
+      }
+  
+      navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+          const lat = pos.coords.latitude;
+          const lon = pos.coords.longitude;
+          const alt = pos.coords.altitude !== null ? pos.coords.altitude : null;
+  
+          this.tool.location.latitude = lat;
+          this.tool.location.longitude = lon;
+          this.tool.location.altitude = alt;
+          this.tool.location.sources.latitude = 'AUTO';
+          this.tool.location.sources.longitude = 'AUTO';
+          if (alt !== null) this.tool.location.sources.altitude = 'AUTO';
+  
+          this.inputLat.value = lat.toFixed(8);
+          this.inputLon.value = lon.toFixed(8);
+          if (alt !== null) this.inputAlt.value = alt.toFixed(1);
+  
+          this.updateSourceBadges();
+          this.renderFieldsList();
+          this.app.requestRender();
+  
+          try {
+            const geo = await reverseGeocode(lat, lon);
+            if (geo) {
+              this.applyGeocodedLocation(geo);
+            }
+          } catch {}
+  
+          if (this.btnDeviceGps) {
+            this.btnDeviceGps.disabled = false;
+            this.btnDeviceGps.innerHTML = `
+              <svg class="svg-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="2" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22" y2="12"/></svg>
+              <span>GPS do Dispositivo</span>
+            `;
+          }
+  
+          if (this.app && typeof this.app.showToast === 'function') {
+            this.app.showToast('Coordenadas GPS obtidas do dispositivo com sucesso!');
+          }
+        },
+        (err) => {
+          if (this.btnDeviceGps) {
+            this.btnDeviceGps.disabled = false;
+            this.btnDeviceGps.innerHTML = `
+              <svg class="svg-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="2" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22" y2="12"/></svg>
+              <span>GPS do Dispositivo</span>
+            `;
+          }
+          alert(`Não foi possível obter o GPS do dispositivo: ${err.message}. Verifique as permissões de localização no navegador.`);
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0
+        }
+      );
+    }
+  
+    /**
+     * Captura foto diretamente da câmera traseira do celular e busca geolocalização se necessário
+     */
+    async handleCameraCapture(file) {
+      if (!file) return;
+      try {
+        if (this.app && typeof this.app.showLoading === 'function') {
+          this.app.showLoading(true);
+        }
+        const photoData = await loadImageFromFile(file);
+  
+        // Se a foto não possui GPS no EXIF (comum na web móvel), busca geolocalização imediata do dispositivo
+        if (!photoData.exif.hasGps && navigator.geolocation) {
+          await new Promise((resolve) => {
+            navigator.geolocation.getCurrentPosition(
+              (pos) => {
+                photoData.exif.hasGps = true;
+                photoData.exif.latitude = pos.coords.latitude;
+                photoData.exif.longitude = pos.coords.longitude;
+                if (pos.coords.altitude !== null) photoData.exif.altitude = pos.coords.altitude;
+                resolve();
+              },
+              () => resolve(),
+              { enableHighAccuracy: true, timeout: 6000, maximumAge: 0 }
+            );
+          });
+        }
+  
+        // Se não possui data no EXIF, atribui a data atual
+        if (!photoData.exif.hasDate) {
+          photoData.exif.hasDate = true;
+          photoData.exif.dateObj = new Date();
+        }
+  
+        this.tool.loadPhotoData(photoData);
+        this.syncPhotoState();
+        this.app.requestRender();
+  
+        // Geocodificação automática de endereço
+        if (this.tool.location.latitude !== null && this.tool.location.longitude !== null) {
+          try {
+            const geo = await reverseGeocode(this.tool.location.latitude, this.tool.location.longitude);
+            if (geo) this.applyGeocodedLocation(geo);
+          } catch {}
+        }
+  
+        if (this.app && typeof this.app.showToast === 'function') {
+          this.app.showToast('Fotografia capturada na câmera com sucesso!');
+        }
+      } catch (err) {
+        alert(`Falha ao processar fotografia da câmera: ${err.message}`);
+      } finally {
+        if (this.app && typeof this.app.showLoading === 'function') {
+          this.app.showLoading(false);
+        }
+        if (this.cameraInput) this.cameraInput.value = '';
+      }
+    }
+  
+    /**
+     * Métodos de Gerenciamento do Modal de Lote
+     */
+    openBatchModal() {
+      if (this.batchModal) {
+        this.batchModal.style.display = 'flex';
+        this.renderBatchList();
+      }
+    }
+  
+    closeBatchModal() {
+      if (this.batchModal) {
+        this.batchModal.style.display = 'none';
+      }
+    }
+  
+    async addBatchFiles(fileList) {
+      if (!fileList || fileList.length === 0) return;
+      for (let i = 0; i < fileList.length; i++) {
+        const file = fileList[i];
+        if (this.batchPhotos.some(p => p.filename === file.name && p.fileSize === file.size)) {
+          continue;
+        }
+        try {
+          const exif = await readExifData(file);
+          this.batchPhotos.push({
+            file,
+            filename: file.name,
+            fileSize: file.size,
+            exif
+          });
+        } catch {
+          this.batchPhotos.push({
+            file,
+            filename: file.name,
+            fileSize: file.size,
+            exif: { hasGps: false, hasDate: false }
+          });
+        }
+      }
+  
+      if (this.batchFileInput) this.batchFileInput.value = '';
+      this.updateBatchBadge();
+      this.renderBatchList();
+  
+      if (this.app && typeof this.app.showToast === 'function') {
+        this.app.showToast(`${fileList.length} fotografia(s) adicionadas à fila de lote.`);
+      }
+    }
+  
+    updateBatchBadge() {
+      const count = this.batchPhotos.length;
+      if (this.batchBadge) {
+        this.batchBadge.textContent = count;
+        this.batchBadge.style.display = count > 0 ? 'inline-block' : 'none';
+      }
+      if (this.batchCountText) {
+        this.batchCountText.textContent = `${count} fotografia(s) na fila`;
+      }
+    }
+  
+    clearBatch() {
+      this.batchPhotos = [];
+      this.updateBatchBadge();
+      this.renderBatchList();
+    }
+  
+    renderBatchList() {
+      if (!this.batchListContainer) return;
+      this.batchListContainer.innerHTML = '';
+  
+      if (this.batchPhotos.length === 0) {
+        this.batchListContainer.innerHTML = `
+          <div style="padding: 24px; text-align: center; color: var(--text-muted); font-size: 11.5px;">
+            Nenhuma fotografia na fila de lote. Clique em <strong>+ Adicionar Mais Fotos</strong> para importar.
+          </div>
+        `;
+        return;
+      }
+  
+      const prefix = this.batchPrefix ? this.batchPrefix.value : 'Foto ';
+      const startNum = parseInt(this.batchStartNum ? this.batchStartNum.value : 1, 10) || 1;
+  
+      this.batchPhotos.forEach((photo, idx) => {
+        const item = document.createElement('div');
+        item.className = 'batch-item';
+  
+        const numStr = `${prefix}${String(startNum + idx).padStart(2, '0')}`;
+        const gpsStatus = photo.exif?.hasGps ? '📍 GPS Detectado' : 'Sem GPS';
+        const sizeKb = (photo.fileSize / 1024).toFixed(0);
+  
+        item.innerHTML = `
+          <div class="batch-item-info">
+            <span class="batch-item-num">${numStr}</span>
+            <span class="batch-item-name" title="${photo.filename}">${photo.filename}</span>
+            <span style="font-size: 10px; color: var(--text-subtle);">(${sizeKb} KB)</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span class="batch-item-status">${gpsStatus}</span>
+            <button type="button" class="btn-icon btn-sm btn-remove-batch" title="Remover da fila" data-index="${idx}">
+              <svg class="svg-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+        `;
+  
+        const removeBtn = item.querySelector('.btn-remove-batch');
+        if (removeBtn) {
+          removeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.batchPhotos.splice(idx, 1);
+            this.updateBatchBadge();
+            this.renderBatchList();
+          });
+        }
+  
+        this.batchListContainer.appendChild(item);
+      });
+    }
+  
+    async processAndExportBatchZip() {
+      if (this.batchPhotos.length === 0) {
+        alert('Nenhuma fotografia na fila de lote.');
+        return;
+      }
+  
+      const prefix = this.batchPrefix ? this.batchPrefix.value : 'Foto ';
+      const startNum = parseInt(this.batchStartNum ? this.batchStartNum.value : 1, 10) || 1;
+      const preserveExif = this.batchPreserveExif ? this.batchPreserveExif.checked : true;
+      const mimeType = this.selectExportFormat ? this.selectExportFormat.value : 'image/jpeg';
+  
+      if (this.batchProgressWrapper) this.batchProgressWrapper.style.display = 'flex';
+      if (this.btnExportBatchZip) this.btnExportBatchZip.disabled = true;
+  
+      try {
+        const total = this.batchPhotos.length;
+        const loadedPhotos = [];
+  
+        for (let i = 0; i < total; i++) {
+          const item = this.batchPhotos[i];
+          if (this.batchProgressText) {
+            this.batchProgressText.textContent = `Carregando foto ${i + 1} de ${total}: ${item.filename}...`;
+          }
+          if (this.batchProgressFill) {
+            this.batchProgressFill.style.width = `${Math.round(((i) / (total * 2)) * 100)}%`;
+          }
+  
+          const photoData = await loadImageFromFile(item.file);
+          loadedPhotos.push({
+            ...photoData,
+            batchIndex: i,
+            seqNumber: `${prefix}${String(startNum + i).padStart(2, '0')}`
+          });
+        }
+  
+        const renderPhotoFn = async (p, idx, tot) => {
+          if (this.batchProgressText) {
+            this.batchProgressText.textContent = `Carimbando foto ${idx + 1} de ${tot}: ${p.filename}...`;
+          }
+          if (this.batchProgressFill) {
+            this.batchProgressFill.style.width = `${Math.round(50 + ((idx + 1) / (tot * 2)) * 100)}%`;
+          }
+  
+          const canvas = document.createElement('canvas');
+          canvas.width = p.width;
+          canvas.height = p.height;
+  
+          const lines = this.tool.activeFields
+            .filter(f => f.enabled)
+            .map(f => {
+              let val = '';
+              if (f.id === 'photo_id') {
+                val = p.seqNumber;
+              } else if (['lat', 'lon', 'coordinates'].includes(f.id)) {
+                if (p.exif.hasGps) {
+                  val = formatCoordinates(p.exif.latitude, p.exif.longitude, this.tool.settings.coordFormat);
+                } else {
+                  val = this.tool.getFieldValue(f.id, f);
+                }
+              } else if (['date', 'time', 'datetime'].includes(f.id)) {
+                if (p.exif.hasDate && p.exif.dateObj) {
+                  val = this.tool.formatDateTime(p.exif.dateObj);
+                } else {
+                  val = this.tool.getFieldValue(f.id, f);
+                }
+              } else {
+                val = this.tool.getFieldValue(f.id, f);
+              }
+  
+              if (this.tool.settings.showOriginStampBadge) {
+                const originBadge = (['lat', 'lon', 'coordinates'].includes(f.id))
+                  ? (p.exif.hasGps ? 'EXIF' : 'MANUAL')
+                  : (['date', 'time', 'datetime'].includes(f.id))
+                    ? (p.exif.hasDate ? 'EXIF' : 'MANUAL')
+                    : null;
+                if (originBadge) val = `${val} [${originBadge}]`;
+              }
+  
+              return {
+                id: f.id,
+                label: f.label,
+                value: val,
+                showLabel: f.showLabel !== false,
+                isCustom: f.isCustom,
+                icon: f.icon || FIELD_ICONS[f.id] || 'default'
+              };
+            })
+            .filter(l => l.value);
+  
+          this.engine.render(canvas, p.canvas, lines, this.tool.settings, true);
+          return canvas;
+        };
+  
+        await exportStampedPhotosBatch(loadedPhotos, renderPhotoFn, {
+          mimeType,
+          preserveExif,
+          zipFilename: `fotos_carimbadas_${Date.now()}.zip`
+        });
+  
+        if (this.batchProgressText) {
+          this.batchProgressText.textContent = `✓ Lote concluído! Download do ZIP iniciado.`;
+        }
+        if (this.batchProgressFill) {
+          this.batchProgressFill.style.width = '100%';
+        }
+  
+        if (this.app && typeof this.app.showToast === 'function') {
+          this.app.showToast(`Lote com ${total} fotografias processado e baixado em ZIP!`);
+        }
+  
+        setTimeout(() => {
+          this.closeBatchModal();
+          if (this.batchProgressWrapper) this.batchProgressWrapper.style.display = 'none';
+          if (this.batchProgressFill) this.batchProgressFill.style.width = '0%';
+        }, 1500);
+      } catch (err) {
+        alert(`Erro durante o processamento em lote: ${err.message}`);
+      } finally {
+        if (this.btnExportBatchZip) this.btnExportBatchZip.disabled = false;
+      }
+    }
   }
   
   // --- Fim de js/tools/stamp-camera/ui.js ---
@@ -6949,7 +7477,13 @@
   
       if (fileInput) {
         fileInput.addEventListener('change', (e) => {
-          if (e.target.files && e.target.files[0]) {
+          if (!e.target.files || e.target.files.length === 0) return;
+          if (e.target.files.length > 1) {
+            if (this.ui) {
+              this.ui.addBatchFiles(e.target.files);
+              this.ui.openBatchModal();
+            }
+          } else {
             this.handleFileSelected(e.target.files[0]);
           }
         });
@@ -7130,18 +7664,30 @@
         const mimeType = formatSelect ? formatSelect.value : 'image/jpeg';
         const quality = 1.0;
   
-        const filename = await exportStampedPhoto(
+        const exportRes = await exportStampedPhoto(
           exportCanvas,
           this.tool.photo.filename,
           mimeType,
-          quality
+          quality,
+          {
+            preserveExif: this.tool.settings.preserveExif !== false,
+            rawApp1Bytes: this.tool.photo?.exif?.rawApp1Bytes,
+            exifData: {
+              latitude: this.tool.location.latitude,
+              longitude: this.tool.location.longitude,
+              altitude: this.tool.location.altitude,
+              dateStr: this.tool.photo?.exif?.dateStr || null
+            }
+          }
         );
   
         btnExport.innerHTML = originalHtml;
         btnExport.disabled = false;
   
         // Mensagem visual de sucesso
-        this.showToast(`Fotografia exportada: ${filename}`);
+        const outFilename = typeof exportRes === 'string' ? exportRes : exportRes.filename;
+        const exifTag = (exportRes && exportRes.exifPreserved) ? ' (EXIF preservado)' : '';
+        this.showToast(`Fotografia exportada: ${outFilename}${exifTag}`);
       } catch (err) {
         const btnExport = document.getElementById('btnExport');
         if (btnExport) {

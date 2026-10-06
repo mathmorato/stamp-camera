@@ -4,7 +4,7 @@
  * 100% Client-side - Nenhuma informação é enviada para servidores externos.
  */
 
-export const PNITE_VERSION = "v.1.1.1";
+export const PNITE_VERSION = "v.1.1.2";
 
 export const APP_CONFIG = {
   name: 'STAMP-CAMERA',
@@ -49,7 +49,7 @@ export const STAMP_POSITIONS = {
 };
 
 export const LABEL_MODES = {
-  ICONS: 'icons',      // Somente ícones inline (ex: 📍 -15.8699, 📅 22/11/2022)
+  ICONS: 'icons',      // Somente ícones line art (ex: data, hora, coordenadas)
   TEXT: 'text',        // Rótulos de texto (ex: Coordenadas: -15.8699, Data: 22/11/2022)
   NONE: 'none'         // Sem rótulos ou ícones (apenas os valores)
 };
@@ -176,7 +176,7 @@ export const DEFAULT_STAMP_SETTINGS = {
   dateFormat: DATE_FORMATS.BR,
   timeFormat: TIME_FORMATS.FULL,
   customCoordTemplate: '{lat}, {lon}',
-  labelMode: LABEL_MODES.ICONS,          // Padrão: Somente ícones inline!
+  labelMode: LABEL_MODES.ICONS,          // Padrão: Somente ícones line art!
   inlineLayout: STAMP_LAYOUTS.MULTILINE,  // 'multiline' ou 'single_line'
   inlineSeparator: ' • ',
   showOriginStampBadge: false,           // Exibe [EXIF] / [MANUAL] no carimbo

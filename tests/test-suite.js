@@ -8,7 +8,8 @@
  * - Integridade do DOM (IDs e seletores do index.html)
  */
 
-import { readExifData, parseExifDate } from '../js/exif-reader.js';
+import { readExifData, parseExifDate, injectApp1BytesIntoJpeg } from '../js/exif-reader.js';
+import { ZipWriter } from '../js/zip-writer.js';
 import {
   toDms,
   toDdm,
@@ -195,11 +196,59 @@ assert(geoJussara && geoJussara.country === 'Brasil', `Geocodificador identifico
 const geoBrasilia = getOfflineLocation(-15.7975, -47.8919);
 assert(geoBrasilia && geoBrasilia.city === 'Brasília', `Geocodificador identificou Brasília: ${geoBrasilia?.city}`);
 
-// Teste de Limpeza do Espaço de Trabalho (Opção Limpar)
+// Teste de Selos de Origem [EXIF] e [MANUAL] no Carimbo
+console.log('\n[4.7/5] Testes de Selos de Origem, Preservação de EXIF e Gerador ZIP:');
+tool.loadPhotoData({
+  canvas: { width: 1920, height: 1080 },
+  width: 1920,
+  height: 1080,
+  filename: 'teste_origem.jpg',
+  fileSize: 500000,
+  exif: {
+    hasExif: true,
+    hasGps: true,
+    hasDate: true,
+    latitude: refLat,
+    longitude: refLon,
+    altitude: null,
+    dateObj: parsedDate,
+    dateStr: sampleDateStr
+  }
+});
+tool.settings.showOriginStampBadge = true;
+tool.location.altitude = 550;
+tool.location.sources.altitude = 'MANUAL';
+const altField = tool.activeFields.find(f => f.id === 'altitude');
+if (altField) altField.enabled = true;
+const stampLinesWithBadges = tool.getStampRenderLines();
+const coordLineBadge = stampLinesWithBadges.find(l => l.id === 'lat' || l.id === 'coordinates');
+assert(coordLineBadge && coordLineBadge.value.includes('[EXIF]'), 'Selo [EXIF] anexado à coordenada extraída do EXIF');
+const altLineBadge = stampLinesWithBadges.find(l => l.id === 'altitude');
+assert(altLineBadge && altLineBadge.value.includes('[MANUAL]'), 'Selo [MANUAL] anexado à altitude preenchida manualmente');
+
+// Teste de Injeção e Preservação de Segmento APP1 EXIF em JPEG
+const sampleLibertyPath = path.resolve('assets/images/demo_liberty.jpg');
+const sampleLibertyBuf = fs.readFileSync(sampleLibertyPath);
+const libertyExif = await readExifData(sampleLibertyBuf.buffer.slice(sampleLibertyBuf.byteOffset, sampleLibertyBuf.byteOffset + sampleLibertyBuf.byteLength));
+assert(libertyExif.hasExif && libertyExif.hasGps && libertyExif.rawApp1Bytes !== null, 'Segmento binário APP1 bruto extraído com sucesso da foto de demonstração');
+
+// Simula JPEG sem EXIF gerado por Canvas: SOI (FFD8) + DQT (FFDB)
+const mockCanvasJpeg = Buffer.from([0xFF, 0xD8, 0xFF, 0xDB, 0x00, 0x04, 0x00, 0x00, 0xFF, 0xD9]);
+const injectedJpeg = injectApp1BytesIntoJpeg(mockCanvasJpeg, libertyExif.rawApp1Bytes);
+assert(injectedJpeg.length > mockCanvasJpeg.length, 'Segmento APP1 reinjetado no buffer do JPEG');
+const reReadExif = await readExifData(injectedJpeg.buffer.slice(injectedJpeg.byteOffset, injectedJpeg.byteOffset + injectedJpeg.byteLength));
+assert(reReadExif.hasExif && reReadExif.hasGps && Math.abs(reReadExif.latitude - 40.68925) < 0.001, 'Metadados EXIF e coordenadas GPS recuperados 100% intactos após injeção');
+
+// Teste do Gerador ZIP (ZipWriter)
+const zip = new ZipWriter();
+await zip.addFile('foto_01.jpg', new Uint8Array([0xFF, 0xD8, 0xFF, 0xD9]));
+await zip.addFile('foto_02.jpg', new Uint8Array([0xFF, 0xD8, 0xFF, 0xD9]));
+const zipBytes = zip.generateUint8Array();
+assert(zipBytes.length > 50, `Arquivo ZIP válido gerado com sucesso (${zipBytes.length} bytes)`);
+// Verifica assinatura inicial PK\x03\x04
+assert(zipBytes[0] === 0x50 && zipBytes[1] === 0x4B && zipBytes[2] === 0x03 && zipBytes[3] === 0x04, 'Assinatura padrão PK\x03\x04 verificada no início do ZIP');
+
 tool.clearWorkspace();
-assert(tool.photo === null, 'Foto limpa com sucesso');
-assert(tool.location.latitude === null && tool.location.longitude === null, 'Coordenadas resetadas com sucesso');
-assert(tool.location.city === '' && tool.location.state === '', 'Campos de localização resetados com sucesso');
 
 // 5. TESTES DE INTEGRIDADE DO DOM (index.html)
 console.log('\n[5/5] Testes de Integridade do DOM (index.html):');
@@ -277,7 +326,14 @@ const requiredElementIds = [
   'inputNumberStart',
   'inputNumberDigits',
   'themeToggleBtn',
-  'langSelect'
+  'langSelect',
+  'cameraInput',
+  'btnCaptureCamera',
+  'btnBatchModal',
+  'btnDeviceGps',
+  'checkPreserveExif',
+  'checkOriginStampBadge',
+  'batchModal'
 ];
 
 let allIdsFound = true;

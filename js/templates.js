@@ -158,8 +158,8 @@ export const BUILT_IN_MODELS = [
   },
   {
     id: 'model_6_inline_banner',
-    name: 'Modelo 6 - Faixa Inline com Ícones',
-    description: 'Linha única contínua com ícones inline (📍 📅 🕒 🏙️) em formato compacto.',
+    name: 'Modelo 6 - Faixa com Ícones Line Art',
+    description: 'Linha única contínua com ícones line art em formato compacto.',
     position: STAMP_POSITIONS.BOTTOM_CENTER,
     backgroundType: 'semitransparent',
     backgroundColor: '#0F172A',

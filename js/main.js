@@ -89,7 +89,13 @@ class StampCameraApp {
 
     if (fileInput) {
       fileInput.addEventListener('change', (e) => {
-        if (e.target.files && e.target.files[0]) {
+        if (!e.target.files || e.target.files.length === 0) return;
+        if (e.target.files.length > 1) {
+          if (this.ui) {
+            this.ui.addBatchFiles(e.target.files);
+            this.ui.openBatchModal();
+          }
+        } else {
           this.handleFileSelected(e.target.files[0]);
         }
       });
@@ -270,18 +276,30 @@ class StampCameraApp {
       const mimeType = formatSelect ? formatSelect.value : 'image/jpeg';
       const quality = 1.0;
 
-      const filename = await exportStampedPhoto(
+      const exportRes = await exportStampedPhoto(
         exportCanvas,
         this.tool.photo.filename,
         mimeType,
-        quality
+        quality,
+        {
+          preserveExif: this.tool.settings.preserveExif !== false,
+          rawApp1Bytes: this.tool.photo?.exif?.rawApp1Bytes,
+          exifData: {
+            latitude: this.tool.location.latitude,
+            longitude: this.tool.location.longitude,
+            altitude: this.tool.location.altitude,
+            dateStr: this.tool.photo?.exif?.dateStr || null
+          }
+        }
       );
 
       btnExport.innerHTML = originalHtml;
       btnExport.disabled = false;
 
       // Mensagem visual de sucesso
-      this.showToast(`Fotografia exportada: ${filename}`);
+      const outFilename = typeof exportRes === 'string' ? exportRes : exportRes.filename;
+      const exifTag = (exportRes && exportRes.exifPreserved) ? ' (EXIF preservado)' : '';
+      this.showToast(`Fotografia exportada: ${outFilename}${exifTag}`);
     } catch (err) {
       const btnExport = document.getElementById('btnExport');
       if (btnExport) {
