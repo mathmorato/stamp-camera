@@ -1,20 +1,9 @@
 /**
  * STAMP-CAMERA - Configurações Gerais e Constantes
- * Versão: 1.0.0
  * 100% Client-side - Nenhuma informação é enviada para servidores externos.
  */
 
-export const VERSION = "v.1.2.0";
-export const PNITE_VERSION = VERSION; // Compatibilidade retroativa
-
-export const APP_CONFIG = {
-  name: 'STAMP-CAMERA',
-  subtitle: 'Carimbo técnico e geográfico para fotografias',
-  version: VERSION,
-  defaultLanguage: 'pt-BR',
-  supportedLanguages: ['pt-BR', 'en', 'es'],
-  defaultTheme: 'dark',
-};
+export const VERSION = "v.1.2.1";
 
 export const COORD_FORMATS = {
   DECIMAL_CARDINAL: 'decimal_cardinal', // 15.869969° S, 50.852275° W

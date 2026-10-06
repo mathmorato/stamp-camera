@@ -6,6 +6,9 @@
 
 import http from 'http';
 import { spawn } from 'child_process';
+import os from 'os';
+import path from 'path';
+import { pathToFileURL } from 'url';
 
 async function runBrowserTest(targetUrl) {
   console.log(`\n======================================================`);
@@ -13,7 +16,7 @@ async function runBrowserTest(targetUrl) {
   console.log(`======================================================`);
 
   const port = 9222;
-  const chromePath = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
+  const chromePath = process.env.CHROME_PATH || 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
 
   const chromeProc = spawn(chromePath, [
     `--remote-debugging-port=${port}`,
@@ -21,7 +24,7 @@ async function runBrowserTest(targetUrl) {
     '--disable-gpu',
     '--no-first-run',
     '--no-default-browser-check',
-    '--user-data-dir=C:\\Users\\M\\.gemini\\antigravity-ide\\scratch\\chrome_profile_' + Date.now()
+    '--user-data-dir=' + path.join(os.tmpdir(), 'stamp-camera-chrome-' + Date.now())
   ]);
 
   await new Promise(r => setTimeout(r, 1200));
@@ -223,7 +226,7 @@ async function runBrowserTest(targetUrl) {
 }
 
 async function run() {
-  await runBrowserTest('file:///C:/Antigravity/stamp-camera/index.html');
+  await runBrowserTest(pathToFileURL(path.resolve('index.html')).href);
   await runBrowserTest('http://127.0.0.1:8080/index.html');
   console.log('\n=== TODOS OS TESTES E2E EM NAVEGADOR REAL FORAM CONCLUÍDOS ===\n');
   process.exit(0);

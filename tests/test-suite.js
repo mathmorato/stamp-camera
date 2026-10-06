@@ -343,8 +343,12 @@ assert(tool.numbering.startNumber === 5, 'Contador avançado para 5 após lote d
 
 const backup = storage.getBackupData(tool);
 assert(backup.schema === 1, 'Backup gerado com Schema 1');
-assert(backup.version === 'v.1.2.0', 'Backup com versão atualizada v.1.2.0');
-assert(VERSION === 'v.1.2.0', 'Constante VERSION definida como v.1.2.0');
+const pkgVersion = JSON.parse(fs.readFileSync(path.resolve('package.json'), 'utf-8')).version;
+const indexHtml = fs.readFileSync(path.resolve('index.html'), 'utf-8');
+assert(/^v\.\d\.\d\.\d+$/.test(VERSION), `Constante VERSION no formato v.X.Y.Z (${VERSION})`);
+assert(backup.version === VERSION, `Backup com versão atual ${VERSION}`);
+assert(VERSION === `v.${pkgVersion}`, 'Versão do package.json sincronizada com VERSION');
+assert(indexHtml.includes(`STAMP-CAMERA ${VERSION}`) && indexHtml.includes(`bundle.js?v=${pkgVersion}`), 'Versão do rodapé e cache-busting do index.html sincronizados');
 assert(backup.config && backup.data && backup.counter, 'Estrutura completa de backup exportada sem fotos');
 
 const legacyData = {

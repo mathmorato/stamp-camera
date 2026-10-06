@@ -5,7 +5,7 @@
  */
 
 import { readExifData } from './exif-reader.js';
-import { DEMO_LIBERTY_BASE64 } from '../assets/images/demo-image-data.js';
+// DEMO_LIBERTY_BASE64 é injetado pelo build (scripts/build-bundle.js) a partir de assets/images/demo_liberty.jpg.
 
 /**
  * Carrega e processa uma imagem do usuário

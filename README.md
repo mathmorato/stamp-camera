@@ -11,7 +11,6 @@ O **STAMP-CAMERA** foi concebido para inserir automaticamente ou manualmente inf
 
 Principais informações suportadas no carimbo:
 - Coordenadas geográficas (Latitude e Longitude) em múltiplos formatos técnicos;
-- Altitude e dados de posicionamento;
 - Endereço físico (Logradouro, Número, Bairro, Cidade, Estado, País, CEP);
 - Data e horário precisos com suporte a padrões brasileiros e internacionais;
 - Identificação da fotografia com numeração automática sequencial;
@@ -46,13 +45,20 @@ O projeto adota uma arquitetura modular em Vanilla JavaScript (ES Modules) e Van
 stamp-camera/
 ├── index.html                 # Ponto de entrada executável da aplicação
 ├── AGENTS.md                  # Regras e diretrizes do agente
-├── package.json               # Configurações do projeto e scripts de execução
-├── README.md                  # Documentação completa
+├── package.json               # Scripts de build e testes
+├── README.md                  # Documentação
+├── assets/images/demo_liberty.jpg  # Foto de demonstração (embutida no bundle pelo build)
+├── scripts/build-bundle.js    # Gera js/stamp-camera.bundle.js a partir dos módulos
+├── tests/                     # test-suite.js (Node) e cdp-full-test.js (E2E via Chrome)
 ├── css/
 │   ├── theme.css              # Tokens de design, cores e suporte a Dark/Light Mode
 │   ├── main.css               # Estilos globais e componentes base acessíveis
 │   └── stamp-camera.css       # Layout 3 colunas, painéis, grade de posicionamento
 └── js/
+    ├── stamp-camera.bundle.js # Pacote gerado (carregado pelo index.html; não editar)
+    ├── vendor/piexif.js       # Escrita de EXIF na exportação
+    ├── zip-writer.js          # Exportação em lote (.zip)
+    ├── geocoder.js            # Localização offline aproximada
     ├── config.js              # Configurações padrão, enums e formatos
     ├── exif-reader.js         # Leitor binário EXIF/TIFF 100% client-side
     ├── geolocation.js         # Conversores de coordenadas (Decimal, DMS, DDM)
@@ -98,8 +104,7 @@ O sistema disponibiliza modelos pré-formatados prontos para uso:
 ### 7.1 Execução Direta (Sem dependências)
 Basta abrir o arquivo `index.html` em qualquer navegador web moderno (Chrome, Edge, Firefox, Safari).
 
-### 7.2 Execução via Servidor Local (Recomendado)
-Para executar com suporte nativo a ES Modules via servidor HTTP:
+### 7.2 Execução via Servidor Local
 
 ```bash
 # Opção 1: Usando npx
@@ -111,7 +116,15 @@ python -m http.server 8080
 
 Abra `http://localhost:3000` ou `http://localhost:8080` no seu navegador.
 
-### 7.3 Hospedagem no GitHub Pages
+### 7.3 Desenvolvimento
+Os módulos em `js/` são a fonte; após editá-los, regenere o pacote e rode os testes:
+
+```bash
+npm run build   # gera js/stamp-camera.bundle.js
+npm test        # testes unitários e de integridade do DOM
+```
+
+### 7.4 Hospedagem no GitHub Pages
 Como o STAMP-CAMERA não necessita de servidores, basta publicar o repositório na branch `main` e ativar o GitHub Pages nas configurações do repositório (`Settings > Pages > Branch: main / root`).
 
 ---

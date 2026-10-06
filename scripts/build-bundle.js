@@ -13,7 +13,6 @@ const files = [
   'js/vendor/piexif.js',
   'js/zip-writer.js',
   'js/geolocation.js',
-  'assets/images/demo-image-data.js',
   'js/exif-reader.js',
   'js/image-loader.js',
   'js/templates.js',
@@ -27,12 +26,17 @@ const files = [
   'js/main.js'
 ];
 
+const version = fs.readFileSync('js/config.js', 'utf-8').match(/VERSION = "([^"]+)"/)[1];
+// Imagem de demonstração embutida em base64 (evita fetch bloqueado em file:///)
+const demoBase64 = fs.readFileSync('assets/images/demo_liberty.jpg').toString('base64');
+
 let bundleContent = `/**
- * STAMP-CAMERA v1.0.2 - Pacote Autônomo 100% Client-Side
+ * STAMP-CAMERA ${version} - Pacote Autônomo 100% Client-Side
  * Funciona nativamente tanto em servidores HTTP quanto no protocolo file:///
  */
 (function() {
   'use strict';
+  const DEMO_LIBERTY_BASE64 = "data:image/jpeg;base64,${demoBase64}";
 \n`;
 
 for (const filePath of files) {

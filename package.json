@@ -1,6 +1,6 @@
 {
   "name": "stamp-camera",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Carimbo técnico e geográfico para fotografias - 100% Client-side",
   "type": "module",
   "main": "index.html",
