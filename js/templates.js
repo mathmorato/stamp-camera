@@ -4,13 +4,13 @@
  * Contém a lista completa dos campos padrão conforme as regras da diretriz.
  */
 
-import { COORD_FORMATS, DATE_FORMATS, TIME_FORMATS, STAMP_POSITIONS } from './config.js';
+import { COORD_FORMATS, DATE_FORMATS, TIME_FORMATS, STAMP_POSITIONS, LABEL_MODES, STAMP_LAYOUTS, FIELD_ICONS } from './config.js';
 
 export const BUILT_IN_MODELS = [
   {
     id: 'model_1_simple',
-    name: 'Modelo 1 - Simples',
-    description: 'Data, hora e coordenadas em formato direto.',
+    name: 'Modelo 1 - Simples (Ícones)',
+    description: 'Data, hora e coordenadas com ícones inline modernos.',
     position: STAMP_POSITIONS.BOTTOM_LEFT,
     backgroundType: 'semitransparent',
     backgroundColor: '#0F172A',
@@ -26,6 +26,8 @@ export const BUILT_IN_MODELS = [
     coordFormat: COORD_FORMATS.DECIMAL_CARDINAL,
     dateFormat: DATE_FORMATS.BR,
     timeFormat: TIME_FORMATS.FULL,
+    labelMode: LABEL_MODES.ICONS,
+    inlineLayout: STAMP_LAYOUTS.MULTILINE,
     fields: [
       { id: 'date', label: 'Data', enabled: true, showLabel: true },
       { id: 'time', label: 'Hora', enabled: true, showLabel: true },
@@ -53,6 +55,8 @@ export const BUILT_IN_MODELS = [
     coordFormat: COORD_FORMATS.DECIMAL_CARDINAL,
     dateFormat: DATE_FORMATS.BR,
     timeFormat: TIME_FORMATS.DATE_TIME,
+    labelMode: LABEL_MODES.ICONS,
+    inlineLayout: STAMP_LAYOUTS.MULTILINE,
     fields: [
       { id: 'datetime', label: 'Data e Hora', enabled: true, showLabel: false },
       { id: 'address_street_num', label: 'Endereço', enabled: true, showLabel: false },
@@ -81,6 +85,8 @@ export const BUILT_IN_MODELS = [
     coordFormat: COORD_FORMATS.DECIMAL_SIGNED,
     dateFormat: DATE_FORMATS.BR,
     timeFormat: TIME_FORMATS.FULL,
+    labelMode: LABEL_MODES.TEXT,
+    inlineLayout: STAMP_LAYOUTS.MULTILINE,
     fields: [
       { id: 'date', label: 'DATA', enabled: true, showLabel: true },
       { id: 'time', label: 'HORA', enabled: true, showLabel: true },
@@ -108,6 +114,8 @@ export const BUILT_IN_MODELS = [
     coordFormat: COORD_FORMATS.DMS,
     dateFormat: DATE_FORMATS.BR,
     timeFormat: TIME_FORMATS.FULL,
+    labelMode: LABEL_MODES.TEXT,
+    inlineLayout: STAMP_LAYOUTS.MULTILINE,
     fields: [
       { id: 'photo_id', label: 'FOTOGRAFIA Nº', enabled: true, showLabel: true, defaultValue: '01' },
       { id: 'date', label: 'DATA', enabled: true, showLabel: true },
@@ -137,6 +145,8 @@ export const BUILT_IN_MODELS = [
     coordFormat: COORD_FORMATS.DECIMAL_CARDINAL,
     dateFormat: DATE_FORMATS.BR,
     timeFormat: TIME_FORMATS.FULL,
+    labelMode: LABEL_MODES.ICONS,
+    inlineLayout: STAMP_LAYOUTS.MULTILINE,
     fields: [
       { id: 'datetime', label: 'Data e Hora', enabled: true, showLabel: false },
       { id: 'coordinates', label: 'Coordenadas', enabled: true, showLabel: true },
@@ -144,6 +154,34 @@ export const BUILT_IN_MODELS = [
       { id: 'altitude', label: 'Altitude', enabled: false, showLabel: true },
       { id: 'project_name', label: 'Obra', enabled: false, showLabel: true, defaultValue: 'Residência Jussara' },
       { id: 'custom_text', label: 'Observação', enabled: false, showLabel: false, defaultValue: 'Inspeção de rotina' }
+    ]
+  },
+  {
+    id: 'model_6_inline_banner',
+    name: 'Modelo 6 - Faixa Inline com Ícones',
+    description: 'Linha única contínua com ícones inline (📍 📅 🕒 🏙️) em formato compacto.',
+    position: STAMP_POSITIONS.BOTTOM_CENTER,
+    backgroundType: 'semitransparent',
+    backgroundColor: '#0F172A',
+    backgroundOpacity: 85,
+    textColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#3B82F6',
+    borderRadius: 8,
+    hasShadow: true,
+    fontFamily: 'Inter',
+    fontSize: 18,
+    fontSizeScale: 1.0,
+    textAlign: 'center',
+    coordFormat: COORD_FORMATS.DECIMAL_CARDINAL,
+    dateFormat: DATE_FORMATS.BR,
+    timeFormat: TIME_FORMATS.DATE_TIME,
+    labelMode: LABEL_MODES.ICONS,
+    inlineLayout: STAMP_LAYOUTS.SINGLE_LINE,
+    fields: [
+      { id: 'datetime', label: 'Data e Hora', enabled: true, showLabel: false },
+      { id: 'coordinates', label: 'Coordenadas', enabled: true, showLabel: false },
+      { id: 'city_state_country', label: 'Localidade', enabled: true, showLabel: false }
     ]
   }
 ];

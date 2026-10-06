@@ -56,37 +56,70 @@ export class StampEngine {
     const borderRadiusPx = Math.round((settings.borderRadius || 8) * scaleFactor);
     const borderWidthPx = Math.round((settings.borderWidth || 0) * scaleFactor);
 
-    // Configuração de fonte no context para medição
+    // Configuração de fonte no context para medição (com fallback de emojis para alta fidelidade)
     const fontStyle = settings.isItalic ? 'italic' : 'normal';
     const fontWeight = settings.fontWeight || '600';
     const fontFamily = settings.fontFamily || 'Inter, system-ui, sans-serif';
-    ctx.font = `${fontStyle} ${fontWeight} ${fontSizePx}px ${fontFamily}`;
+    const fontSpec = `${fontStyle} ${fontWeight} ${fontSizePx}px ${fontFamily}, "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif`;
+    ctx.font = fontSpec;
 
     if ('letterSpacing' in ctx) {
       ctx.letterSpacing = `${(settings.letterSpacing || 0.5) * scaleFactor}px`;
     }
 
-    // 3. Formata e mede as linhas de texto
+    // 3. Formata e mede as linhas de texto com suporte a ícones inline e layout
     const renderedRows = [];
     let maxContentWidth = 0;
 
-    for (const item of activeLines) {
-      let text = '';
-      if (item.showLabel && item.label) {
-        text = `${item.label}: ${item.value}`;
-      } else {
-        text = `${item.value}`;
-      }
+    const labelMode = settings.labelMode || 'icons';
+    const isSingleLine = settings.inlineLayout === 'single_line';
 
-      // Suporte a quebra de linha interna dentro do valor
-      const subLines = text.split('\n');
-      for (const sub of subLines) {
-        const trimmed = sub.trim();
-        if (trimmed) {
-          const metrics = ctx.measureText(trimmed);
-          const w = metrics.width;
-          if (w > maxContentWidth) maxContentWidth = w;
-          renderedRows.push({ text: trimmed, width: w });
+    if (isSingleLine) {
+      // Modo linha única inline contínua (ex: 📅 22/11/2022 • 📍 -15.8699, -50.8522 • 📌 Jussara, GO)
+      const parts = [];
+      for (const item of activeLines) {
+        const valText = item.value || '';
+        let prefix = '';
+        if (labelMode === 'icons') {
+          const icon = item.icon || '📌';
+          prefix = `${icon} `;
+        } else if (labelMode === 'text') {
+          prefix = (item.showLabel && item.label) ? `${item.label}: ` : '';
+        }
+        parts.push(`${prefix}${valText}`.trim());
+      }
+      const fullInlineText = parts.join(settings.inlineSeparator || ' • ');
+      const metrics = ctx.measureText(fullInlineText);
+      maxContentWidth = metrics.width;
+      renderedRows.push({ text: fullInlineText, width: metrics.width });
+    } else {
+      // Modo multilinhas (com ícones inline ou rótulos tradicionais)
+      for (const item of activeLines) {
+        let text = '';
+        if (labelMode === 'icons') {
+          const icon = item.icon || '📌';
+          text = `${icon} ${item.value}`;
+        } else if (labelMode === 'text') {
+          if (item.showLabel && item.label) {
+            text = `${item.label}: ${item.value}`;
+          } else {
+            text = `${item.value}`;
+          }
+        } else {
+          // 'none' (apenas o valor puro)
+          text = `${item.value}`;
+        }
+
+        // Suporte a quebra de linha interna dentro do valor
+        const subLines = text.split('\n');
+        for (const sub of subLines) {
+          const trimmed = sub.trim();
+          if (trimmed) {
+            const metrics = ctx.measureText(trimmed);
+            const w = metrics.width;
+            if (w > maxContentWidth) maxContentWidth = w;
+            renderedRows.push({ text: trimmed, width: w });
+          }
         }
       }
     }
@@ -194,7 +227,7 @@ export class StampEngine {
 
     // 6. Desenha os textos
     ctx.save();
-    ctx.font = `${fontStyle} ${fontWeight} ${fontSizePx}px ${fontFamily}`;
+    ctx.font = fontSpec;
     ctx.fillStyle = settings.textColor || '#FFFFFF';
 
     if (settings.hasShadow && settings.backgroundType === 'none') {

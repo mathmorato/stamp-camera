@@ -10,7 +10,10 @@ import {
   COORD_FORMATS,
   DATE_FORMATS,
   TIME_FORMATS,
-  STAMP_POSITIONS
+  STAMP_POSITIONS,
+  LABEL_MODES,
+  STAMP_LAYOUTS,
+  FIELD_ICONS
 } from '../../config.js';
 import { formatCoordinates, toDms, toDdm, parseCoordinateString, isValidCoordinate } from '../../geolocation.js';
 import { BUILT_IN_MODELS, PRESET_CATEGORIES, STANDARD_FIELD_DEFS } from '../../templates.js';
@@ -111,6 +114,8 @@ export class StampCameraTool {
     if (model.coordFormat) this.settings.coordFormat = model.coordFormat;
     if (model.dateFormat) this.settings.dateFormat = model.dateFormat;
     if (model.timeFormat) this.settings.timeFormat = model.timeFormat;
+    if (model.labelMode) this.settings.labelMode = model.labelMode;
+    if (model.inlineLayout) this.settings.inlineLayout = model.inlineLayout;
 
     // Reseta posição personalizada caso troque de modelo
     this.settings.customPosX = null;
@@ -620,7 +625,8 @@ export class StampCameraTool {
           label: field.label,
           value: val,
           showLabel: field.showLabel !== false,
-          isCustom: field.isCustom
+          isCustom: field.isCustom,
+          icon: field.icon || FIELD_ICONS[field.id] || '📌'
         });
       }
     }

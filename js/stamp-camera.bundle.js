@@ -48,6 +48,40 @@
     BOTTOM_RIGHT: 'bottom-right',
     CUSTOM: 'custom'
   };
+  const LABEL_MODES = {
+    ICONS: 'icons',      // Somente ícones inline (ex: 📍 -15.8699, 📅 22/11/2022)
+    TEXT: 'text',        // Rótulos de texto (ex: Coordenadas: -15.8699, Data: 22/11/2022)
+    NONE: 'none'         // Sem rótulos ou ícones (apenas os valores)
+  };
+  const STAMP_LAYOUTS = {
+    MULTILINE: 'multiline',      // Múltiplas linhas (ícone + valor por linha)
+    SINGLE_LINE: 'single_line'   // Linha única inline contínua separada por ' • '
+  };
+  const FIELD_ICONS = {
+    photo_id: '📷',
+    date: '📅',
+    time: '🕒',
+    datetime: '📅',
+    coordinates: '📍',
+    lat: '🌐',
+    lon: '🌐',
+    altitude: '⛰️',
+    street: '🛣️',
+    number: '🔢',
+    address_street_num: '🏠',
+    neighborhood: '🏘️',
+    locality: '📌',
+    city: '🏙️',
+    state: '🗺️',
+    country: '🌍',
+    city_state_country: '📍',
+    postal_code: '📮',
+    project_name: '🏗️',
+    process: '⚖️',
+    report_num: '📋',
+    responsible: '👤',
+    custom_text: '📝'
+  };
   const DEFAULT_STAMP_SETTINGS = {
     position: STAMP_POSITIONS.BOTTOM_LEFT,
     marginPercentX: 2.5,
@@ -74,7 +108,10 @@
     coordFormat: COORD_FORMATS.DECIMAL_CARDINAL,
     dateFormat: DATE_FORMATS.BR,
     timeFormat: TIME_FORMATS.FULL,
-    customCoordTemplate: '{lat}, {lon}'
+    customCoordTemplate: '{lat}, {lon}',
+    labelMode: LABEL_MODES.ICONS,          // Padrão: Somente ícones inline!
+    inlineLayout: STAMP_LAYOUTS.MULTILINE,  // 'multiline' ou 'single_line'
+    inlineSeparator: ' • '
   };
   const DEFAULT_NUMBERING = {
     enabled: false,
@@ -897,8 +934,8 @@
   const BUILT_IN_MODELS = [
     {
       id: 'model_1_simple',
-      name: 'Modelo 1 - Simples',
-      description: 'Data, hora e coordenadas em formato direto.',
+      name: 'Modelo 1 - Simples (Ícones)',
+      description: 'Data, hora e coordenadas com ícones inline modernos.',
       position: STAMP_POSITIONS.BOTTOM_LEFT,
       backgroundType: 'semitransparent',
       backgroundColor: '#0F172A',
@@ -914,6 +951,8 @@
       coordFormat: COORD_FORMATS.DECIMAL_CARDINAL,
       dateFormat: DATE_FORMATS.BR,
       timeFormat: TIME_FORMATS.FULL,
+      labelMode: LABEL_MODES.ICONS,
+      inlineLayout: STAMP_LAYOUTS.MULTILINE,
       fields: [
         { id: 'date', label: 'Data', enabled: true, showLabel: true },
         { id: 'time', label: 'Hora', enabled: true, showLabel: true },
@@ -941,6 +980,8 @@
       coordFormat: COORD_FORMATS.DECIMAL_CARDINAL,
       dateFormat: DATE_FORMATS.BR,
       timeFormat: TIME_FORMATS.DATE_TIME,
+      labelMode: LABEL_MODES.ICONS,
+      inlineLayout: STAMP_LAYOUTS.MULTILINE,
       fields: [
         { id: 'datetime', label: 'Data e Hora', enabled: true, showLabel: false },
         { id: 'address_street_num', label: 'Endereço', enabled: true, showLabel: false },
@@ -969,6 +1010,8 @@
       coordFormat: COORD_FORMATS.DECIMAL_SIGNED,
       dateFormat: DATE_FORMATS.BR,
       timeFormat: TIME_FORMATS.FULL,
+      labelMode: LABEL_MODES.TEXT,
+      inlineLayout: STAMP_LAYOUTS.MULTILINE,
       fields: [
         { id: 'date', label: 'DATA', enabled: true, showLabel: true },
         { id: 'time', label: 'HORA', enabled: true, showLabel: true },
@@ -996,6 +1039,8 @@
       coordFormat: COORD_FORMATS.DMS,
       dateFormat: DATE_FORMATS.BR,
       timeFormat: TIME_FORMATS.FULL,
+      labelMode: LABEL_MODES.TEXT,
+      inlineLayout: STAMP_LAYOUTS.MULTILINE,
       fields: [
         { id: 'photo_id', label: 'FOTOGRAFIA Nº', enabled: true, showLabel: true, defaultValue: '01' },
         { id: 'date', label: 'DATA', enabled: true, showLabel: true },
@@ -1025,6 +1070,8 @@
       coordFormat: COORD_FORMATS.DECIMAL_CARDINAL,
       dateFormat: DATE_FORMATS.BR,
       timeFormat: TIME_FORMATS.FULL,
+      labelMode: LABEL_MODES.ICONS,
+      inlineLayout: STAMP_LAYOUTS.MULTILINE,
       fields: [
         { id: 'datetime', label: 'Data e Hora', enabled: true, showLabel: false },
         { id: 'coordinates', label: 'Coordenadas', enabled: true, showLabel: true },
@@ -1032,6 +1079,34 @@
         { id: 'altitude', label: 'Altitude', enabled: false, showLabel: true },
         { id: 'project_name', label: 'Obra', enabled: false, showLabel: true, defaultValue: 'Residência Jussara' },
         { id: 'custom_text', label: 'Observação', enabled: false, showLabel: false, defaultValue: 'Inspeção de rotina' }
+      ]
+    },
+    {
+      id: 'model_6_inline_banner',
+      name: 'Modelo 6 - Faixa Inline com Ícones',
+      description: 'Linha única contínua com ícones inline (📍 📅 🕒 🏙️) em formato compacto.',
+      position: STAMP_POSITIONS.BOTTOM_CENTER,
+      backgroundType: 'semitransparent',
+      backgroundColor: '#0F172A',
+      backgroundOpacity: 85,
+      textColor: '#FFFFFF',
+      borderWidth: 1,
+      borderColor: '#3B82F6',
+      borderRadius: 8,
+      hasShadow: true,
+      fontFamily: 'Inter',
+      fontSize: 18,
+      fontSizeScale: 1.0,
+      textAlign: 'center',
+      coordFormat: COORD_FORMATS.DECIMAL_CARDINAL,
+      dateFormat: DATE_FORMATS.BR,
+      timeFormat: TIME_FORMATS.DATE_TIME,
+      labelMode: LABEL_MODES.ICONS,
+      inlineLayout: STAMP_LAYOUTS.SINGLE_LINE,
+      fields: [
+        { id: 'datetime', label: 'Data e Hora', enabled: true, showLabel: false },
+        { id: 'coordinates', label: 'Coordenadas', enabled: true, showLabel: false },
+        { id: 'city_state_country', label: 'Localidade', enabled: true, showLabel: false }
       ]
     }
   ];
@@ -1279,37 +1354,70 @@
       const borderRadiusPx = Math.round((settings.borderRadius || 8) * scaleFactor);
       const borderWidthPx = Math.round((settings.borderWidth || 0) * scaleFactor);
   
-      // Configuração de fonte no context para medição
+      // Configuração de fonte no context para medição (com fallback de emojis para alta fidelidade)
       const fontStyle = settings.isItalic ? 'italic' : 'normal';
       const fontWeight = settings.fontWeight || '600';
       const fontFamily = settings.fontFamily || 'Inter, system-ui, sans-serif';
-      ctx.font = `${fontStyle} ${fontWeight} ${fontSizePx}px ${fontFamily}`;
+      const fontSpec = `${fontStyle} ${fontWeight} ${fontSizePx}px ${fontFamily}, "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif`;
+      ctx.font = fontSpec;
   
       if ('letterSpacing' in ctx) {
         ctx.letterSpacing = `${(settings.letterSpacing || 0.5) * scaleFactor}px`;
       }
   
-      // 3. Formata e mede as linhas de texto
+      // 3. Formata e mede as linhas de texto com suporte a ícones inline e layout
       const renderedRows = [];
       let maxContentWidth = 0;
   
-      for (const item of activeLines) {
-        let text = '';
-        if (item.showLabel && item.label) {
-          text = `${item.label}: ${item.value}`;
-        } else {
-          text = `${item.value}`;
-        }
+      const labelMode = settings.labelMode || 'icons';
+      const isSingleLine = settings.inlineLayout === 'single_line';
   
-        // Suporte a quebra de linha interna dentro do valor
-        const subLines = text.split('\n');
-        for (const sub of subLines) {
-          const trimmed = sub.trim();
-          if (trimmed) {
-            const metrics = ctx.measureText(trimmed);
-            const w = metrics.width;
-            if (w > maxContentWidth) maxContentWidth = w;
-            renderedRows.push({ text: trimmed, width: w });
+      if (isSingleLine) {
+        // Modo linha única inline contínua (ex: 📅 22/11/2022 • 📍 -15.8699, -50.8522 • 📌 Jussara, GO)
+        const parts = [];
+        for (const item of activeLines) {
+          const valText = item.value || '';
+          let prefix = '';
+          if (labelMode === 'icons') {
+            const icon = item.icon || '📌';
+            prefix = `${icon} `;
+          } else if (labelMode === 'text') {
+            prefix = (item.showLabel && item.label) ? `${item.label}: ` : '';
+          }
+          parts.push(`${prefix}${valText}`.trim());
+        }
+        const fullInlineText = parts.join(settings.inlineSeparator || ' • ');
+        const metrics = ctx.measureText(fullInlineText);
+        maxContentWidth = metrics.width;
+        renderedRows.push({ text: fullInlineText, width: metrics.width });
+      } else {
+        // Modo multilinhas (com ícones inline ou rótulos tradicionais)
+        for (const item of activeLines) {
+          let text = '';
+          if (labelMode === 'icons') {
+            const icon = item.icon || '📌';
+            text = `${icon} ${item.value}`;
+          } else if (labelMode === 'text') {
+            if (item.showLabel && item.label) {
+              text = `${item.label}: ${item.value}`;
+            } else {
+              text = `${item.value}`;
+            }
+          } else {
+            // 'none' (apenas o valor puro)
+            text = `${item.value}`;
+          }
+  
+          // Suporte a quebra de linha interna dentro do valor
+          const subLines = text.split('\n');
+          for (const sub of subLines) {
+            const trimmed = sub.trim();
+            if (trimmed) {
+              const metrics = ctx.measureText(trimmed);
+              const w = metrics.width;
+              if (w > maxContentWidth) maxContentWidth = w;
+              renderedRows.push({ text: trimmed, width: w });
+            }
           }
         }
       }
@@ -1417,7 +1525,7 @@
   
       // 6. Desenha os textos
       ctx.save();
-      ctx.font = `${fontStyle} ${fontWeight} ${fontSizePx}px ${fontFamily}`;
+      ctx.font = fontSpec;
       ctx.fillStyle = settings.textColor || '#FFFFFF';
   
       if (settings.hasShadow && settings.backgroundType === 'none') {
@@ -2006,6 +2114,8 @@
       if (model.coordFormat) this.settings.coordFormat = model.coordFormat;
       if (model.dateFormat) this.settings.dateFormat = model.dateFormat;
       if (model.timeFormat) this.settings.timeFormat = model.timeFormat;
+      if (model.labelMode) this.settings.labelMode = model.labelMode;
+      if (model.inlineLayout) this.settings.inlineLayout = model.inlineLayout;
   
       // Reseta posição personalizada caso troque de modelo
       this.settings.customPosX = null;
@@ -2515,7 +2625,8 @@
             label: field.label,
             value: val,
             showLabel: field.showLabel !== false,
-            isCustom: field.isCustom
+            isCustom: field.isCustom,
+            icon: field.icon || FIELD_ICONS[field.id] || '📌'
           });
         }
       }
@@ -2667,6 +2778,8 @@
       this.checkBold = document.getElementById('checkBold');
       this.checkItalic = document.getElementById('checkItalic');
       this.selectTextAlign = document.getElementById('selectTextAlign');
+      this.selectLabelMode = document.getElementById('selectLabelMode');
+      this.selectInlineLayout = document.getElementById('selectInlineLayout');
   
       // Grid de Posições
       this.posButtons = document.querySelectorAll('.pos-btn');
@@ -2815,6 +2928,20 @@
         this.tool.settings.textAlign = e.target.value;
         this.app.requestRender();
       });
+  
+      if (this.selectLabelMode) {
+        this.selectLabelMode.addEventListener('change', (e) => {
+          this.tool.settings.labelMode = e.target.value;
+          this.app.requestRender();
+        });
+      }
+  
+      if (this.selectInlineLayout) {
+        this.selectInlineLayout.addEventListener('change', (e) => {
+          this.tool.settings.inlineLayout = e.target.value;
+          this.app.requestRender();
+        });
+      }
   
       // Numeração Automática
       this.checkAutoNumber.addEventListener('change', (e) => {
@@ -3295,6 +3422,8 @@
       this.checkBold.checked = s.fontWeight === '700';
       this.checkItalic.checked = !!s.isItalic;
       this.selectTextAlign.value = s.textAlign || 'left';
+      if (this.selectLabelMode) this.selectLabelMode.value = s.labelMode || 'icons';
+      if (this.selectInlineLayout) this.selectInlineLayout.value = s.inlineLayout || 'multiline';
     }
   
     /**
@@ -3419,7 +3548,14 @@
           actionsDiv.appendChild(btnDelete);
         }
   
+        // 1.5. Ícone inline do campo
+        const iconTag = document.createElement('span');
+        iconTag.className = 'field-icon-tag';
+        iconTag.textContent = field.icon || FIELD_ICONS[field.id] || '📌';
+        iconTag.title = 'Ícone inline exibido no carimbo';
+  
         row.appendChild(check);
+        row.appendChild(iconTag);
         row.appendChild(labelInput);
         row.appendChild(valInput);
         row.appendChild(actionsDiv);
@@ -3711,8 +3847,8 @@
   
       try {
         const btnExport = document.getElementById('btnExport');
-        const originalText = btnExport.textContent;
-        btnExport.textContent = 'Gerando...';
+        const originalHtml = btnExport.innerHTML;
+        btnExport.innerHTML = '⏳';
         btnExport.disabled = true;
   
         // Criar canvas de alta resolução 1:1 para exportação sem perda de qualidade
@@ -3740,15 +3876,18 @@
           quality
         );
   
-        btnExport.textContent = originalText;
+        btnExport.innerHTML = originalHtml;
         btnExport.disabled = false;
   
         // Mensagem visual de sucesso
         this.showToast(`Fotografia exportada: ${filename}`);
       } catch (err) {
-        alert(`Falha ao exportar imagem: ${err.message}`);
         const btnExport = document.getElementById('btnExport');
-        if (btnExport) btnExport.disabled = false;
+        if (btnExport) {
+          btnExport.innerHTML = '💾';
+          btnExport.disabled = false;
+        }
+        alert(`Falha ao exportar imagem: ${err.message}`);
       }
     }
   

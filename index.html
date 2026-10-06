@@ -33,29 +33,29 @@
       <div class="header-actions">
         <div class="privacy-pill" title="Nenhum dado ou imagem sai do seu computador. Todo o processamento é executado localmente no navegador.">
           <span class="privacy-dot"></span>
-          <span>100% Processamento Local</span>
+          <span>100% Local</span>
         </div>
 
-        <button type="button" class="btn btn-secondary btn-sm" id="btnOpenPhoto" title="Abrir arquivo do dispositivo">
-          📁 Abrir Fotografia
+        <button type="button" class="btn-icon header-btn-icon" id="btnOpenPhoto" title="Abrir Fotografia (do dispositivo)" aria-label="Abrir Fotografia">
+          📁
         </button>
 
-        <button type="button" class="btn btn-secondary btn-sm" id="btnClearWorkspace" title="Limpar fotografia e resetar campos">
-          🗑️ Limpar
+        <button type="button" class="btn-icon header-btn-icon" id="btnClearWorkspace" title="Limpar Fotografia e Campos" aria-label="Limpar Espaço de Trabalho">
+          🗑️
         </button>
 
-        <select id="langSelect" class="form-select" style="width: auto; padding: 4px 8px; font-size: 12px;" title="Selecionar Idioma">
-          <option value="pt-BR">🇧🇷 PT-BR</option>
-          <option value="en">🇺🇸 EN</option>
-          <option value="es">🇪🇸 ES</option>
+        <select id="langSelect" class="form-select header-lang-select" title="Selecionar Idioma" aria-label="Selecionar Idioma">
+          <option value="pt-BR">🇧🇷</option>
+          <option value="en">🇺🇸</option>
+          <option value="es">🇪🇸</option>
         </select>
 
-        <button type="button" class="btn-icon" id="themeToggleBtn" title="Alternar Modo Escuro / Claro">
+        <button type="button" class="btn-icon header-btn-icon" id="themeToggleBtn" title="Alternar Modo Escuro / Claro" aria-label="Alternar Tema">
           ☀️
         </button>
 
-        <button type="button" class="btn btn-primary btn-sm" id="btnExport" title="Exportar e baixar fotografia carimbada">
-          💾 Exportar Foto
+        <button type="button" class="btn-icon header-btn-icon btn-export-icon" id="btnExport" title="Exportar e Baixar Fotografia" aria-label="Exportar Fotografia">
+          💾
         </button>
       </div>
     </header>
@@ -150,6 +150,27 @@
 
           <!-- ABA 3: Estilo Visual e Tipografia -->
           <div class="tab-panel" id="tab-style">
+            <div class="section-block">
+              <div class="section-title">
+                <span>Formato dos Rótulos e Ícones</span>
+              </div>
+              <div class="form-group">
+                <label for="selectLabelMode" class="form-label">Estilo dos Identificadores</label>
+                <select id="selectLabelMode" class="form-select">
+                  <option value="icons" selected>📍 Somente Ícones Inline (📅 📍 🕒 🏙️)</option>
+                  <option value="text">🏷️ Rótulo em Texto (DATA:, LAT:, LOCAL:)</option>
+                  <option value="none">🚫 Ocultar Rótulos e Ícones (Apenas Valores)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="selectInlineLayout" class="form-label">Disposição do Carimbo</label>
+                <select id="selectInlineLayout" class="form-select">
+                  <option value="multiline" selected>☰ Múltiplas Linhas (Ícone + Valor por Linha)</option>
+                  <option value="single_line">─ Linha Única Inline (Faixa Contínua)</option>
+                </select>
+              </div>
+            </div>
+
             <div class="section-block">
               <div class="section-title">
                 <span>Tipografia</span>

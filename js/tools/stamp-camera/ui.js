@@ -5,7 +5,7 @@
  */
 
 import { BUILT_IN_MODELS, PRESET_CATEGORIES, STANDARD_FIELD_DEFS } from '../../templates.js';
-import { COORD_FORMATS, DATE_FORMATS, TIME_FORMATS, STAMP_POSITIONS } from '../../config.js';
+import { COORD_FORMATS, DATE_FORMATS, TIME_FORMATS, STAMP_POSITIONS, LABEL_MODES, STAMP_LAYOUTS, FIELD_ICONS } from '../../config.js';
 import { parseCoordinateString, isValidCoordinate } from '../../geolocation.js';
 import { storage } from '../../storage.js';
 
@@ -103,6 +103,8 @@ export class StampCameraUI {
     this.checkBold = document.getElementById('checkBold');
     this.checkItalic = document.getElementById('checkItalic');
     this.selectTextAlign = document.getElementById('selectTextAlign');
+    this.selectLabelMode = document.getElementById('selectLabelMode');
+    this.selectInlineLayout = document.getElementById('selectInlineLayout');
 
     // Grid de Posições
     this.posButtons = document.querySelectorAll('.pos-btn');
@@ -251,6 +253,20 @@ export class StampCameraUI {
       this.tool.settings.textAlign = e.target.value;
       this.app.requestRender();
     });
+
+    if (this.selectLabelMode) {
+      this.selectLabelMode.addEventListener('change', (e) => {
+        this.tool.settings.labelMode = e.target.value;
+        this.app.requestRender();
+      });
+    }
+
+    if (this.selectInlineLayout) {
+      this.selectInlineLayout.addEventListener('change', (e) => {
+        this.tool.settings.inlineLayout = e.target.value;
+        this.app.requestRender();
+      });
+    }
 
     // Numeração Automática
     this.checkAutoNumber.addEventListener('change', (e) => {
@@ -731,6 +747,8 @@ export class StampCameraUI {
     this.checkBold.checked = s.fontWeight === '700';
     this.checkItalic.checked = !!s.isItalic;
     this.selectTextAlign.value = s.textAlign || 'left';
+    if (this.selectLabelMode) this.selectLabelMode.value = s.labelMode || 'icons';
+    if (this.selectInlineLayout) this.selectInlineLayout.value = s.inlineLayout || 'multiline';
   }
 
   /**
@@ -855,7 +873,14 @@ export class StampCameraUI {
         actionsDiv.appendChild(btnDelete);
       }
 
+      // 1.5. Ícone inline do campo
+      const iconTag = document.createElement('span');
+      iconTag.className = 'field-icon-tag';
+      iconTag.textContent = field.icon || FIELD_ICONS[field.id] || '📌';
+      iconTag.title = 'Ícone inline exibido no carimbo';
+
       row.appendChild(check);
+      row.appendChild(iconTag);
       row.appendChild(labelInput);
       row.appendChild(valInput);
       row.appendChild(actionsDiv);

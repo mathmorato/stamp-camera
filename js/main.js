@@ -247,8 +247,8 @@ class StampCameraApp {
 
     try {
       const btnExport = document.getElementById('btnExport');
-      const originalText = btnExport.textContent;
-      btnExport.textContent = 'Gerando...';
+      const originalHtml = btnExport.innerHTML;
+      btnExport.innerHTML = '⏳';
       btnExport.disabled = true;
 
       // Criar canvas de alta resolução 1:1 para exportação sem perda de qualidade
@@ -276,15 +276,18 @@ class StampCameraApp {
         quality
       );
 
-      btnExport.textContent = originalText;
+      btnExport.innerHTML = originalHtml;
       btnExport.disabled = false;
 
       // Mensagem visual de sucesso
       this.showToast(`Fotografia exportada: ${filename}`);
     } catch (err) {
-      alert(`Falha ao exportar imagem: ${err.message}`);
       const btnExport = document.getElementById('btnExport');
-      if (btnExport) btnExport.disabled = false;
+      if (btnExport) {
+        btnExport.innerHTML = '💾';
+        btnExport.disabled = false;
+      }
+      alert(`Falha ao exportar imagem: ${err.message}`);
     }
   }
 

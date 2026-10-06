@@ -92,14 +92,16 @@ async function runBrowserTest(targetUrl) {
 
     // 1. Testa carregamento da aplicação
     const initCheck = await evaluate(`() => {
+      const headerIconBtns = document.querySelectorAll('.header-btn-icon');
       return {
         appLoaded: !!window.stampCameraApp,
         title: document.title,
         btnDemoExists: !!document.getElementById('btnDemoWithGps'),
-        btnExportExists: !!document.getElementById('btnExport')
+        btnExportExists: !!document.getElementById('btnExport'),
+        headerInlineIconsCount: headerIconBtns.length
       };
     }`);
-    console.log('✓ Inicialização da aplicação:', initCheck);
+    console.log('✓ Inicialização da aplicação (com botões de ícones inline):', initCheck);
 
     // 2. Testa clique no botão Demo com GPS
     const demoClickResult = await evaluate(`async () => {
@@ -108,6 +110,7 @@ async function runBrowserTest(targetUrl) {
       await new Promise(r => setTimeout(r, 600));
       const app = window.stampCameraApp;
       const canvas = document.getElementById('previewCanvas');
+      const lines = app?.tool?.getStampRenderLines() || [];
       return {
         hasPhoto: !!(app && app.tool && app.tool.photo),
         filename: app?.tool?.photo?.filename,
@@ -116,10 +119,11 @@ async function runBrowserTest(targetUrl) {
         activeFieldsCount: app?.tool?.activeFields?.length,
         autoCity: app?.tool?.location?.city,
         autoState: app?.tool?.location?.state,
-        autoCountry: app?.tool?.location?.country
+        autoCountry: app?.tool?.location?.country,
+        stampLinesWithInlineIcons: lines.length > 0 && lines.every(l => !!l.icon)
       };
     }`);
-    console.log('✓ Carregamento da foto de teste e geocodificação automática:', demoClickResult);
+    console.log('✓ Carregamento da foto de teste, geocodificação e ícones inline no carimbo:', demoClickResult);
 
     // 3. Testa alternância de abas e campos
     const tabClickResult = await evaluate(`() => {

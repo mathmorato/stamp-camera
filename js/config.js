@@ -46,6 +46,43 @@ export const STAMP_POSITIONS = {
   CUSTOM: 'custom'
 };
 
+export const LABEL_MODES = {
+  ICONS: 'icons',      // Somente ícones inline (ex: 📍 -15.8699, 📅 22/11/2022)
+  TEXT: 'text',        // Rótulos de texto (ex: Coordenadas: -15.8699, Data: 22/11/2022)
+  NONE: 'none'         // Sem rótulos ou ícones (apenas os valores)
+};
+
+export const STAMP_LAYOUTS = {
+  MULTILINE: 'multiline',      // Múltiplas linhas (ícone + valor por linha)
+  SINGLE_LINE: 'single_line'   // Linha única inline contínua separada por ' • '
+};
+
+export const FIELD_ICONS = {
+  photo_id: '📷',
+  date: '📅',
+  time: '🕒',
+  datetime: '📅',
+  coordinates: '📍',
+  lat: '🌐',
+  lon: '🌐',
+  altitude: '⛰️',
+  street: '🛣️',
+  number: '🔢',
+  address_street_num: '🏠',
+  neighborhood: '🏘️',
+  locality: '📌',
+  city: '🏙️',
+  state: '🗺️',
+  country: '🌍',
+  city_state_country: '📍',
+  postal_code: '📮',
+  project_name: '🏗️',
+  process: '⚖️',
+  report_num: '📋',
+  responsible: '👤',
+  custom_text: '📝'
+};
+
 export const DEFAULT_STAMP_SETTINGS = {
   position: STAMP_POSITIONS.BOTTOM_LEFT,
   marginPercentX: 2.5,
@@ -72,7 +109,10 @@ export const DEFAULT_STAMP_SETTINGS = {
   coordFormat: COORD_FORMATS.DECIMAL_CARDINAL,
   dateFormat: DATE_FORMATS.BR,
   timeFormat: TIME_FORMATS.FULL,
-  customCoordTemplate: '{lat}, {lon}'
+  customCoordTemplate: '{lat}, {lon}',
+  labelMode: LABEL_MODES.ICONS,          // Padrão: Somente ícones inline!
+  inlineLayout: STAMP_LAYOUTS.MULTILINE,  // 'multiline' ou 'single_line'
+  inlineSeparator: ' • '
 };
 
 export const DEFAULT_NUMBERING = {

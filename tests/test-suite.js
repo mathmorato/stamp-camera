@@ -89,6 +89,7 @@ assert(BUILT_IN_MODELS.some(m => m.id === 'model_2_location'), 'Modelo 2 (Locali
 assert(BUILT_IN_MODELS.some(m => m.id === 'model_3_technical'), 'Modelo 3 (Técnico) presente');
 assert(BUILT_IN_MODELS.some(m => m.id === 'model_4_forensic'), 'Modelo 4 (Fotografia Pericial) presente');
 assert(BUILT_IN_MODELS.some(m => m.id === 'model_5_custom'), 'Modelo 5 (Personalizado) presente');
+assert(BUILT_IN_MODELS.some(m => m.id === 'model_6_inline_banner'), 'Modelo 6 (Faixa Inline com Ícones) presente');
 
 assert(PRESET_CATEGORIES.some(p => p.id === 'preset_pericia'), 'Preset Perícia presente');
 assert(PRESET_CATEGORIES.some(p => p.id === 'preset_obra'), 'Preset Obra presente');
@@ -127,6 +128,7 @@ const renderLinesWithGps = tool.getStampRenderLines();
 assert(renderLinesWithGps.length > 0, 'Linhas ativas geradas para renderização com GPS');
 const coordLine = renderLinesWithGps.find(l => l.id === 'lat' || l.id === 'coordinates');
 assert(coordLine !== undefined, 'Linha de coordenadas presente no Modelo 1');
+assert(coordLine.icon !== undefined && coordLine.icon.length > 0, 'Ícone inline presente na linha do carimbo');
 
 // Carrega dados de teste SEM GPS (Teste de Ausência de Dados)
 tool.loadPhotoData({
@@ -264,6 +266,8 @@ const requiredElementIds = [
   'checkBold',
   'checkItalic',
   'selectTextAlign',
+  'selectLabelMode',
+  'selectInlineLayout',
   'selectExportFormat',
   'rangeExportQuality',
   'valExportQuality',
