@@ -11,6 +11,7 @@ import path from 'path';
 const files = [
   'js/config.js',
   'js/geolocation.js',
+  'assets/images/demo-image-data.js',
   'js/exif-reader.js',
   'js/image-loader.js',
   'js/templates.js',

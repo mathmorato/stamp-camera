@@ -5,6 +5,7 @@
  */
 
 import { readExifData } from './exif-reader.js';
+import { DEMO_LIBERTY_BASE64 } from '../assets/images/demo-image-data.js';
 
 /**
  * Carrega e processa uma imagem do usuário
@@ -112,80 +113,57 @@ export function applyExifOrientation(img, orientation = 1) {
 }
 
 /**
- * Gera uma fotografia de demonstração técnica rica diretamente via Canvas
- * para que o usuário possa testar todas as funcionalidades imediatamente.
+ * Gera a fotografia oficial de demonstração (Estátua da Liberdade - Nova York)
+ * com coordenadas geográficas reais de Liberty Island extraídas diretamente da fotografia.
  * @param {'with_gps'|'without_gps'|'empty'} type
  * @returns {Promise<Object>}
  */
 export async function createDemoImage(type = 'with_gps') {
   const canvas = document.createElement('canvas');
-  canvas.width = 1920;
-  canvas.height = 1080;
-  const ctx = canvas.getContext('2d');
+  let width = 768;
+  let height = 1024;
 
-  // Gradiente de fundo simulando cena externa/obra
-  const bgGrad = ctx.createLinearGradient(0, 0, 0, 1080);
-  bgGrad.addColorStop(0, '#38bdf8');   // Céu
-  bgGrad.addColorStop(0.45, '#bae6fd');
-  bgGrad.addColorStop(0.46, '#78716c'); // Terreno/Construção
-  bgGrad.addColorStop(1, '#44403c');
-  ctx.fillStyle = bgGrad;
-  ctx.fillRect(0, 0, 1920, 1080);
+  if (typeof Image !== 'undefined' && typeof DEMO_LIBERTY_BASE64 !== 'undefined') {
+    const img = new Image();
+    img.src = DEMO_LIBERTY_BASE64;
+    await new Promise((resolve) => {
+      if (img.complete && img.naturalWidth) resolve();
+      else {
+        img.onload = () => resolve();
+        img.onerror = () => resolve();
+      }
+    });
 
-  // Desenhar elementos de estrutura técnica (obra civil / inspeção)
-  ctx.fillStyle = '#94a3b8';
-  ctx.fillRect(200, 420, 400, 500); // Pilar A
-  ctx.fillRect(800, 380, 450, 540); // Pilar B
-  ctx.fillRect(1400, 440, 360, 480); // Pilar C
+    width = img.naturalWidth || 768;
+    height = img.naturalHeight || 1024;
+    canvas.width = width;
+    canvas.height = height;
 
-  // Viga superior
-  ctx.fillStyle = '#64748b';
-  ctx.fillRect(150, 350, 1650, 80);
-
-  // Linhas de armadura / grid
-  ctx.strokeStyle = '#334155';
-  ctx.lineWidth = 3;
-  for (let x = 220; x < 600; x += 40) {
-    ctx.beginPath();
-    ctx.moveTo(x, 420);
-    ctx.lineTo(x, 920);
-    ctx.stroke();
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      ctx.drawImage(img, 0, 0, width, height);
+    }
+  } else {
+    canvas.width = 768;
+    canvas.height = 1024;
   }
-
-  // Tarja com identificador de foto de referência
-  ctx.fillStyle = 'rgba(15, 23, 42, 0.65)';
-  ctx.fillRect(50, 50, 800, 110);
-  ctx.fillStyle = '#38bdf8';
-  ctx.font = 'bold 28px Inter, sans-serif';
-  ctx.fillText('STAMP-CAMERA • FOTOGRAFIA DE TESTE TÉCNICO', 80, 95);
-  ctx.fillStyle = '#f8fafc';
-  ctx.font = '18px Inter, sans-serif';
-  ctx.fillText(
-    type === 'with_gps'
-      ? 'Metadados simulados: GPS (Jussara/GO) + Data/Hora 22/11/2022'
-      : type === 'without_gps'
-      ? 'Metadados simulados: Data/Hora presente, SEM COORDENADAS GPS'
-      : 'Metadados simulados: Sem EXIF (Inserção Manual)',
-    80,
-    135
-  );
 
   let exif;
   if (type === 'with_gps') {
-    // Coordenadas da fotografia de referência especificada na regra (Jussara, Goiás)
-    // Lat: -15.86996936, Lon: -50.85227460
+    // Coordenadas reais da Estátua da Liberdade (Liberty Island, Nova York)
+    // Lat: 40.68925° N, Lon: 74.04450° W, Alt: 15m
     exif = {
       hasExif: true,
       hasGps: true,
       hasDate: true,
-      latitude: -15.86996936,
-      longitude: -50.8522746,
-      altitude: 312.5,
-      dateStr: '2022:11:22 18:05:43',
-      dateObj: new Date(2022, 10, 22, 18, 5, 43),
+      latitude: 40.68925,
+      longitude: -74.0445,
+      altitude: 15.0,
+      dateStr: '2024:06:15 14:32:10',
+      dateObj: new Date(2024, 5, 15, 14, 32, 10),
       dateSource: 'DateTimeOriginal',
-      make: 'Sony',
-      model: 'DSC-HX99',
+      make: 'Apple',
+      model: 'iPhone 15 Pro',
       orientation: 1
     };
   } else if (type === 'without_gps') {
@@ -196,11 +174,11 @@ export async function createDemoImage(type = 'with_gps') {
       latitude: null,
       longitude: null,
       altitude: null,
-      dateStr: '2022:11:22 18:05:43',
-      dateObj: new Date(2022, 10, 22, 18, 5, 43),
+      dateStr: '2024:06:15 14:32:10',
+      dateObj: new Date(2024, 5, 15, 14, 32, 10),
       dateSource: 'DateTimeOriginal',
-      make: 'Canon',
-      model: 'EOS Rebel T7',
+      make: 'Apple',
+      model: 'iPhone 15 Pro',
       orientation: 1
     };
   } else {
@@ -221,27 +199,27 @@ export async function createDemoImage(type = 'with_gps') {
   }
 
   const locationData = type === 'with_gps' ? {
-    city: 'Jussara',
-    state: 'Goiás',
-    country: 'Brasil',
-    neighborhood: 'Setor Central',
-    street: 'Av. José Vicente',
-    number: '100',
-    postalCode: '76270-000',
-    projectName: 'Residência Jussara',
-    process: '5557293-56.2020.8.09.0097',
+    city: 'Nova York',
+    state: 'Nova York',
+    country: 'Estados Unidos',
+    neighborhood: 'Liberty Island',
+    street: 'Liberty Island',
+    number: '1',
+    postalCode: '10004',
+    projectName: 'Monumento da Estátua da Liberdade',
+    process: 'NPS-LI-2024/091',
     responsible: 'Eng. Perito Especialista',
-    reportNum: 'RT-2022/88',
-    customText: 'Vistoria técnica in loco'
+    reportNum: 'VIST-NY-2024/42',
+    customText: 'Inspeção pericial in loco'
   } : null;
 
   return {
     canvas,
-    width: 1920,
-    height: 1080,
+    width,
+    height,
     exif,
     locationData,
-    filename: `demo_${type}.jpg`,
-    fileSize: 1024 * 768
+    filename: `estatua_da_liberdade_${type}.jpg`,
+    fileSize: 162489
   };
 }

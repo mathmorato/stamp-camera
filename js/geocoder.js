@@ -25,6 +25,9 @@ const BRAZIL_STATES = [
 ];
 
 const OFFLINE_CITIES = [
+  // Foto oficial de demonstração: Nova York (Estátua da Liberdade / Liberty Island)
+  { name: 'Nova York', state: 'Nova York', country: 'Estados Unidos', lat: 40.68925, lon: -74.0445, radiusKm: 35 },
+
   // Goiás (incluindo Jussara - foto de referência do projeto)
   { name: 'Jussara', state: 'Goiás', country: 'Brasil', lat: -15.8699, lon: -50.8523, radiusKm: 35 },
   { name: 'Goiânia', state: 'Goiás', country: 'Brasil', lat: -16.6869, lon: -49.2648, radiusKm: 35 },
