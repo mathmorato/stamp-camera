@@ -626,7 +626,7 @@ export class StampCameraTool {
           value: val,
           showLabel: field.showLabel !== false,
           isCustom: field.isCustom,
-          icon: field.icon || FIELD_ICONS[field.id] || '📌'
+          icon: field.icon || FIELD_ICONS[field.id] || 'default'
         });
       }
     }

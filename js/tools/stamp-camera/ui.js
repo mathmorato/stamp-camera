@@ -5,7 +5,7 @@
  */
 
 import { BUILT_IN_MODELS, PRESET_CATEGORIES, STANDARD_FIELD_DEFS } from '../../templates.js';
-import { COORD_FORMATS, DATE_FORMATS, TIME_FORMATS, STAMP_POSITIONS, LABEL_MODES, STAMP_LAYOUTS, FIELD_ICONS } from '../../config.js';
+import { COORD_FORMATS, DATE_FORMATS, TIME_FORMATS, STAMP_POSITIONS, LABEL_MODES, STAMP_LAYOUTS, FIELD_ICONS, getLineArtSvg } from '../../config.js';
 import { parseCoordinateString, isValidCoordinate } from '../../geolocation.js';
 import { storage } from '../../storage.js';
 
@@ -873,11 +873,11 @@ export class StampCameraUI {
         actionsDiv.appendChild(btnDelete);
       }
 
-      // 1.5. Ícone inline do campo
+      // 1.5. Ícone inline do campo (formato line-art)
       const iconTag = document.createElement('span');
       iconTag.className = 'field-icon-tag';
-      iconTag.textContent = field.icon || FIELD_ICONS[field.id] || '📌';
-      iconTag.title = 'Ícone inline exibido no carimbo';
+      iconTag.innerHTML = getLineArtSvg(field.icon || field.id);
+      iconTag.title = 'Ícone line art do campo exibido no carimbo';
 
       row.appendChild(check);
       row.appendChild(iconTag);

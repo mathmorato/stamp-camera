@@ -57,30 +57,94 @@ export const STAMP_LAYOUTS = {
   SINGLE_LINE: 'single_line'   // Linha única inline contínua separada por ' • '
 };
 
+export const LINE_ART_PATHS = {
+  photo_id: 'M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z M12 17a4 4 0 1 0 0-8 4 4 0 0 0 0 8z',
+  date: 'M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z M16 2v4 M8 2v4 M3 10h18',
+  time: 'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z M12 6v6l4 2',
+  datetime: 'M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z M16 2v4 M8 2v4 M3 10h18 M12 14v3l2 1',
+  coordinates: 'M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z M12 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6z',
+  lat: 'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z M2 12h20 M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z',
+  lon: 'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z M2 12h20 M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z',
+  altitude: 'M8 3l4 8 5-5 5 15H2L8 3z M8 13l2 3 M14 12l2 2',
+  street: 'M4 19L8 5 M20 19L16 5 M12 5v3 M12 11v3 M12 17v3',
+  number: 'M4 9h16 M4 15h16 M10 3L8 21 M16 3l-2 21',
+  address_street_num: 'M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z M9 22V12h6v10',
+  neighborhood: 'M2 20h20 M4 20V8l6-4v16 M10 20V10l6-4v14 M16 20V6l4-2v16',
+  locality: 'M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z M12 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6z',
+  city: 'M2 20h20 M3 20V10h5v10 M8 20V4h8v16 M16 20v-8h5v8',
+  state: 'M1 6v14l7-4 8 4 7-4V2l-7 4-8-4-7 4z M8 2v14 M16 6v14',
+  country: 'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z M2 12h20 M12 2a15.3 15.3 0 0 1 0 20 M12 2a15.3 15.3 0 0 0 0 20',
+  city_state_country: 'M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z M12 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6z',
+  postal_code: 'M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z M22 6l-10 7L2 6',
+  project_name: 'M2 22h20 M12 2v20 M12 5H6l-4 7h10 M12 5h6l4 7H12',
+  process: 'M12 3v18 M5 6h14 M2 13l3-7 3 7a3 3 0 0 1-6 0z M16 13l3-7 3 7a3 3 0 0 1-6 0z',
+  report_num: 'M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2 M9 2h6a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z M9 12h6 M9 16h4',
+  responsible: 'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2 M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z',
+  custom_text: 'M12 20h9 M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z',
+  default: 'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z'
+};
+
+export const EMOJI_TO_LINE_ART = {
+  '📷': 'photo_id',
+  '📅': 'date',
+  '🕒': 'time',
+  '⏰': 'time',
+  '📍': 'coordinates',
+  '🌐': 'lat',
+  '⛰️': 'altitude',
+  '🏔️': 'altitude',
+  '🛣️': 'street',
+  '🔢': 'number',
+  '🏠': 'address_street_num',
+  '🏘️': 'neighborhood',
+  '📌': 'locality',
+  '🏙️': 'city',
+  '🗺️': 'state',
+  '🌍': 'country',
+  '📮': 'postal_code',
+  '🏗️': 'project_name',
+  '⚖️': 'process',
+  '📋': 'report_num',
+  '👤': 'responsible',
+  '📝': 'custom_text'
+};
+
+export function getLineArtPath(iconOrFieldId) {
+  if (!iconOrFieldId) return LINE_ART_PATHS.default;
+  if (LINE_ART_PATHS[iconOrFieldId]) return LINE_ART_PATHS[iconOrFieldId];
+  if (EMOJI_TO_LINE_ART[iconOrFieldId]) return LINE_ART_PATHS[EMOJI_TO_LINE_ART[iconOrFieldId]];
+  return LINE_ART_PATHS.default;
+}
+
+export function getLineArtSvg(iconOrFieldId, className = 'svg-icon-sm') {
+  const pathD = getLineArtPath(iconOrFieldId);
+  return `<svg class="${className}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="${pathD}"/></svg>`;
+}
+
 export const FIELD_ICONS = {
-  photo_id: '📷',
-  date: '📅',
-  time: '🕒',
-  datetime: '📅',
-  coordinates: '📍',
-  lat: '🌐',
-  lon: '🌐',
-  altitude: '⛰️',
-  street: '🛣️',
-  number: '🔢',
-  address_street_num: '🏠',
-  neighborhood: '🏘️',
-  locality: '📌',
-  city: '🏙️',
-  state: '🗺️',
-  country: '🌍',
-  city_state_country: '📍',
-  postal_code: '📮',
-  project_name: '🏗️',
-  process: '⚖️',
-  report_num: '📋',
-  responsible: '👤',
-  custom_text: '📝'
+  photo_id: 'photo_id',
+  date: 'date',
+  time: 'time',
+  datetime: 'datetime',
+  coordinates: 'coordinates',
+  lat: 'lat',
+  lon: 'lon',
+  altitude: 'altitude',
+  street: 'street',
+  number: 'number',
+  address_street_num: 'address_street_num',
+  neighborhood: 'neighborhood',
+  locality: 'locality',
+  city: 'city',
+  state: 'state',
+  country: 'country',
+  city_state_country: 'city_state_country',
+  postal_code: 'postal_code',
+  project_name: 'project_name',
+  process: 'process',
+  report_num: 'report_num',
+  responsible: 'responsible',
+  custom_text: 'custom_text'
 };
 
 export const DEFAULT_STAMP_SETTINGS = {

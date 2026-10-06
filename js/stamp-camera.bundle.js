@@ -57,30 +57,90 @@
     MULTILINE: 'multiline',      // Múltiplas linhas (ícone + valor por linha)
     SINGLE_LINE: 'single_line'   // Linha única inline contínua separada por ' • '
   };
+  const LINE_ART_PATHS = {
+    photo_id: 'M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z M12 17a4 4 0 1 0 0-8 4 4 0 0 0 0 8z',
+    date: 'M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z M16 2v4 M8 2v4 M3 10h18',
+    time: 'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z M12 6v6l4 2',
+    datetime: 'M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z M16 2v4 M8 2v4 M3 10h18 M12 14v3l2 1',
+    coordinates: 'M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z M12 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6z',
+    lat: 'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z M2 12h20 M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z',
+    lon: 'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z M2 12h20 M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z',
+    altitude: 'M8 3l4 8 5-5 5 15H2L8 3z M8 13l2 3 M14 12l2 2',
+    street: 'M4 19L8 5 M20 19L16 5 M12 5v3 M12 11v3 M12 17v3',
+    number: 'M4 9h16 M4 15h16 M10 3L8 21 M16 3l-2 21',
+    address_street_num: 'M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z M9 22V12h6v10',
+    neighborhood: 'M2 20h20 M4 20V8l6-4v16 M10 20V10l6-4v14 M16 20V6l4-2v16',
+    locality: 'M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z M12 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6z',
+    city: 'M2 20h20 M3 20V10h5v10 M8 20V4h8v16 M16 20v-8h5v8',
+    state: 'M1 6v14l7-4 8 4 7-4V2l-7 4-8-4-7 4z M8 2v14 M16 6v14',
+    country: 'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z M2 12h20 M12 2a15.3 15.3 0 0 1 0 20 M12 2a15.3 15.3 0 0 0 0 20',
+    city_state_country: 'M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z M12 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6z',
+    postal_code: 'M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z M22 6l-10 7L2 6',
+    project_name: 'M2 22h20 M12 2v20 M12 5H6l-4 7h10 M12 5h6l4 7H12',
+    process: 'M12 3v18 M5 6h14 M2 13l3-7 3 7a3 3 0 0 1-6 0z M16 13l3-7 3 7a3 3 0 0 1-6 0z',
+    report_num: 'M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2 M9 2h6a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z M9 12h6 M9 16h4',
+    responsible: 'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2 M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z',
+    custom_text: 'M12 20h9 M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z',
+    default: 'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z'
+  };
+  const EMOJI_TO_LINE_ART = {
+    '📷': 'photo_id',
+    '📅': 'date',
+    '🕒': 'time',
+    '⏰': 'time',
+    '📍': 'coordinates',
+    '🌐': 'lat',
+    '⛰️': 'altitude',
+    '🏔️': 'altitude',
+    '🛣️': 'street',
+    '🔢': 'number',
+    '🏠': 'address_street_num',
+    '🏘️': 'neighborhood',
+    '📌': 'locality',
+    '🏙️': 'city',
+    '🗺️': 'state',
+    '🌍': 'country',
+    '📮': 'postal_code',
+    '🏗️': 'project_name',
+    '⚖️': 'process',
+    '📋': 'report_num',
+    '👤': 'responsible',
+    '📝': 'custom_text'
+  };
+  function getLineArtPath(iconOrFieldId) {
+    if (!iconOrFieldId) return LINE_ART_PATHS.default;
+    if (LINE_ART_PATHS[iconOrFieldId]) return LINE_ART_PATHS[iconOrFieldId];
+    if (EMOJI_TO_LINE_ART[iconOrFieldId]) return LINE_ART_PATHS[EMOJI_TO_LINE_ART[iconOrFieldId]];
+    return LINE_ART_PATHS.default;
+  }
+  function getLineArtSvg(iconOrFieldId, className = 'svg-icon-sm') {
+    const pathD = getLineArtPath(iconOrFieldId);
+    return `<svg class="${className}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="${pathD}"/></svg>`;
+  }
   const FIELD_ICONS = {
-    photo_id: '📷',
-    date: '📅',
-    time: '🕒',
-    datetime: '📅',
-    coordinates: '📍',
-    lat: '🌐',
-    lon: '🌐',
-    altitude: '⛰️',
-    street: '🛣️',
-    number: '🔢',
-    address_street_num: '🏠',
-    neighborhood: '🏘️',
-    locality: '📌',
-    city: '🏙️',
-    state: '🗺️',
-    country: '🌍',
-    city_state_country: '📍',
-    postal_code: '📮',
-    project_name: '🏗️',
-    process: '⚖️',
-    report_num: '📋',
-    responsible: '👤',
-    custom_text: '📝'
+    photo_id: 'photo_id',
+    date: 'date',
+    time: 'time',
+    datetime: 'datetime',
+    coordinates: 'coordinates',
+    lat: 'lat',
+    lon: 'lon',
+    altitude: 'altitude',
+    street: 'street',
+    number: 'number',
+    address_street_num: 'address_street_num',
+    neighborhood: 'neighborhood',
+    locality: 'locality',
+    city: 'city',
+    state: 'state',
+    country: 'country',
+    city_state_country: 'city_state_country',
+    postal_code: 'postal_code',
+    project_name: 'project_name',
+    process: 'process',
+    report_num: 'report_num',
+    responsible: 'responsible',
+    custom_text: 'custom_text'
   };
   const DEFAULT_STAMP_SETTINGS = {
     position: STAMP_POSITIONS.BOTTOM_LEFT,
@@ -1305,6 +1365,15 @@
    * Calcula posições, formata textos, desenha caixas com cantos arredondados,
    * sombras, bordas e renderiza tanto para preview interativo quanto para exportação 1:1.
    */
+  
+  
+  
+  function resolveIconKey(id, icon) {
+    if (icon && LINE_ART_PATHS[icon]) return icon;
+    if (icon && EMOJI_TO_LINE_ART[icon]) return EMOJI_TO_LINE_ART[icon];
+    if (id && LINE_ART_PATHS[id]) return id;
+    return 'default';
+  }
   class StampEngine {
     constructor() {
       this.lastBounds = null; // Guarda os limites do carimbo no último render (para drag-and-drop)
@@ -1344,7 +1413,6 @@
       }
   
       // 2. Calcula tipografia e escalas baseadas nas dimensões da imagem
-      // Para manter consistência visual independente da resolução original (ex: 12MP vs 2MP)
       const baseDimension = Math.min(imgWidth, imgHeight);
       const scaleFactor = baseDimension / 1080; // Normalizado para referência Full HD 1080p
   
@@ -1354,69 +1422,117 @@
       const borderRadiusPx = Math.round((settings.borderRadius || 8) * scaleFactor);
       const borderWidthPx = Math.round((settings.borderWidth || 0) * scaleFactor);
   
-      // Configuração de fonte no context para medição (com fallback de emojis para alta fidelidade)
+      // Configuração de fonte no context para medição
       const fontStyle = settings.isItalic ? 'italic' : 'normal';
       const fontWeight = settings.fontWeight || '600';
       const fontFamily = settings.fontFamily || 'Inter, system-ui, sans-serif';
-      const fontSpec = `${fontStyle} ${fontWeight} ${fontSizePx}px ${fontFamily}, "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif`;
+      const fontSpec = `${fontStyle} ${fontWeight} ${fontSizePx}px ${fontFamily}, "Segoe UI Emoji", "Apple Color Emoji", sans-serif`;
       ctx.font = fontSpec;
   
       if ('letterSpacing' in ctx) {
         ctx.letterSpacing = `${(settings.letterSpacing || 0.5) * scaleFactor}px`;
       }
   
-      // 3. Formata e mede as linhas de texto com suporte a ícones inline e layout
+      // 3. Formata e mede as linhas com suporte a ícones line art vetorizados e layouts
       const renderedRows = [];
       let maxContentWidth = 0;
   
       const labelMode = settings.labelMode || 'icons';
       const isSingleLine = settings.inlineLayout === 'single_line';
+      const canUsePath2D = typeof Path2D !== 'undefined';
   
       if (isSingleLine) {
-        // Modo linha única inline contínua (ex: 📅 22/11/2022 • 📍 -15.8699, -50.8522 • 📌 Jussara, GO)
-        const parts = [];
-        for (const item of activeLines) {
-          const valText = item.value || '';
-          let prefix = '';
+        // Modo linha única contínua com ícones line-art
+        const segments = [];
+        const separator = settings.inlineSeparator || '  •  ';
+        const sepWidth = ctx.measureText(separator).width;
+        let totalWidth = 0;
+  
+        for (let sIdx = 0; sIdx < activeLines.length; sIdx++) {
+          const item = activeLines[sIdx];
+          const valText = String(item.value || '').trim();
+          if (!valText) continue;
+  
+          let iconKey = null;
+          let text = valText;
+  
           if (labelMode === 'icons') {
-            const icon = item.icon || '📌';
-            prefix = `${icon} `;
-          } else if (labelMode === 'text') {
-            prefix = (item.showLabel && item.label) ? `${item.label}: ` : '';
-          }
-          parts.push(`${prefix}${valText}`.trim());
-        }
-        const fullInlineText = parts.join(settings.inlineSeparator || ' • ');
-        const metrics = ctx.measureText(fullInlineText);
-        maxContentWidth = metrics.width;
-        renderedRows.push({ text: fullInlineText, width: metrics.width });
-      } else {
-        // Modo multilinhas (com ícones inline ou rótulos tradicionais)
-        for (const item of activeLines) {
-          let text = '';
-          if (labelMode === 'icons') {
-            const icon = item.icon || '📌';
-            text = `${icon} ${item.value}`;
+            iconKey = resolveIconKey(item.id, item.icon);
           } else if (labelMode === 'text') {
             if (item.showLabel && item.label) {
-              text = `${item.label}: ${item.value}`;
-            } else {
-              text = `${item.value}`;
+              text = `${item.label}: ${valText}`;
             }
-          } else {
-            // 'none' (apenas o valor puro)
-            text = `${item.value}`;
+          }
+  
+          const iconSize = iconKey ? Math.round(fontSizePx * 0.95) : 0;
+          const iconGap = iconKey ? Math.round(fontSizePx * 0.45) : 0;
+          const textWidth = ctx.measureText(text).width;
+          const segWidth = (iconKey ? iconSize + iconGap : 0) + textWidth;
+  
+          segments.push({
+            iconKey,
+            text,
+            iconSize,
+            iconGap,
+            textWidth,
+            width: segWidth,
+            isLast: false
+          });
+        }
+  
+        if (segments.length > 0) {
+          segments[segments.length - 1].isLast = true;
+          for (let s = 0; s < segments.length; s++) {
+            totalWidth += segments[s].width;
+            if (!segments[s].isLast) {
+              totalWidth += sepWidth;
+            }
+          }
+          maxContentWidth = totalWidth;
+          renderedRows.push({
+            isSingleLine: true,
+            segments,
+            separator,
+            sepWidth,
+            width: totalWidth
+          });
+        }
+      } else {
+        // Modo multilinhas com ícones line-art verticais
+        for (const item of activeLines) {
+          const valText = String(item.value || '').trim();
+          if (!valText) continue;
+  
+          let iconKey = null;
+          let displayText = valText;
+  
+          if (labelMode === 'icons') {
+            iconKey = resolveIconKey(item.id, item.icon);
+          } else if (labelMode === 'text') {
+            if (item.showLabel && item.label) {
+              displayText = `${item.label}: ${valText}`;
+            }
           }
   
           // Suporte a quebra de linha interna dentro do valor
-          const subLines = text.split('\n');
-          for (const sub of subLines) {
-            const trimmed = sub.trim();
-            if (trimmed) {
-              const metrics = ctx.measureText(trimmed);
-              const w = metrics.width;
+          const subLines = displayText.split('\n');
+          for (let slIdx = 0; slIdx < subLines.length; slIdx++) {
+            const sub = subLines[slIdx].trim();
+            if (sub) {
+              const rowIconKey = (slIdx === 0) ? iconKey : null;
+              const iconSize = rowIconKey ? Math.round(fontSizePx * 0.95) : 0;
+              const iconGap = rowIconKey ? Math.round(fontSizePx * 0.45) : 0;
+              const textMetrics = ctx.measureText(sub);
+              const w = (rowIconKey ? iconSize + iconGap : 0) + textMetrics.width;
               if (w > maxContentWidth) maxContentWidth = w;
-              renderedRows.push({ text: trimmed, width: w });
+              renderedRows.push({
+                isSingleLine: false,
+                iconKey: rowIconKey,
+                text: sub,
+                iconSize,
+                iconGap,
+                width: w
+              });
             }
           }
         }
@@ -1523,7 +1639,7 @@
   
       ctx.restore();
   
-      // 6. Desenha os textos
+      // 6. Desenha os textos e ícones line-art com renderização precisa
       ctx.save();
       ctx.font = fontSpec;
       ctx.fillStyle = settings.textColor || '#FFFFFF';
@@ -1548,7 +1664,59 @@
           rowX = posX + boxWidth - paddingPx - row.width;
         }
   
-        ctx.fillText(row.text, rowX, textStartY + (i * lineHeightPx));
+        const rowY = textStartY + (i * lineHeightPx);
+  
+        if (row.isSingleLine && row.segments) {
+          let curX = rowX;
+          for (const seg of row.segments) {
+            if (seg.iconKey && LINE_ART_PATHS[seg.iconKey] && canUsePath2D) {
+              const iconSize = seg.iconSize;
+              const iconScale = iconSize / 24;
+              const iconY = rowY - fontSizePx + Math.round((fontSizePx - iconSize) / 2);
+  
+              ctx.save();
+              ctx.translate(curX, iconY);
+              ctx.scale(iconScale, iconScale);
+              ctx.lineWidth = 1.75;
+              ctx.lineCap = 'round';
+              ctx.lineJoin = 'round';
+              ctx.strokeStyle = settings.textColor || '#FFFFFF';
+              ctx.stroke(new Path2D(LINE_ART_PATHS[seg.iconKey]));
+              ctx.restore();
+  
+              curX += iconSize + seg.iconGap;
+            }
+  
+            ctx.fillText(seg.text, curX, rowY);
+            curX += ctx.measureText(seg.text).width;
+  
+            if (!seg.isLast) {
+              ctx.fillText(row.separator, curX, rowY);
+              curX += row.sepWidth;
+            }
+          }
+        } else {
+          let curX = rowX;
+          if (row.iconKey && LINE_ART_PATHS[row.iconKey] && canUsePath2D) {
+            const iconSize = row.iconSize;
+            const iconScale = iconSize / 24;
+            const iconY = rowY - fontSizePx + Math.round((fontSizePx - iconSize) / 2);
+  
+            ctx.save();
+            ctx.translate(curX, iconY);
+            ctx.scale(iconScale, iconScale);
+            ctx.lineWidth = 1.75;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.strokeStyle = settings.textColor || '#FFFFFF';
+            ctx.stroke(new Path2D(LINE_ART_PATHS[row.iconKey]));
+            ctx.restore();
+  
+            curX += iconSize + row.iconGap;
+          }
+  
+          ctx.fillText(row.text, curX, rowY);
+        }
       }
   
       ctx.restore();
@@ -2626,7 +2794,7 @@
             value: val,
             showLabel: field.showLabel !== false,
             isCustom: field.isCustom,
-            icon: field.icon || FIELD_ICONS[field.id] || '📌'
+            icon: field.icon || FIELD_ICONS[field.id] || 'default'
           });
         }
       }
@@ -3548,11 +3716,11 @@
           actionsDiv.appendChild(btnDelete);
         }
   
-        // 1.5. Ícone inline do campo
+        // 1.5. Ícone inline do campo (formato line-art)
         const iconTag = document.createElement('span');
         iconTag.className = 'field-icon-tag';
-        iconTag.textContent = field.icon || FIELD_ICONS[field.id] || '📌';
-        iconTag.title = 'Ícone inline exibido no carimbo';
+        iconTag.innerHTML = getLineArtSvg(field.icon || field.id);
+        iconTag.title = 'Ícone line art do campo exibido no carimbo';
   
         row.appendChild(check);
         row.appendChild(iconTag);

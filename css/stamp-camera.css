@@ -335,13 +335,22 @@
 }
 
 .field-icon-tag {
-  font-size: 13px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 20px;
+  width: 18px;
+  height: 18px;
+  color: var(--text-muted);
   flex-shrink: 0;
   user-select: none;
+}
+
+.field-icon-tag svg {
+  width: 14px;
+  height: 14px;
+  stroke: currentColor;
+  stroke-width: 1.75;
+  fill: none;
 }
 
 .field-label-input {

@@ -5,7 +5,14 @@
  * sombras, bordas e renderiza tanto para preview interativo quanto para exportação 1:1.
  */
 
-import { STAMP_POSITIONS } from './config.js';
+import { STAMP_POSITIONS, LINE_ART_PATHS, EMOJI_TO_LINE_ART } from './config.js';
+
+function resolveIconKey(id, icon) {
+  if (icon && LINE_ART_PATHS[icon]) return icon;
+  if (icon && EMOJI_TO_LINE_ART[icon]) return EMOJI_TO_LINE_ART[icon];
+  if (id && LINE_ART_PATHS[id]) return id;
+  return 'default';
+}
 
 export class StampEngine {
   constructor() {
@@ -46,7 +53,6 @@ export class StampEngine {
     }
 
     // 2. Calcula tipografia e escalas baseadas nas dimensões da imagem
-    // Para manter consistência visual independente da resolução original (ex: 12MP vs 2MP)
     const baseDimension = Math.min(imgWidth, imgHeight);
     const scaleFactor = baseDimension / 1080; // Normalizado para referência Full HD 1080p
 
@@ -56,69 +62,117 @@ export class StampEngine {
     const borderRadiusPx = Math.round((settings.borderRadius || 8) * scaleFactor);
     const borderWidthPx = Math.round((settings.borderWidth || 0) * scaleFactor);
 
-    // Configuração de fonte no context para medição (com fallback de emojis para alta fidelidade)
+    // Configuração de fonte no context para medição
     const fontStyle = settings.isItalic ? 'italic' : 'normal';
     const fontWeight = settings.fontWeight || '600';
     const fontFamily = settings.fontFamily || 'Inter, system-ui, sans-serif';
-    const fontSpec = `${fontStyle} ${fontWeight} ${fontSizePx}px ${fontFamily}, "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif`;
+    const fontSpec = `${fontStyle} ${fontWeight} ${fontSizePx}px ${fontFamily}, "Segoe UI Emoji", "Apple Color Emoji", sans-serif`;
     ctx.font = fontSpec;
 
     if ('letterSpacing' in ctx) {
       ctx.letterSpacing = `${(settings.letterSpacing || 0.5) * scaleFactor}px`;
     }
 
-    // 3. Formata e mede as linhas de texto com suporte a ícones inline e layout
+    // 3. Formata e mede as linhas com suporte a ícones line art vetorizados e layouts
     const renderedRows = [];
     let maxContentWidth = 0;
 
     const labelMode = settings.labelMode || 'icons';
     const isSingleLine = settings.inlineLayout === 'single_line';
+    const canUsePath2D = typeof Path2D !== 'undefined';
 
     if (isSingleLine) {
-      // Modo linha única inline contínua (ex: 📅 22/11/2022 • 📍 -15.8699, -50.8522 • 📌 Jussara, GO)
-      const parts = [];
-      for (const item of activeLines) {
-        const valText = item.value || '';
-        let prefix = '';
+      // Modo linha única contínua com ícones line-art
+      const segments = [];
+      const separator = settings.inlineSeparator || '  •  ';
+      const sepWidth = ctx.measureText(separator).width;
+      let totalWidth = 0;
+
+      for (let sIdx = 0; sIdx < activeLines.length; sIdx++) {
+        const item = activeLines[sIdx];
+        const valText = String(item.value || '').trim();
+        if (!valText) continue;
+
+        let iconKey = null;
+        let text = valText;
+
         if (labelMode === 'icons') {
-          const icon = item.icon || '📌';
-          prefix = `${icon} `;
-        } else if (labelMode === 'text') {
-          prefix = (item.showLabel && item.label) ? `${item.label}: ` : '';
-        }
-        parts.push(`${prefix}${valText}`.trim());
-      }
-      const fullInlineText = parts.join(settings.inlineSeparator || ' • ');
-      const metrics = ctx.measureText(fullInlineText);
-      maxContentWidth = metrics.width;
-      renderedRows.push({ text: fullInlineText, width: metrics.width });
-    } else {
-      // Modo multilinhas (com ícones inline ou rótulos tradicionais)
-      for (const item of activeLines) {
-        let text = '';
-        if (labelMode === 'icons') {
-          const icon = item.icon || '📌';
-          text = `${icon} ${item.value}`;
+          iconKey = resolveIconKey(item.id, item.icon);
         } else if (labelMode === 'text') {
           if (item.showLabel && item.label) {
-            text = `${item.label}: ${item.value}`;
-          } else {
-            text = `${item.value}`;
+            text = `${item.label}: ${valText}`;
           }
-        } else {
-          // 'none' (apenas o valor puro)
-          text = `${item.value}`;
+        }
+
+        const iconSize = iconKey ? Math.round(fontSizePx * 0.95) : 0;
+        const iconGap = iconKey ? Math.round(fontSizePx * 0.45) : 0;
+        const textWidth = ctx.measureText(text).width;
+        const segWidth = (iconKey ? iconSize + iconGap : 0) + textWidth;
+
+        segments.push({
+          iconKey,
+          text,
+          iconSize,
+          iconGap,
+          textWidth,
+          width: segWidth,
+          isLast: false
+        });
+      }
+
+      if (segments.length > 0) {
+        segments[segments.length - 1].isLast = true;
+        for (let s = 0; s < segments.length; s++) {
+          totalWidth += segments[s].width;
+          if (!segments[s].isLast) {
+            totalWidth += sepWidth;
+          }
+        }
+        maxContentWidth = totalWidth;
+        renderedRows.push({
+          isSingleLine: true,
+          segments,
+          separator,
+          sepWidth,
+          width: totalWidth
+        });
+      }
+    } else {
+      // Modo multilinhas com ícones line-art verticais
+      for (const item of activeLines) {
+        const valText = String(item.value || '').trim();
+        if (!valText) continue;
+
+        let iconKey = null;
+        let displayText = valText;
+
+        if (labelMode === 'icons') {
+          iconKey = resolveIconKey(item.id, item.icon);
+        } else if (labelMode === 'text') {
+          if (item.showLabel && item.label) {
+            displayText = `${item.label}: ${valText}`;
+          }
         }
 
         // Suporte a quebra de linha interna dentro do valor
-        const subLines = text.split('\n');
-        for (const sub of subLines) {
-          const trimmed = sub.trim();
-          if (trimmed) {
-            const metrics = ctx.measureText(trimmed);
-            const w = metrics.width;
+        const subLines = displayText.split('\n');
+        for (let slIdx = 0; slIdx < subLines.length; slIdx++) {
+          const sub = subLines[slIdx].trim();
+          if (sub) {
+            const rowIconKey = (slIdx === 0) ? iconKey : null;
+            const iconSize = rowIconKey ? Math.round(fontSizePx * 0.95) : 0;
+            const iconGap = rowIconKey ? Math.round(fontSizePx * 0.45) : 0;
+            const textMetrics = ctx.measureText(sub);
+            const w = (rowIconKey ? iconSize + iconGap : 0) + textMetrics.width;
             if (w > maxContentWidth) maxContentWidth = w;
-            renderedRows.push({ text: trimmed, width: w });
+            renderedRows.push({
+              isSingleLine: false,
+              iconKey: rowIconKey,
+              text: sub,
+              iconSize,
+              iconGap,
+              width: w
+            });
           }
         }
       }
@@ -225,7 +279,7 @@ export class StampEngine {
 
     ctx.restore();
 
-    // 6. Desenha os textos
+    // 6. Desenha os textos e ícones line-art com renderização precisa
     ctx.save();
     ctx.font = fontSpec;
     ctx.fillStyle = settings.textColor || '#FFFFFF';
@@ -250,7 +304,59 @@ export class StampEngine {
         rowX = posX + boxWidth - paddingPx - row.width;
       }
 
-      ctx.fillText(row.text, rowX, textStartY + (i * lineHeightPx));
+      const rowY = textStartY + (i * lineHeightPx);
+
+      if (row.isSingleLine && row.segments) {
+        let curX = rowX;
+        for (const seg of row.segments) {
+          if (seg.iconKey && LINE_ART_PATHS[seg.iconKey] && canUsePath2D) {
+            const iconSize = seg.iconSize;
+            const iconScale = iconSize / 24;
+            const iconY = rowY - fontSizePx + Math.round((fontSizePx - iconSize) / 2);
+
+            ctx.save();
+            ctx.translate(curX, iconY);
+            ctx.scale(iconScale, iconScale);
+            ctx.lineWidth = 1.75;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.strokeStyle = settings.textColor || '#FFFFFF';
+            ctx.stroke(new Path2D(LINE_ART_PATHS[seg.iconKey]));
+            ctx.restore();
+
+            curX += iconSize + seg.iconGap;
+          }
+
+          ctx.fillText(seg.text, curX, rowY);
+          curX += ctx.measureText(seg.text).width;
+
+          if (!seg.isLast) {
+            ctx.fillText(row.separator, curX, rowY);
+            curX += row.sepWidth;
+          }
+        }
+      } else {
+        let curX = rowX;
+        if (row.iconKey && LINE_ART_PATHS[row.iconKey] && canUsePath2D) {
+          const iconSize = row.iconSize;
+          const iconScale = iconSize / 24;
+          const iconY = rowY - fontSizePx + Math.round((fontSizePx - iconSize) / 2);
+
+          ctx.save();
+          ctx.translate(curX, iconY);
+          ctx.scale(iconScale, iconScale);
+          ctx.lineWidth = 1.75;
+          ctx.lineCap = 'round';
+          ctx.lineJoin = 'round';
+          ctx.strokeStyle = settings.textColor || '#FFFFFF';
+          ctx.stroke(new Path2D(LINE_ART_PATHS[row.iconKey]));
+          ctx.restore();
+
+          curX += iconSize + row.iconGap;
+        }
+
+        ctx.fillText(row.text, curX, rowY);
+      }
     }
 
     ctx.restore();
