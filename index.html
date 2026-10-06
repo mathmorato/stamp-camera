@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>STAMP-CAMERA • Carimbo Técnico e Geográfico para Fotografias</title>
+  <meta name="description" content="Aplicação web 100% client-side para inserção de carimbos técnicos e georreferenciados em fotografias para perícias, obras, inspeções e laudos.">
+  
+  <!-- Estilos -->
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/stamp-camera.css">
+</head>
+<body>
+
+  <!-- Input oculto para carregar arquivo de foto -->
+  <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp" style="display: none;">
+
+  <div class="app-container">
+    <!-- Header Principal -->
+    <header class="app-header">
+      <div class="brand-section">
+        <div class="logo-badge">
+          <div class="logo-icon">SC</div>
+          <span class="logo-title">STAMP-CAMERA</span>
+        </div>
+        <span class="logo-subtitle">Carimbo técnico e geográfico para fotografias</span>
+      </div>
+
+      <div class="header-actions">
+        <div class="privacy-pill" title="Nenhum dado ou imagem sai do seu computador. Todo o processamento é executado localmente no navegador.">
+          <span class="privacy-dot"></span>
+          <span>100% Processamento Local</span>
+        </div>
+
+        <button type="button" class="btn btn-secondary btn-sm" id="btnOpenPhoto" title="Abrir arquivo do dispositivo">
+          📁 Abrir Fotografia
+        </button>
+
+        <select id="langSelect" class="form-select" style="width: auto; padding: 4px 8px; font-size: 12px;" title="Selecionar Idioma">
+          <option value="pt-BR">🇧🇷 PT-BR</option>
+          <option value="en">🇺🇸 EN</option>
+          <option value="es">🇪🇸 ES</option>
+        </select>
+
+        <button type="button" class="btn-icon" id="themeToggleBtn" title="Alternar Modo Escuro / Claro">
+          ☀️
+        </button>
+
+        <button type="button" class="btn btn-primary btn-sm" id="btnExport" title="Exportar e baixar fotografia carimbada">
+          💾 Exportar Foto
+        </button>
+      </div>
+    </header>
+
+    <!-- Layout 3 Colunas -->
+    <main class="main-layout">
+
+      <!-- PAINEL ESQUERDO: Configurações do Carimbo -->
+      <aside class="panel panel-left" aria-label="Painel de Configuração do Carimbo">
+        <div class="panel-tabs">
+          <button type="button" class="tab-btn active" data-tab="models">Modelos</button>
+          <button type="button" class="tab-btn" data-tab="fields">Campos</button>
+          <button type="button" class="tab-btn" data-tab="style">Estilo</button>
+        </div>
+
+        <div class="panel-content">
+          <!-- ABA 1: Modelos e Presets -->
+          <div class="tab-panel active" id="tab-models">
+            <div class="section-block">
+              <div class="section-title">
+                <span>Modelo do Carimbo</span>
+              </div>
+              <div class="form-group">
+                <label for="presetsSelect" class="form-label">Selecione o Modelo / Preset</label>
+                <select id="presetsSelect" class="form-select"></select>
+              </div>
+              <button type="button" class="btn btn-secondary btn-sm" id="btnSavePreset" style="width: 100%;">
+                ⭐ Salvar Modelo Personalizado
+              </button>
+            </div>
+
+            <div class="section-block">
+              <div class="section-title">
+                <span>Numeração Automática</span>
+              </div>
+              <div class="form-group" style="display: flex; align-items: center; gap: 8px;">
+                <input type="checkbox" id="checkAutoNumber" id="checkAutoNumber" class="field-checkbox">
+                <label for="checkAutoNumber" style="font-size: 13px; font-weight: 500; cursor: pointer;">Habilitar numeração automática</label>
+              </div>
+
+              <div class="form-group">
+                <label for="inputNumberPrefix" class="form-label">Prefixo da Fotografia</label>
+                <input type="text" id="inputNumberPrefix" class="form-input" value="FOTOGRAFIA ">
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div class="form-group">
+                  <label for="inputNumberStart" class="form-label">Número Inicial</label>
+                  <input type="number" id="inputNumberStart" class="form-input" value="1" min="1">
+                </div>
+                <div class="form-group">
+                  <label for="inputNumberDigits" class="form-label">Dígitos (Zeros)</label>
+                  <input type="number" id="inputNumberDigits" class="form-input" value="2" min="1" max="6">
+                </div>
+              </div>
+            </div>
+
+            <div class="section-block">
+              <div class="section-title">
+                <span>Posição Rápida (Grade 3x3)</span>
+              </div>
+              <div class="pos-grid">
+                <button type="button" class="pos-btn" data-pos="top-left" title="Superior Esquerdo">Sup. Esq</button>
+                <button type="button" class="pos-btn" data-pos="top-center" title="Superior Centro">Sup. Cen</button>
+                <button type="button" class="pos-btn" data-pos="top-right" title="Superior Direito">Sup. Dir</button>
+                <button type="button" class="pos-btn" data-pos="center-left" title="Centro Esquerdo">Cen. Esq</button>
+                <button type="button" class="pos-btn" data-pos="center" title="Centro">Centro</button>
+                <button type="button" class="pos-btn" data-pos="center-right" title="Centro Direito">Cen. Dir</button>
+                <button type="button" class="pos-btn active" data-pos="bottom-left" title="Inferior Esquerdo">Inf. Esq</button>
+                <button type="button" class="pos-btn" data-pos="bottom-center" title="Inferior Centro">Inf. Cen</button>
+                <button type="button" class="pos-btn" data-pos="bottom-right" title="Inferior Direito">Inf. Dir</button>
+              </div>
+              <p style="font-size: 11px; color: var(--text-subtle); margin-top: 6px;">
+                💡 Ou arraste o carimbo livremente sobre a imagem no centro.
+              </p>
+            </div>
+          </div>
+
+          <!-- ABA 2: Campos do Carimbo -->
+          <div class="tab-panel" id="tab-fields">
+            <div class="section-title">
+              <span>Campos Ativos no Carimbo</span>
+              <button type="button" class="btn btn-secondary btn-sm" id="btnAddField">+ Campo</button>
+            </div>
+            <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 12px;">
+              Marque os campos desejados, reordene nas setas ou edite os rótulos.
+            </p>
+            <div class="fields-list" id="fieldsContainer">
+              <!-- Renderizado dinamicamente pelo UI Controller -->
+            </div>
+          </div>
+
+          <!-- ABA 3: Estilo Visual e Tipografia -->
+          <div class="tab-panel" id="tab-style">
+            <div class="section-block">
+              <div class="section-title">
+                <span>Tipografia</span>
+              </div>
+              <div class="form-group">
+                <label for="selectFontFamily" class="form-label">Família da Fonte</label>
+                <select id="selectFontFamily" class="form-select">
+                  <option value="Inter, system-ui, sans-serif">Inter</option>
+                  <option value="Roboto, sans-serif">Roboto</option>
+                  <option value="Arial, sans-serif">Arial</option>
+                  <option value="Helvetica, sans-serif">Helvetica</option>
+                  <option value="system-ui, sans-serif">System UI</option>
+                  <option value="'JetBrains Mono', monospace">Monospace</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="rangeFontSize" class="form-label">
+                  <span>Tamanho da Fonte</span>
+                  <span id="valFontSize" class="range-val">20px</span>
+                </label>
+                <input type="range" id="rangeFontSize" class="form-range" min="14" max="42" value="20" step="1">
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+                <label style="display: flex; align-items: center; gap: 6px; font-size: 12px; cursor: pointer;">
+                  <input type="checkbox" id="checkBold" checked class="field-checkbox">
+                  <strong>Negrito</strong>
+                </label>
+                <label style="display: flex; align-items: center; gap: 6px; font-size: 12px; cursor: pointer;">
+                  <input type="checkbox" id="checkItalic" class="field-checkbox">
+                  <em>Itálico</em>
+                </label>
+              </div>
+
+              <div class="form-group">
+                <label for="selectTextAlign" class="form-label">Alinhamento do Texto</label>
+                <select id="selectTextAlign" class="form-select">
+                  <option value="left">Esquerda</option>
+                  <option value="center">Centralizado</option>
+                  <option value="right">Direita</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="colorText" class="form-label">Cor do Texto</label>
+                <div class="color-picker-wrapper">
+                  <input type="color" id="colorText" value="#ffffff">
+                  <span style="font-family: var(--font-mono); font-size: 12px; color: var(--text-muted);">Texto</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="section-block">
+              <div class="section-title">
+                <span>Fundo e Moldura</span>
+              </div>
+
+              <div class="form-group">
+                <label for="selectBgType" class="form-label">Estilo do Fundo</label>
+                <select id="selectBgType" class="form-select">
+                  <option value="semitransparent">Fundo Semitransparente</option>
+                  <option value="solid">Fundo Sólido</option>
+                  <option value="none">Sem Fundo (Texto Direto)</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="rangeBgOpacity" class="form-label">
+                  <span>Opacidade do Fundo</span>
+                  <span id="valBgOpacity" class="range-val">85%</span>
+                </label>
+                <input type="range" id="rangeBgOpacity" class="form-range" min="0" max="100" value="85" step="5">
+              </div>
+
+              <div class="form-group">
+                <label for="colorBg" class="form-label">Cor do Fundo</label>
+                <div class="color-picker-wrapper">
+                  <input type="color" id="colorBg" value="#0f172a">
+                  <span style="font-family: var(--font-mono); font-size: 12px; color: var(--text-muted);">Caixa</span>
+                </div>
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div class="form-group">
+                  <label for="selectBorderWidth" class="form-label">Borda</label>
+                  <select id="selectBorderWidth" class="form-select">
+                    <option value="0">Sem Borda</option>
+                    <option value="1">Fina (1px)</option>
+                    <option value="2">Média (2px)</option>
+                    <option value="4">Grossa (4px)</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="colorBorder" class="form-label">Cor da Borda</label>
+                  <div class="color-picker-wrapper">
+                    <input type="color" id="colorBorder" value="#3b82f6">
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="rangeBorderRadius" class="form-label">
+                  <span>Raio dos Cantos</span>
+                  <span id="valBorderRadius" class="range-val">8px</span>
+                </label>
+                <input type="range" id="rangeBorderRadius" class="form-range" min="0" max="24" value="8" step="2">
+              </div>
+
+              <div class="form-group" style="display: flex; align-items: center; gap: 8px;">
+                <input type="checkbox" id="checkShadow" checked class="field-checkbox">
+                <label for="checkShadow" style="font-size: 12px; cursor: pointer;">Sombra projetada</label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- CENTRO: Preview da Fotografia -->
+      <section class="preview-panel" aria-label="Área de Pré-visualização da Imagem">
+        <div class="preview-toolbar">
+          <div id="imageInfoBar" style="display: none; align-items: center; gap: 8px;">
+            <span style="color: var(--primary);">📷</span>
+            <span id="photoMetaText" style="font-weight: 500;">fotografia.jpg</span>
+          </div>
+          <div style="margin-left: auto; display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 11px; color: var(--text-subtle);">Pré-visualização em tempo real</span>
+          </div>
+        </div>
+
+        <div class="preview-canvas-container" id="previewContainer">
+          <!-- Placeholder quando não há foto carregada -->
+          <div class="empty-placeholder" id="emptyPlaceholder">
+            <div class="empty-icon">📷</div>
+            <h2 class="empty-title">Selecione ou Arraste uma Fotografia</h2>
+            <p class="empty-desc">
+              Carregue uma imagem do seu dispositivo para ler metadados EXIF, detectar GPS e gerar o carimbo técnico.
+            </p>
+            <div class="empty-buttons">
+              <button type="button" class="btn btn-primary" id="btnDropOpen">
+                Selecionar Imagem do Dispositivo
+              </button>
+              <div class="empty-demo-group">
+                <button type="button" class="btn btn-secondary btn-sm" id="btnDemoWithGps" title="Testar fluxo com coordenadas GPS de Jussara/GO">
+                  🧪 Teste com GPS
+                </button>
+                <button type="button" class="btn btn-secondary btn-sm" id="btnDemoWithoutGps" title="Testar fluxo sem coordenadas nos metadados">
+                  ⚠️ Teste sem GPS
+                </button>
+              </div>
+            </div>
+            <span style="font-size: 11px; color: var(--success); font-weight: 600;">
+              🔒 100% Seguro: Nenhum arquivo é enviado para servidores.
+            </span>
+          </div>
+
+          <!-- Canvas Interativo de Preview -->
+          <canvas id="previewCanvas" style="display: none;"></canvas>
+
+          <div class="drag-hint-pill" id="dragHintPill" style="display: none;">
+            🖐️ Clique e arraste o carimbo para posicioná-lo livremente
+          </div>
+        </div>
+      </section>
+
+      <!-- PAINEL DIREITO: Metadados EXIF e Localização -->
+      <aside class="panel panel-right" aria-label="Painel de Metadados e Localização">
+        <div class="panel-tabs">
+          <button type="button" class="tab-btn active" data-tab="location">Localização</button>
+          <button type="button" class="tab-btn" data-tab="technical">Técnico</button>
+          <button type="button" class="tab-btn" data-tab="export">Exportar</button>
+        </div>
+
+        <div class="panel-content">
+          <!-- ABA 1: Localização & Coordenadas -->
+          <div class="tab-panel active" id="tab-location">
+            <!-- Alertas de Ausência / Sucesso de Metadados -->
+            <div class="alert-box alert-warning" id="alertNoGps" style="display: none;">
+              <span class="alert-icon">⚠️</span>
+              <div>
+                <strong>Sem coordenadas GPS</strong>
+                <p>Esta fotografia não possui dados de GPS no EXIF. Você pode inserir as coordenadas manualmente abaixo.</p>
+              </div>
+            </div>
+
+            <div class="alert-box alert-warning" id="alertNoDate" style="display: none;">
+              <span class="alert-icon">⚠️</span>
+              <div>
+                <strong>Data/Hora não encontrada</strong>
+                <p>Metadados temporais ausentes. Insira manualmente.</p>
+              </div>
+            </div>
+
+            <div class="alert-box alert-success" id="alertMetaSuccess" style="display: none;">
+              <span class="alert-icon">✓</span>
+              <div>
+                <strong>Metadados EXIF Detectados</strong>
+                <p>GPS e data/hora extraídos automaticamente da fotografia.</p>
+              </div>
+            </div>
+
+            <!-- Formato das Coordenadas -->
+            <div class="section-block">
+              <div class="section-title">
+                <span>Formato das Coordenadas</span>
+              </div>
+              <div class="form-group">
+                <select id="selectCoordFormat" class="form-select">
+                  <option value="decimal_cardinal">Decimal Cardinal (15.869969° S, 50.852275° W)</option>
+                  <option value="dms">Graus, Minutos e Segundos (15°52'11.89"S, 50°51'08.19"W)</option>
+                  <option value="ddm">Graus e Minutos Decimais (15°52.198'S, 50°51.136'W)</option>
+                  <option value="decimal_signed">Apenas Decimal (Lat: -15.869969, Long: -50.852275)</option>
+                </select>
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div class="form-group">
+                  <label for="inputLat" class="form-label">
+                    <span>Latitude</span>
+                    <span id="badgeLat" class="badge badge-manual">MANUAL</span>
+                  </label>
+                  <input type="number" step="any" id="inputLat" class="form-input" placeholder="-15.869969">
+                </div>
+                <div class="form-group">
+                  <label for="inputLon" class="form-label">
+                    <span>Longitude</span>
+                    <span id="badgeLon" class="badge badge-manual">MANUAL</span>
+                  </label>
+                  <input type="number" step="any" id="inputLon" class="form-input" placeholder="-50.852275">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="inputAlt" class="form-label">
+                  <span>Altitude (metros)</span>
+                  <span id="badgeAlt" class="badge badge-manual">MANUAL</span>
+                </label>
+                <input type="number" step="any" id="inputAlt" class="form-input" placeholder="Ex: 312.5">
+              </div>
+            </div>
+
+            <!-- Data e Horário -->
+            <div class="section-block">
+              <div class="section-title">
+                <span>Data e Horário</span>
+              </div>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                <div class="form-group">
+                  <label for="selectDateFormat" class="form-label">Padrão da Data</label>
+                  <select id="selectDateFormat" class="form-select">
+                    <option value="pt-BR">Brasileiro (DD/MM/AAAA)</option>
+                    <option value="iso">Internacional (AAAA-MM-DD)</option>
+                    <option value="textual">Textual Extenso</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="selectTimeFormat" class="form-label">Padrão da Hora</label>
+                  <select id="selectTimeFormat" class="form-select">
+                    <option value="full">HH:MM:SS</option>
+                    <option value="no_seconds">HH:MM</option>
+                    <option value="date_time">Data + Hora</option>
+                  </select>
+                </div>
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div class="form-group">
+                  <label for="inputDate" class="form-label">
+                    <span>Data</span>
+                    <span id="badgeDate" class="badge badge-manual">MANUAL</span>
+                  </label>
+                  <input type="text" id="inputDate" class="form-input" placeholder="22/11/2022">
+                </div>
+                <div class="form-group">
+                  <label for="inputTime" class="form-label">
+                    <span>Hora</span>
+                    <span id="badgeTime" class="badge badge-manual">MANUAL</span>
+                  </label>
+                  <input type="text" id="inputTime" class="form-input" placeholder="18:05:43">
+                </div>
+              </div>
+            </div>
+
+            <!-- Dados de Endereço (Processamento Local) -->
+            <div class="section-block">
+              <div class="section-title">
+                <span>Endereço e Logradouro</span>
+              </div>
+              <p style="font-size: 11px; color: var(--text-subtle); margin-bottom: 8px;">
+                Informações declaradas pelo usuário (não inventadas).
+              </p>
+
+              <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px;">
+                <div class="form-group">
+                  <label for="inputStreet" class="form-label">Logradouro / Rua</label>
+                  <input type="text" id="inputStreet" class="form-input" placeholder="Rua / Av.">
+                </div>
+                <div class="form-group">
+                  <label for="inputNumber" class="form-label">Número</label>
+                  <input type="text" id="inputNumber" class="form-input" placeholder="Nº">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="inputNeighborhood" class="form-label">Bairro</label>
+                <input type="text" id="inputNeighborhood" class="form-input" placeholder="Bairro">
+              </div>
+
+              <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px;">
+                <div class="form-group">
+                  <label for="inputCity" class="form-label">Cidade</label>
+                  <input type="text" id="inputCity" class="form-input" placeholder="Cidade">
+                </div>
+                <div class="form-group">
+                  <label for="inputState" class="form-label">Estado / UF</label>
+                  <input type="text" id="inputState" class="form-input" placeholder="GO">
+                </div>
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div class="form-group">
+                  <label for="inputCountry" class="form-label">País</label>
+                  <input type="text" id="inputCountry" class="form-input" placeholder="Brasil">
+                </div>
+                <div class="form-group">
+                  <label for="inputPostalCode" class="form-label">CEP</label>
+                  <input type="text" id="inputPostalCode" class="form-input" placeholder="76270-000">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ABA 2: Dados Técnicos (Perícia / Obra) -->
+          <div class="tab-panel" id="tab-technical">
+            <div class="section-block">
+              <div class="section-title">
+                <span>Identificação do Projeto / Laudo</span>
+              </div>
+
+              <div class="form-group">
+                <label for="inputProjectName" class="form-label">Nome da Obra / Local</label>
+                <input type="text" id="inputProjectName" class="form-input" placeholder="Ex: Residência Jussara">
+              </div>
+
+              <div class="form-group">
+                <label for="inputProcess" class="form-label">Número do Processo / Laudo</label>
+                <input type="text" id="inputProcess" class="form-input" placeholder="Ex: 5557293-56.2020.8.09.0097">
+              </div>
+
+              <div class="form-group">
+                <label for="inputResponsible" class="form-label">Responsável Técnico / Perito</label>
+                <input type="text" id="inputResponsible" class="form-input" placeholder="Ex: Eng. Perito">
+              </div>
+            </div>
+          </div>
+
+          <!-- ABA 3: Exportação e Download -->
+          <div class="tab-panel" id="tab-export">
+            <div class="section-block">
+              <div class="section-title">
+                <span>Configurações do Arquivo</span>
+              </div>
+
+              <div class="form-group">
+                <label for="selectExportFormat" class="form-label">Formato de Saída</label>
+                <select id="selectExportFormat" class="form-select">
+                  <option value="image/jpeg">JPG (Recomendado para fotografias)</option>
+                  <option value="image/png">PNG (Sem perda de qualidade)</option>
+                  <option value="image/webp">WebP (Alta compressão)</option>
+                </select>
+              </div>
+
+              <div class="form-group" id="qualityGroup">
+                <label for="rangeExportQuality" class="form-label">
+                  <span>Qualidade JPEG</span>
+                  <span id="valExportQuality" class="range-val">95%</span>
+                </label>
+                <input type="range" id="rangeExportQuality" class="form-range" min="0.5" max="1.0" step="0.05" value="0.95">
+              </div>
+
+              <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 16px; line-height: 1.4;">
+                🛡️ <strong>Preservação Integral:</strong> O arquivo original permanecerá intacto no seu computador. A imagem final será salva com sufixo <code>_stamp</code> na resolução nativa máxima.
+              </p>
+
+              <button type="button" class="btn btn-primary" id="btnExportPanel" style="width: 100%; padding: 12px;" onclick="document.getElementById('btnExport').click()">
+                💾 Baixar Fotografia Carimbada
+              </button>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </main>
+
+    <!-- Rodapé -->
+    <footer class="app-footer">
+      <div class="footer-left">
+        <span><strong>STAMP-CAMERA</strong> v1.0.0</span>
+        <span>•</span>
+        <span class="footer-privacy-text">100% Client-side • Compatível com GitHub Pages • Sem telemetria</span>
+      </div>
+      <div>
+        <span>Engenharia, Perícia & Inspeções Técnicas</span>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Indicador de Carregamento -->
+  <div class="loading-overlay" id="loadingIndicator" style="display: none;">
+    <div class="spinner"></div>
+    <span style="color: #fff; font-size: 14px; font-weight: 600;">Processando fotografia...</span>
+  </div>
+
+  <!-- Scripts Modulares -->
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

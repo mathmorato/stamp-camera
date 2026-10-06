@@ -1,0 +1,24 @@
+{
+  "name": "stamp-camera",
+  "version": "1.0.0",
+  "description": "Carimbo técnico e geográfico para fotografias - 100% Client-side",
+  "type": "module",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx serve .",
+    "serve": "npx serve -l 3000 .",
+    "test": "node tests/test-suite.js"
+  },
+  "keywords": [
+    "stamp-camera",
+    "exif",
+    "watermark",
+    "geolocation",
+    "gps",
+    "pericia",
+    "inspecao",
+    "engenharia"
+  ],
+  "author": "Antigravity",
+  "license": "MIT"
+}
