@@ -345,7 +345,7 @@ assert(tool.numbering.startNumber === 5, 'Contador avançado para 5 após lote d
 
 const backup = storage.getBackupData(tool);
 assert(backup.schema === 1, 'Backup gerado com Schema 1');
-assert(backup.version === 'v.1.1.7', 'Backup com versão atualizada v.1.1.7');
+assert(backup.version === 'v.1.1.8', 'Backup com versão atualizada v.1.1.8');
 assert(backup.config && backup.data && backup.counter, 'Estrutura completa de backup exportada sem fotos');
 
 const legacyData = {

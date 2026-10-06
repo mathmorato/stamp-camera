@@ -58,7 +58,6 @@ export class StampCameraUI {
     // Campos de Localização (Painel Direito)
     this.inputLat = document.getElementById('inputLat');
     this.inputLon = document.getElementById('inputLon');
-    this.inputAlt = document.getElementById('inputAlt');
     this.inputDate = document.getElementById('inputDate');
     this.inputTime = document.getElementById('inputTime');
     this.inputStreet = document.getElementById('inputStreet');
@@ -69,13 +68,10 @@ export class StampCameraUI {
     this.inputCountry = document.getElementById('inputCountry');
     this.inputPostalCode = document.getElementById('inputPostalCode');
     this.inputProjectName = document.getElementById('inputProjectName');
-    this.inputProcess = document.getElementById('inputProcess');
-    this.inputResponsible = document.getElementById('inputResponsible');
 
     // Badges de Origem (AUTO / MANUAL)
     this.badgeLat = document.getElementById('badgeLat');
     this.badgeLon = document.getElementById('badgeLon');
-    this.badgeAlt = document.getElementById('badgeAlt');
     this.badgeDate = document.getElementById('badgeDate');
     this.badgeTime = document.getElementById('badgeTime');
 
@@ -1140,18 +1136,6 @@ export class StampCameraUI {
       }
     });
 
-    // Altitude manual (se presente)
-    if (this.inputAlt) {
-      this.inputAlt.addEventListener('input', (e) => {
-        const val = parseFloat(e.target.value);
-        this.tool.location.altitude = isNaN(val) ? null : val;
-        this.tool.location.sources.altitude = 'MANUAL';
-        this.updateSourceBadges();
-        this.updateFieldInputValue('altitude', this.tool.getFieldValue('altitude'));
-        this.scheduleAutoSave();
-        this.app.requestRender();
-      });
-    }
 
     // Data manual
     if (this.inputDate) {
@@ -1405,7 +1389,6 @@ export class StampCameraUI {
     // Sincroniza TODOS os inputs do painel direito com os dados da localização
     if (this.inputLat) this.inputLat.value = this.tool.location.latitude !== null ? this.tool.location.latitude.toFixed(8) : '';
     if (this.inputLon) this.inputLon.value = this.tool.location.longitude !== null ? this.tool.location.longitude.toFixed(8) : '';
-    if (this.inputAlt) this.inputAlt.value = this.tool.location.altitude !== null ? this.tool.location.altitude.toFixed(1) : '';
     if (this.inputDate) this.inputDate.value = this.tool.location.date || '';
     if (this.inputTime) this.inputTime.value = this.tool.location.time || '';
     if (this.inputStreet) this.inputStreet.value = this.tool.location.street || '';
@@ -1416,8 +1399,6 @@ export class StampCameraUI {
     if (this.inputCountry) this.inputCountry.value = this.tool.location.country || '';
     if (this.inputPostalCode) this.inputPostalCode.value = this.tool.location.postalCode || '';
     if (this.inputProjectName) this.inputProjectName.value = this.tool.location.projectName || '';
-    if (this.inputProcess) this.inputProcess.value = this.tool.location.process || '';
-    if (this.inputResponsible) this.inputResponsible.value = this.tool.location.responsible || '';
 
     // Alertas de Metadados
     const exif = this.tool.exif;
@@ -1453,7 +1434,6 @@ export class StampCameraUI {
 
     updateBadge(this.badgeLat, this.tool.location.sources.latitude);
     updateBadge(this.badgeLon, this.tool.location.sources.longitude);
-    updateBadge(this.badgeAlt, this.tool.location.sources.altitude);
     updateBadge(this.badgeDate, this.tool.location.sources.date);
     updateBadge(this.badgeTime, this.tool.location.sources.time);
   }
@@ -1670,7 +1650,6 @@ export class StampCameraUI {
     const loc = this.tool.location;
     if (this.inputLat) this.inputLat.value = loc.latitude !== null ? loc.latitude : '';
     if (this.inputLon) this.inputLon.value = loc.longitude !== null ? loc.longitude : '';
-    if (this.inputAlt) this.inputAlt.value = loc.altitude !== null ? loc.altitude : '';
     if (this.inputDate) this.inputDate.value = loc.date || '';
     if (this.inputTime) this.inputTime.value = loc.time || '';
     if (this.inputStreet) this.inputStreet.value = loc.street || '';
@@ -1681,8 +1660,6 @@ export class StampCameraUI {
     if (this.inputCountry) this.inputCountry.value = loc.country || '';
     if (this.inputPostalCode) this.inputPostalCode.value = loc.postalCode || '';
     if (this.inputProjectName) this.inputProjectName.value = loc.projectName || '';
-    if (this.inputProcess) this.inputProcess.value = loc.process || '';
-    if (this.inputResponsible) this.inputResponsible.value = loc.responsible || '';
     this.updateSourceBadges();
   }
 
@@ -2305,9 +2282,7 @@ export class StampCameraUI {
       'state': this.inputState,
       'country': this.inputCountry,
       'postal_code': this.inputPostalCode,
-      'project_name': this.inputProjectName,
-      'process': this.inputProcess,
-      'responsible': this.inputResponsible
+      'project_name': this.inputProjectName
     };
 
     const targetInput = inputMap[fieldId];
@@ -2386,7 +2361,6 @@ export class StampCameraUI {
 
         this.inputLat.value = lat.toFixed(8);
         this.inputLon.value = lon.toFixed(8);
-        if (alt !== null) this.inputAlt.value = alt.toFixed(1);
 
         this.updateSourceBadges();
         this.renderFieldsList();
