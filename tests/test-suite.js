@@ -23,8 +23,29 @@ import { COORD_FORMATS, DATE_FORMATS, TIME_FORMATS } from '../js/config.js';
 import { BUILT_IN_MODELS, PRESET_CATEGORIES, STANDARD_FIELD_DEFS } from '../js/templates.js';
 import { StampCameraTool } from '../js/tools/stamp-camera/tool.js';
 import { getOfflineLocation } from '../js/geocoder.js';
+import { migrate, storage, CURRENT_SCHEMA_VERSION } from '../js/storage.js';
 import fs from 'fs';
 import path from 'path';
+
+if (typeof document === 'undefined') {
+  global.document = {
+    createElement: (tag) => {
+      if (tag === 'canvas') {
+        return {
+          width: 0,
+          height: 0,
+          getContext: () => ({
+            translate: () => {},
+            rotate: () => {},
+            drawImage: () => {}
+          }),
+          toDataURL: () => 'data:image/jpeg;base64,mock'
+        };
+      }
+      return {};
+    }
+  };
+}
 
 let passed = 0;
 let failed = 0;
@@ -248,15 +269,15 @@ tool.loadPhotoData({
   }
 });
 tool.settings.showOriginStampBadge = true;
-tool.location.altitude = 550;
-tool.location.sources.altitude = 'MANUAL';
-const altField = tool.activeFields.find(f => f.id === 'altitude');
-if (altField) altField.enabled = true;
+tool.location.date = '22/11/2022';
+tool.location.sources.date = 'MANUAL';
+const dateField = tool.activeFields.find(f => f.id === 'date');
+if (dateField) dateField.enabled = true;
 const stampLinesWithBadges = tool.getStampRenderLines();
 const coordLineBadge = stampLinesWithBadges.find(l => l.id === 'lat' || l.id === 'coordinates');
 assert(coordLineBadge && coordLineBadge.value.includes('[EXIF]'), 'Selo [EXIF] anexado à coordenada extraída do EXIF');
-const altLineBadge = stampLinesWithBadges.find(l => l.id === 'altitude');
-assert(altLineBadge && altLineBadge.value.includes('[MANUAL]'), 'Selo [MANUAL] anexado à altitude preenchida manualmente');
+const dateLineBadge = stampLinesWithBadges.find(l => l.id === 'date');
+assert(dateLineBadge && dateLineBadge.value.includes('[MANUAL]'), 'Selo [MANUAL] anexado a campo com fonte MANUAL');
 
 // Teste de Injeção e Preservação de Segmento APP1 EXIF em JPEG
 const sampleLibertyPath = path.resolve('assets/images/demo_liberty.jpg');
@@ -279,6 +300,50 @@ const zipBytes = zip.generateUint8Array();
 assert(zipBytes.length > 50, `Arquivo ZIP válido gerado com sucesso (${zipBytes.length} bytes)`);
 // Verifica assinatura inicial PK\x03\x04
 assert(zipBytes[0] === 0x50 && zipBytes[1] === 0x4B && zipBytes[2] === 0x03 && zipBytes[3] === 0x04, 'Assinatura padrão PK\x03\x04 verificada no início do ZIP');
+
+// Testes de Rotação, Numeração e Esquema de Persistência
+console.log('\n[4.8/5] Testes de Rotação de Imagem, Numeração e Esquema de Persistência:');
+const mockPhoto = {
+  canvas: {
+    width: 1920,
+    height: 1080,
+    getContext: () => ({ translate: () => {}, rotate: () => {}, drawImage: () => {} })
+  },
+  width: 1920,
+  height: 1080,
+  filename: 'foto_rotacao.jpg',
+  fileSize: 100000
+};
+tool.loadPhotoData(mockPhoto);
+tool.settings.customPosX = 0.2;
+tool.settings.customPosY = 0.3;
+tool.rotatePhoto('right');
+assert(tool.photo.width === 1080 && tool.photo.height === 1920, 'Dimensões invertidas após rotação de 90° à direita');
+assert(Math.abs(tool.settings.customPosX - 0.7) < 0.001 && Math.abs(tool.settings.customPosY - 0.2) < 0.001, 'Posição proporcional recalculada corretamente após rotação');
+tool.rotatePhoto('left');
+assert(tool.photo.width === 1920 && tool.photo.height === 1080, 'Dimensões restauradas após rotação de 90° à esquerda');
+
+tool.resetNumbering();
+assert(tool.numbering.startNumber === 1, 'Contador redefinido para 1');
+tool.advanceNumbering(1);
+assert(tool.numbering.startNumber === 2, 'Contador avançado para 2 após 1 exportação');
+tool.advanceNumbering(3);
+assert(tool.numbering.startNumber === 5, 'Contador avançado para 5 após lote de 3 fotos');
+
+const backup = storage.getBackupData(tool);
+assert(backup.schema === 1, 'Backup gerado com Schema 1');
+assert(backup.version === 'v.1.1.5', 'Backup com versão atualizada v.1.1.5');
+assert(backup.config && backup.data && backup.counter, 'Estrutura completa de backup exportada sem fotos');
+
+const legacyData = {
+  schema: 0,
+  settings: { fontSize: 24 },
+  customPresets: [{ id: 'custom_1', name: 'Meu Modelo' }]
+};
+const migrated = migrate(legacyData);
+assert(migrated.schema === 1, 'Dados legados convertidos com sucesso para Schema 1 pela função migrate()');
+assert(migrated.config.fontSize === 24, 'Configurações preservadas na migração');
+assert(migrated.models.length === 1, 'Modelos personalizados preservados na migração');
 
 tool.clearWorkspace();
 
@@ -306,7 +371,6 @@ const requiredElementIds = [
   'alertMetaSuccess',
   'inputLat',
   'inputLon',
-  'inputAlt',
   'inputDate',
   'inputTime',
   'inputStreet',
@@ -317,13 +381,23 @@ const requiredElementIds = [
   'inputCountry',
   'inputPostalCode',
   'inputProjectName',
-  'inputProcess',
-  'inputResponsible',
   'badgeLat',
   'badgeLon',
-  'badgeAlt',
   'badgeDate',
   'badgeTime',
+  'btnRotateLeft',
+  'btnRotateRight',
+  'saveStatusIndicator',
+  'draftRestoreBanner',
+  'btnRestoreDraft',
+  'btnDiscardDraft',
+  'btnDuplicatePreset',
+  'btnRenamePreset',
+  'btnDeletePreset',
+  'btnResetNumbering',
+  'btnExportBackupJson',
+  'btnImportBackupJson',
+  'btnClearAllBrowserData',
   'fieldsContainer',
   'btnAddField',
   'presetsSelect',

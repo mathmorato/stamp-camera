@@ -32,10 +32,68 @@ class StampCameraApp {
     // 3. Inicializa UI e escutas
     this.ui = new StampCameraUI(this.tool, this.engine, this);
 
-    // 4. Conecta eventos globais
+    // 4. Restaura estado salvo do Schema 1
+    this.restoreSavedAppState();
+
+    // 5. Conecta eventos globais
     this.bindGlobalEvents();
 
+    // 6. Verifica cota de armazenamento e rascunho anterior (IndexedDB)
+    this.checkStorageAndDrafts();
+
     console.log('[STAMP-CAMERA] Sistema inicializado com sucesso. 100% Client-Side.');
+  }
+
+  restoreSavedAppState() {
+    try {
+      const savedState = storage.getAppState();
+      if (this.ui) {
+        this.ui.restoreState(savedState);
+      }
+    } catch (e) {
+      console.warn('Erro ao restaurar estado do app:', e);
+    }
+  }
+
+  async checkStorageAndDrafts() {
+    try {
+      // Monitoramento de espaço (>80%)
+      const quota = await storage.checkStorageQuota();
+      if (quota && quota.isNearFull && this.ui) {
+        this.ui.updateSaveIndicator('near-full');
+      }
+
+      // Solicita persistência
+      await storage.requestPersistence();
+
+      // Verifica rascunho no IndexedDB
+      const draft = await storage.getDraftPhoto();
+      if (draft && draft.dataUrl && this.ui) {
+        this.ui.showDraftBanner(draft);
+      }
+    } catch (e) {
+      console.warn('Erro ao verificar armazenamento e rascunhos:', e);
+    }
+  }
+
+  async saveCurrentDraft() {
+    if (!this.tool.photo || !this.tool.photo.canvas) return;
+    try {
+      const canvas = this.tool.photo.canvas;
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+      await storage.saveDraftPhoto({
+        dataUrl,
+        width: this.tool.photo.width,
+        height: this.tool.photo.height,
+        filename: this.tool.photo.filename,
+        fileSize: this.tool.photo.fileSize,
+        exif: this.tool.exif,
+        customPosX: this.tool.settings.customPosX,
+        customPosY: this.tool.settings.customPosY
+      });
+    } catch (e) {
+      console.warn('Erro ao salvar rascunho no IndexedDB:', e);
+    }
   }
 
   initTheme() {
@@ -157,6 +215,9 @@ class StampCameraApp {
       this.ui.syncPhotoState();
       this.requestRender();
 
+      // Salva rascunho da fotografia no IndexedDB
+      await this.saveCurrentDraft();
+
       if (this.tool.location.city || this.tool.location.state) {
         const locStr = [this.tool.location.city, this.tool.location.state, this.tool.location.country].filter(Boolean).join(', ');
         this.showToast(`Localização identificada: ${locStr}`);
@@ -180,6 +241,9 @@ class StampCameraApp {
       this.ui.syncPhotoState();
       this.requestRender();
 
+      // Salva rascunho da demonstração no IndexedDB
+      await this.saveCurrentDraft();
+
       if (this.tool.location.city || this.tool.location.state) {
         const locStr = [this.tool.location.city, this.tool.location.state, this.tool.location.country].filter(Boolean).join(', ');
         this.showToast(`Localização identificada: ${locStr}`);
@@ -191,9 +255,12 @@ class StampCameraApp {
     }
   }
 
-  handleClear() {
+  async handleClear() {
     const fileInput = document.getElementById('fileInput');
     if (fileInput) fileInput.value = '';
+
+    await storage.clearDraftPhoto();
+    if (this.ui) this.ui.hideDraftBanner();
 
     this.tool.clearWorkspace();
     this.ui.syncPhotoState();
@@ -295,6 +362,13 @@ class StampCameraApp {
 
       btnExport.innerHTML = originalHtml;
       btnExport.disabled = false;
+
+      // Avança a numeração após exportação concluída com sucesso
+      this.tool.advanceNumbering(1);
+      if (this.ui) {
+        this.ui.syncNumberingControls();
+        this.ui.scheduleAutoSave();
+      }
 
       // Mensagem visual de sucesso
       const outFilename = typeof exportRes === 'string' ? exportRes : exportRes.filename;

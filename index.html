@@ -41,6 +41,11 @@
       </div>
 
       <div class="header-actions">
+        <div class="save-status-pill" id="saveStatusIndicator" title="Status de persistência local no navegador">
+          <span class="save-status-dot" id="saveStatusDot"></span>
+          <span id="saveStatusText">Salvo neste navegador ✓</span>
+        </div>
+
         <div class="privacy-pill" title="Processamento 100% no navegador. Nenhuma imagem trafega pela rede.">
           <span class="privacy-dot"></span>
           <span>Local / Offline</span>
@@ -113,10 +118,25 @@
                 <label for="presetsSelect" class="form-label">Modelo ou Preset Técnico</label>
                 <select id="presetsSelect" class="form-select"></select>
               </div>
-              <button type="button" class="btn btn-secondary btn-sm" id="btnSavePreset" style="width: 100%;">
-                <svg class="svg-icon" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-                <span>Salvar Configuração Atual</span>
-              </button>
+              <div class="model-actions-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 6px;">
+                <button type="button" class="btn btn-secondary btn-sm" id="btnSavePreset" title="Salvar configuração atual como novo modelo">
+                  <svg class="svg-icon" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                  <span>Salvar Novo</span>
+                </button>
+                <button type="button" class="btn btn-secondary btn-sm" id="btnDuplicatePreset" title="Duplicar modelo selecionado">
+                  <svg class="svg-icon" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                  <span>Duplicar</span>
+                </button>
+                <button type="button" class="btn btn-secondary btn-sm" id="btnRenamePreset" title="Renomear modelo personalizado atual">
+                  <svg class="svg-icon" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  <span>Renomear</span>
+                </button>
+                <button type="button" class="btn btn-secondary btn-sm btn-delete-preset" id="btnDeletePreset" title="Excluir modelo personalizado">
+                  <svg class="svg-icon" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                  <span>Excluir</span>
+                </button>
+              </div>
+              <span class="model-factory-note" id="modelFactoryNote" style="font-size: 10.5px; color: var(--text-subtle); display: block;">Modelos de fábrica não podem ser apagados ou renomeados.</span>
             </div>
 
             <div class="section-block">
@@ -143,6 +163,35 @@
                   <input type="number" id="inputNumberDigits" class="form-input" value="2" min="1" max="6">
                 </div>
               </div>
+
+              <button type="button" class="btn btn-secondary btn-sm" id="btnResetNumbering" style="width: 100%; margin-top: 6px;" title="Redefinir o contador para o número 1">
+                <svg class="svg-icon" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><polyline points="3 3 3 8 8 8"/></svg>
+                <span>Redefinir numeração</span>
+              </button>
+            </div>
+
+            <div class="section-block">
+              <div class="section-title">
+                <span>Backup & Armazenamento Local</span>
+              </div>
+              <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 8px; line-height: 1.4;">
+                Exporte modelos e configurações para transferir de aparelho, ou limpe o navegador.
+              </p>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 8px;">
+                <button type="button" class="btn btn-secondary btn-sm" id="btnExportBackupJson" title="Exportar configurações (.json) sem fotos">
+                  <svg class="svg-icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  <span>Exportar (.json)</span>
+                </button>
+                <button type="button" class="btn btn-secondary btn-sm" id="btnImportBackupJson" title="Importar arquivo de configurações (.json)">
+                  <svg class="svg-icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                  <span>Importar (.json)</span>
+                </button>
+              </div>
+              <input type="file" id="backupFileInput" accept=".json,application/json" style="display: none;">
+              <button type="button" class="btn btn-secondary btn-sm btn-clear-data" id="btnClearAllBrowserData" style="width: 100%; color: var(--color-danger); border-color: rgba(239, 68, 68, 0.3);" title="Apagar todos os dados salvos neste navegador">
+                <svg class="svg-icon" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                <span>Apagar dados deste navegador</span>
+              </button>
             </div>
 
             <div class="section-block">
@@ -363,12 +412,38 @@
           <div id="imageInfoBar" style="display: none;">
             <svg class="svg-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
             <span id="photoMetaText" style="font-weight: 500;">fotografia.jpg</span>
+            <button type="button" class="btn-icon btn-sm" id="btnRotateLeft" title="Girar 90° à esquerda (anti-horário)" aria-label="Girar 90° à esquerda">
+              <svg class="svg-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 2v6h6M2.66 15.57a10 10 0 1 0 .57-8.38"/></svg>
+            </button>
+            <button type="button" class="btn-icon btn-sm" id="btnRotateRight" title="Girar 90° à direita (horário)" aria-label="Girar 90° à direita">
+              <svg class="svg-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38"/></svg>
+            </button>
             <button type="button" class="btn-icon btn-sm" id="btnClearPhoto" title="Remover fotografia" aria-label="Remover fotografia">
               <svg class="svg-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
           </div>
           <div style="margin-left: auto; display: flex; align-items: center; gap: 8px;">
-            <span style="font-size: 11px; color: var(--text-subtle);">Renderização 2D em Alta Fidelidade</span>
+            <button type="button" class="btn btn-secondary btn-sm" id="btnToolbarBatch" style="display: none;" title="Processar várias fotografias com este mesmo carimbo">
+              <svg class="svg-icon svg-sm" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+              <span>+ Processar Várias Fotos em Lote</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Banner de Retomada de Trabalho Anterior (Foto e Posição em Rascunho) -->
+        <div class="draft-restore-banner" id="draftRestoreBanner" style="display: none;" role="alert">
+          <div class="draft-banner-info">
+            <div class="draft-banner-icon">
+              <svg class="svg-icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+            </div>
+            <div class="draft-banner-text">
+              <strong>Retomar trabalho anterior?</strong>
+              <span id="draftResumeDetails">Existe uma fotografia e configurações da sua última sessão não finalizada.</span>
+            </div>
+          </div>
+          <div class="draft-banner-actions">
+            <button type="button" class="btn btn-secondary btn-sm" id="btnDiscardDraft">Descartar</button>
+            <button type="button" class="btn btn-primary btn-sm" id="btnRestoreDraft">Retomar</button>
           </div>
         </div>
 
@@ -492,14 +567,6 @@
                 </div>
               </div>
 
-              <div class="form-group">
-                <label for="inputAlt" class="form-label">
-                  <span>Altitude (metros)</span>
-                  <span id="badgeAlt" class="badge badge-manual">MANUAL</span>
-                </label>
-                <input type="number" step="any" id="inputAlt" class="form-input" placeholder="Ex: 312.5">
-              </div>
-
               <div style="display: flex; gap: 8px; margin-top: 4px;">
                 <button type="button" class="btn btn-secondary btn-sm" id="btnDeviceGps" style="flex: 1;" title="Capturar coordenadas atuais do GPS deste dispositivo">
                   <svg class="svg-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="2" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22" y2="12"/></svg>
@@ -618,25 +685,15 @@
               </div>
             </div>
 
-            <!-- Dados Técnicos e Periciais -->
+            <!-- Identificação do Empreendimento -->
             <div class="section-block">
               <div class="section-title">
-                <span>Identificação Pericial & Técnica</span>
+                <span>Identificação do Empreendimento</span>
               </div>
 
               <div class="form-group">
                 <label for="inputProjectName" class="form-label">Obra / Local / Empreendimento</label>
                 <input type="text" id="inputProjectName" class="form-input" placeholder="Ex: Residência Jussara">
-              </div>
-
-              <div class="form-group">
-                <label for="inputProcess" class="form-label">Processo / Laudo / Notificação</label>
-                <input type="text" id="inputProcess" class="form-input" placeholder="Ex: 5557293-56.2020.8.09.0097">
-              </div>
-
-              <div class="form-group">
-                <label for="inputResponsible" class="form-label">Responsável Técnico / CREA / CAU</label>
-                <input type="text" id="inputResponsible" class="form-input" placeholder="Ex: Eng. Perito">
               </div>
             </div>
           </div>
@@ -711,16 +768,56 @@
     <!-- Barra de Status Técnica (Status Bar) -->
     <footer class="app-footer">
       <div class="footer-left">
-        <span>STAMP-CAMERA v.1.1.4</span>
+        <span>STAMP-CAMERA v.1.1.5</span>
         <span>•</span>
-        <span class="footer-privacy-text" title="Processamento 100% no navegador. Nenhuma foto enviada para servidores.">Processamento de Fotos 100% Local (Navegador)</span>
-        <span>•</span>
-        <span title="Consulta pública de logradouro via OpenStreetMap sob demanda">Geocodificação OSM Opcional</span>
+        <span class="footer-privacy-text" title="100% Client-Side: dados salvos exclusivamente no armazenamento local deste navegador">
+          Dados salvos somente neste navegador e dispositivo (não vão para outros aparelhos e se perdem se o histórico for limpo; use o backup .json)
+        </span>
       </div>
       <div>
         <span>Engenharia, Perícia & Inspeção Técnica</span>
       </div>
     </footer>
+  </div>
+
+  <!-- Modal: Exigência de Configuração Prévia com Exemplo para Lote -->
+  <div class="batch-modal" id="batchConfigRequirementModal" style="display: none;" role="dialog" aria-modal="true">
+    <div class="batch-modal-content" style="max-width: 520px;">
+      <div class="batch-modal-header">
+        <div class="batch-modal-title">
+          <svg class="svg-icon" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+          <h3>Configuração Obrigatória do Modelo</h3>
+        </div>
+        <button type="button" class="btn-close-modal" id="btnCloseBatchRequirementModal" aria-label="Fechar">&times;</button>
+      </div>
+      <div class="batch-modal-body" style="padding: 20px; gap: 14px;">
+        <div style="display: flex; gap: 14px; align-items: flex-start;">
+          <div style="width: 44px; height: 44px; border-radius: var(--radius-sm); background-color: rgba(59, 130, 246, 0.12); border: 1px solid rgba(59, 130, 246, 0.3); display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--primary);">
+            <svg class="svg-icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          </div>
+          <div>
+            <h4 style="font-size: 13px; font-weight: 600; color: var(--text-main); margin-bottom: 6px;">Etapa 1: Ajuste o carimbo com uma foto de exemplo</h4>
+            <p style="font-size: 11.5px; line-height: 1.5; color: var(--text-muted); margin: 0;">
+              Para garantir precisão pericial e técnica em todas as fotografias do lote, é <strong>obrigatório</strong> primeiro configurar e aprovar a posição, os campos técnicos e o estilo visual em uma fotografia de exemplo.
+            </p>
+          </div>
+        </div>
+
+        <div style="background-color: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-xs); padding: 12px; font-size: 11px; line-height: 1.5; color: var(--text-muted);">
+          <strong style="color: var(--text-main); display: block; margin-bottom: 4px;">Fluxo de processamento em lote:</strong>
+          1. <strong>Configuração:</strong> Visualize a foto de exemplo e posicione o carimbo onde desejar.<br>
+          2. <strong>Inserção em Lote:</strong> Insira dezenas de fotografias ao mesmo tempo.<br>
+          3. <strong>Exportação:</strong> Cada imagem recebe o carimbo preservando seus metadados EXIF e GPS individuais, gerando um pacote ZIP completo.
+        </div>
+      </div>
+      <div class="batch-modal-footer" style="padding: 12px 18px; display: flex; justify-content: flex-end; gap: 10px;">
+        <button type="button" class="btn btn-secondary" id="btnCancelBatchRequirement">Cancelar</button>
+        <button type="button" class="btn btn-primary" id="btnProceedToExample">
+          <svg class="svg-icon" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          <span>Carregar Foto de Exemplo e Iniciar</span>
+        </button>
+      </div>
+    </div>
   </div>
 
   <!-- Modal de Processamento em Lote de Fotografias -->
@@ -734,6 +831,32 @@
         <button type="button" class="btn-close-modal" id="btnCloseBatchModal" aria-label="Fechar Modal">&times;</button>
       </div>
       <div class="batch-modal-body">
+        <!-- Resumo do Modelo Configurado no Estúdio -->
+        <div class="batch-stamp-preview-summary" id="batchStampSummaryCard">
+          <div class="summary-badge">
+            <svg class="svg-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            <span>Modelo e Padrão Configurados no Estúdio</span>
+          </div>
+          <div class="summary-details">
+            <span id="batchSummaryModel">Modelo: Padrão</span>
+            <span>•</span>
+            <span id="batchSummaryPosition">Posição: Inferior Centro</span>
+            <span>•</span>
+            <span id="batchSummaryFieldsCount">17 campos ativos</span>
+          </div>
+        </div>
+
+        <!-- Área de Upload/Drop para Várias Fotos -->
+        <div class="batch-upload-dropzone" id="batchUploadDropzone">
+          <svg class="svg-icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <div style="font-weight: 600; font-size: 13px; color: var(--text-main);">Inserir Várias Fotografias ao Mesmo Tempo</div>
+          <div style="font-size: 11px; color: var(--text-muted);">Arraste múltiplos arquivos para cá ou clique no botão abaixo para selecionar</div>
+          <button type="button" class="btn btn-primary btn-sm" id="btnSelectBatchFiles" style="margin-top: 6px;">
+            <svg class="svg-icon svg-sm" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <span>+ Selecionar Várias Fotos Simultaneamente</span>
+          </button>
+        </div>
+
         <div class="batch-summary">
           <span id="batchCountText">0 fotografias na fila</span>
           <button type="button" class="btn btn-secondary btn-sm" id="btnAddBatchFiles">
@@ -797,6 +920,35 @@
       <div class="batch-modal-footer" style="padding: 12px 18px; display: flex; justify-content: flex-end; gap: 10px;">
         <button type="button" class="btn btn-secondary btn-sm" id="btnConfirmModalCancel">Cancelar</button>
         <button type="button" class="btn btn-primary btn-sm" id="btnConfirmModalOk">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Escolha de Importação de Backup (Substituir vs Mesclar) -->
+  <div class="batch-modal" id="importChoiceModal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="importModalTitle">
+    <div class="batch-modal-content" style="max-width: 480px;">
+      <div class="batch-modal-header">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <div class="confirm-icon-box">
+            <svg class="svg-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          </div>
+          <h3 class="batch-modal-title" id="importModalTitle" style="font-size: 14px; margin: 0;">Importar Configurações (.json)</h3>
+        </div>
+        <button type="button" class="btn-close-modal" id="btnCloseImportModal" aria-label="Fechar Modal">&times;</button>
+      </div>
+      <div class="batch-modal-body" style="padding: 16px 20px;">
+        <p style="font-size: 13px; color: var(--text-main); margin-bottom: 12px; line-height: 1.45;">
+          Arquivo de configurações carregado com sucesso. Como deseja aplicar as configurações?
+        </p>
+        <div style="display: flex; flex-direction: column; gap: 10px; font-size: 11.5px; line-height: 1.5; color: var(--text-muted); background-color: var(--bg-surface); padding: 12px; border-radius: var(--radius-xs); border: 1px solid var(--border-color);">
+          <div><strong style="color: var(--text-main);">Substituir:</strong> Substitui integralmente todos os modelos, dados e preferências atuais pelo conteúdo do arquivo.</div>
+          <div><strong style="color: var(--text-main);">Mesclar:</strong> Mantém suas configurações atuais e adiciona os modelos personalizados contidos no arquivo.</div>
+        </div>
+      </div>
+      <div class="batch-modal-footer" style="padding: 12px 18px; display: flex; justify-content: flex-end; gap: 8px;">
+        <button type="button" class="btn btn-secondary btn-sm" id="btnImportCancel">Cancelar</button>
+        <button type="button" class="btn btn-secondary btn-sm" id="btnImportMerge">Mesclar</button>
+        <button type="button" class="btn btn-primary btn-sm" id="btnImportReplace">Substituir</button>
       </div>
     </div>
   </div>

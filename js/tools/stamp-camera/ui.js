@@ -175,6 +175,46 @@ export class StampCameraUI {
     this.btnToggleSplitDateTime = document.getElementById('btnToggleSplitDateTime');
     this.btnToggleSplitAddress = document.getElementById('btnToggleSplitAddress');
     this.btnToggleSplitLocality = document.getElementById('btnToggleSplitLocality');
+
+    // Botões de Rotação da Imagem
+    this.btnRotateLeft = document.getElementById('btnRotateLeft');
+    this.btnRotateRight = document.getElementById('btnRotateRight');
+
+    // Indicador Discreto de Salvamento no Topo
+    this.saveStatusIndicator = document.getElementById('saveStatusIndicator');
+    this.saveStatusDot = document.getElementById('saveStatusDot');
+    this.saveStatusText = document.getElementById('saveStatusText');
+
+    // Banner de Retomada de Trabalho Anterior (IndexedDB)
+    this.draftRestoreBanner = document.getElementById('draftRestoreBanner');
+    this.btnRestoreDraft = document.getElementById('btnRestoreDraft');
+    this.btnDiscardDraft = document.getElementById('btnDiscardDraft');
+
+    // Botões de Ações de Modelos & Presets
+    this.btnDuplicatePreset = document.getElementById('btnDuplicatePreset');
+    this.btnRenamePreset = document.getElementById('btnRenamePreset');
+    this.btnDeletePreset = document.getElementById('btnDeletePreset');
+    this.modelFactoryNote = document.getElementById('modelFactoryNote');
+
+    // Botão de Redefinir Numeração
+    this.btnResetNumbering = document.getElementById('btnResetNumbering');
+
+    // Backup & Limpeza de Dados
+    this.btnExportBackupJson = document.getElementById('btnExportBackupJson');
+    this.btnImportBackupJson = document.getElementById('btnImportBackupJson');
+    this.backupFileInput = document.getElementById('backupFileInput');
+    this.btnClearAllBrowserData = document.getElementById('btnClearAllBrowserData');
+
+    // Modal de Escolha de Importação
+    this.importChoiceModal = document.getElementById('importChoiceModal');
+    this.btnCloseImportModal = document.getElementById('btnCloseImportModal');
+    this.btnImportCancel = document.getElementById('btnImportCancel');
+    this.btnImportReplace = document.getElementById('btnImportReplace');
+    this.btnImportMerge = document.getElementById('btnImportMerge');
+    this.pendingImportJson = null;
+
+    // Timer do auto-save com debounce de 500ms
+    this.autoSaveTimer = null;
   }
 
   bindEvents() {
@@ -202,6 +242,7 @@ export class StampCameraUI {
         this.tool.settings.position = pos;
         this.tool.settings.customPosX = null;
         this.tool.settings.customPosY = null;
+        this.scheduleAutoSave();
         this.app.requestRender();
       });
     });
@@ -212,6 +253,7 @@ export class StampCameraUI {
       this.updateFieldInputValue('coordinates', this.tool.getFieldValue('coordinates'));
       this.updateFieldInputValue('lat', this.tool.getFieldValue('lat'));
       this.updateFieldInputValue('lon', this.tool.getFieldValue('lon'));
+      this.scheduleAutoSave();
       this.app.requestRender();
     });
 
@@ -223,6 +265,7 @@ export class StampCameraUI {
         this.updateFieldInputValue('date', this.tool.location.date);
         this.updateFieldInputValue('datetime', this.tool.getFieldValue('datetime'));
       }
+      this.scheduleAutoSave();
       this.app.requestRender();
     });
 
@@ -234,12 +277,14 @@ export class StampCameraUI {
         this.updateFieldInputValue('time', this.tool.location.time);
         this.updateFieldInputValue('datetime', this.tool.getFieldValue('datetime'));
       }
+      this.scheduleAutoSave();
       this.app.requestRender();
     });
 
     // Estilos Visuais
     this.selectFontFamily.addEventListener('change', (e) => {
       this.tool.settings.fontFamily = e.target.value;
+      this.scheduleAutoSave();
       this.app.requestRender();
     });
 
@@ -247,21 +292,25 @@ export class StampCameraUI {
       const val = parseFloat(e.target.value);
       this.valFontSize.textContent = `${val}px`;
       this.tool.settings.fontSize = val;
+      this.scheduleAutoSave();
       this.app.requestRender();
     });
 
     this.colorText.addEventListener('input', (e) => {
       this.tool.settings.textColor = e.target.value;
+      this.scheduleAutoSave();
       this.app.requestRender();
     });
 
     this.colorBg.addEventListener('input', (e) => {
       this.tool.settings.backgroundColor = e.target.value;
+      this.scheduleAutoSave();
       this.app.requestRender();
     });
 
     this.selectBgType.addEventListener('change', (e) => {
       this.tool.settings.backgroundType = e.target.value;
+      this.scheduleAutoSave();
       this.app.requestRender();
     });
 
@@ -269,16 +318,19 @@ export class StampCameraUI {
       const val = parseInt(e.target.value, 10);
       this.valBgOpacity.textContent = `${val}%`;
       this.tool.settings.backgroundOpacity = val;
+      this.scheduleAutoSave();
       this.app.requestRender();
     });
 
     this.selectBorderWidth.addEventListener('change', (e) => {
       this.tool.settings.borderWidth = parseInt(e.target.value, 10);
+      this.scheduleAutoSave();
       this.app.requestRender();
     });
 
     this.colorBorder.addEventListener('input', (e) => {
       this.tool.settings.borderColor = e.target.value;
+      this.scheduleAutoSave();
       this.app.requestRender();
     });
 
@@ -286,26 +338,31 @@ export class StampCameraUI {
       const val = parseInt(e.target.value, 10);
       this.valBorderRadius.textContent = `${val}px`;
       this.tool.settings.borderRadius = val;
+      this.scheduleAutoSave();
       this.app.requestRender();
     });
 
     this.checkShadow.addEventListener('change', (e) => {
       this.tool.settings.hasShadow = e.target.checked;
+      this.scheduleAutoSave();
       this.app.requestRender();
     });
 
     this.checkBold.addEventListener('change', (e) => {
       this.tool.settings.fontWeight = e.target.checked ? '700' : '400';
+      this.scheduleAutoSave();
       this.app.requestRender();
     });
 
     this.checkItalic.addEventListener('change', (e) => {
       this.tool.settings.isItalic = e.target.checked;
+      this.scheduleAutoSave();
       this.app.requestRender();
     });
 
     this.selectTextAlign.addEventListener('change', (e) => {
       this.tool.settings.textAlign = e.target.value;
+      this.scheduleAutoSave();
       this.app.requestRender();
     });
 
@@ -313,6 +370,7 @@ export class StampCameraUI {
       this.selectLabelMode.addEventListener('change', (e) => {
         this.tool.settings.labelMode = e.target.value;
         this.syncLabelModeCustomUI(e.target.value);
+        this.scheduleAutoSave();
         this.app.requestRender();
       });
     }
@@ -347,6 +405,7 @@ export class StampCameraUI {
     if (this.selectInlineLayout) {
       this.selectInlineLayout.addEventListener('change', (e) => {
         this.tool.settings.inlineLayout = e.target.value;
+        this.scheduleAutoSave();
         this.app.requestRender();
       });
     }
@@ -355,24 +414,28 @@ export class StampCameraUI {
     this.checkAutoNumber.addEventListener('change', (e) => {
       this.tool.numbering.enabled = e.target.checked;
       this.updateFieldInputValue('photo_id', this.tool.getFieldValue('photo_id'));
+      this.scheduleAutoSave();
       this.app.requestRender();
     });
 
     this.inputNumberPrefix.addEventListener('input', (e) => {
       this.tool.numbering.prefix = e.target.value;
       this.updateFieldInputValue('photo_id', this.tool.getFieldValue('photo_id'));
+      this.scheduleAutoSave();
       this.app.requestRender();
     });
 
     this.inputNumberStart.addEventListener('input', (e) => {
       this.tool.numbering.startNumber = parseInt(e.target.value, 10) || 1;
       this.updateFieldInputValue('photo_id', this.tool.getFieldValue('photo_id'));
+      this.scheduleAutoSave();
       this.app.requestRender();
     });
 
     this.inputNumberDigits.addEventListener('input', (e) => {
       this.tool.numbering.digits = parseInt(e.target.value, 10) || 2;
       this.updateFieldInputValue('photo_id', this.tool.getFieldValue('photo_id'));
+      this.scheduleAutoSave();
       this.app.requestRender();
     });
 
@@ -426,14 +489,44 @@ export class StampCameraUI {
       this.loadSelectedPreset(e.target.value);
     });
 
-    // Salvar Preset Personalizado
-    this.btnSavePreset.addEventListener('click', () => {
-      const name = prompt('Nome para o novo Modelo / Preset:', 'Meu Modelo Personalizado');
-      if (name) {
-        const customPreset = {
+    // Salvar Novo Modelo Personalizado
+    if (this.btnSavePreset) {
+      this.btnSavePreset.addEventListener('click', () => {
+        const name = prompt('Nome para o novo Modelo / Preset:', 'Meu Modelo Personalizado');
+        if (name && name.trim()) {
+          const customPreset = {
+            id: `custom_${Date.now()}`,
+            name: name.trim(),
+            description: 'Modelo customizado salvo pelo usuário',
+            ...this.tool.settings,
+            fields: this.tool.activeFields.map(f => ({
+              id: f.id,
+              label: f.label,
+              enabled: f.enabled,
+              showLabel: f.showLabel,
+              defaultValue: f.customValue || this.tool.getFieldValue(f.id, f)
+            }))
+          };
+          storage.saveCustomPreset(customPreset);
+          this.renderPresetsList();
+          this.presetsSelect.value = customPreset.id;
+          this.loadSelectedPreset(customPreset.id);
+          this.scheduleAutoSave();
+          if (this.app?.showToast) this.app.showToast(`Modelo "${customPreset.name}" salvo com sucesso!`);
+        }
+      });
+    }
+
+    // Duplicar Modelo Atual
+    if (this.btnDuplicatePreset) {
+      this.btnDuplicatePreset.addEventListener('click', () => {
+        const currentModel = this.getSelectedModelObject();
+        const baseName = currentModel ? currentModel.name : 'Modelo';
+        const copyName = `${baseName} (Cópia)`;
+        const duplicatePreset = {
           id: `custom_${Date.now()}`,
-          name: name.trim(),
-          description: 'Modelo customizado salvo pelo usuário',
+          name: copyName,
+          description: `Cópia criada a partir de ${baseName}`,
           ...this.tool.settings,
           fields: this.tool.activeFields.map(f => ({
             id: f.id,
@@ -443,12 +536,238 @@ export class StampCameraUI {
             defaultValue: f.customValue || this.tool.getFieldValue(f.id, f)
           }))
         };
-        storage.saveCustomPreset(customPreset);
+        storage.saveCustomPreset(duplicatePreset);
         this.renderPresetsList();
-        this.presetsSelect.value = customPreset.id;
-        alert('Modelo salvo com sucesso no navegador!');
-      }
-    });
+        this.presetsSelect.value = duplicatePreset.id;
+        this.loadSelectedPreset(duplicatePreset.id);
+        this.scheduleAutoSave();
+        if (this.app?.showToast) this.app.showToast(`Modelo duplicado como "${copyName}".`);
+      });
+    }
+
+    // Renomear Modelo Atual (Modelos de fábrica protegidos!)
+    if (this.btnRenamePreset) {
+      this.btnRenamePreset.addEventListener('click', () => {
+        if (this.isBuiltInModel(this.tool.selectedModelId)) {
+          alert('Modelos de fábrica não podem ser renomeados. Duplique este modelo para criar uma cópia personalizada.');
+          return;
+        }
+        const currentModel = this.getSelectedModelObject();
+        const newName = prompt('Novo nome para o modelo:', currentModel ? currentModel.name : '');
+        if (newName && newName.trim()) {
+          storage.renameCustomPreset(this.tool.selectedModelId, newName.trim());
+          this.renderPresetsList();
+          this.presetsSelect.value = this.tool.selectedModelId;
+          this.scheduleAutoSave();
+          if (this.app?.showToast) this.app.showToast(`Modelo renomeado para "${newName.trim()}".`);
+        }
+      });
+    }
+
+    // Excluir Modelo Atual (Modelos de fábrica protegidos!)
+    if (this.btnDeletePreset) {
+      this.btnDeletePreset.addEventListener('click', () => {
+        if (this.isBuiltInModel(this.tool.selectedModelId)) {
+          alert('Modelos de fábrica não podem ser apagados.');
+          return;
+        }
+        const currentModel = this.getSelectedModelObject();
+        const modelName = currentModel ? currentModel.name : 'este modelo';
+        this.showConfirmDialog({
+          title: 'Excluir Modelo',
+          message: `Tem certeza de que deseja excluir permanentemente o modelo "${modelName}"?`,
+          confirmText: 'Excluir Modelo',
+          onConfirm: () => {
+            storage.deleteCustomPreset(this.tool.selectedModelId);
+            this.tool.selectedModelId = 'model_1_simple';
+            this.loadSelectedPreset('model_1_simple');
+            this.renderPresetsList();
+            this.scheduleAutoSave();
+            if (this.app?.showToast) this.app.showToast('Modelo excluído com sucesso.');
+          }
+        });
+      });
+    }
+
+    // Redefinir Numeração (com confirmação)
+    if (this.btnResetNumbering) {
+      this.btnResetNumbering.addEventListener('click', () => {
+        this.showConfirmDialog({
+          title: 'Redefinir Numeração',
+          message: 'Deseja redefinir o contador de numeração para o número 1?',
+          confirmText: 'Redefinir',
+          onConfirm: () => {
+            this.tool.resetNumbering();
+            this.syncNumberingControls();
+            this.updateFieldInputValue('photo_id', this.tool.getFieldValue('photo_id'));
+            this.scheduleAutoSave();
+            this.app.requestRender();
+            if (this.app?.showToast) this.app.showToast('Numeração redefinida para 1.');
+          }
+        });
+      });
+    }
+
+    // Exportar Configurações (.json) - Sem fotos
+    if (this.btnExportBackupJson) {
+      this.btnExportBackupJson.addEventListener('click', () => {
+        const backupData = storage.getBackupData(this.tool);
+        const jsonStr = JSON.stringify(backupData, null, 2);
+        const blob = new Blob([jsonStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `stamp-camera-config-${new Date().toISOString().slice(0, 10)}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        if (this.app?.showToast) this.app.showToast('Configurações exportadas (.json) sem fotos.');
+      });
+    }
+
+    // Importar Configurações (.json)
+    if (this.btnImportBackupJson && this.backupFileInput) {
+      this.btnImportBackupJson.addEventListener('click', () => {
+        this.backupFileInput.click();
+      });
+
+      this.backupFileInput.addEventListener('change', (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+          try {
+            const content = evt.target.result;
+            JSON.parse(content);
+            this.pendingImportJson = content;
+            if (this.importChoiceModal) {
+              this.importChoiceModal.style.display = 'flex';
+            }
+          } catch (err) {
+            alert(`Arquivo JSON inválido: ${err.message}`);
+          }
+        };
+        reader.readAsText(file);
+      });
+    }
+
+    // Modal de Escolha de Importação
+    if (this.btnCloseImportModal) {
+      this.btnCloseImportModal.addEventListener('click', () => this.closeImportModal());
+    }
+    if (this.btnImportCancel) {
+      this.btnImportCancel.addEventListener('click', () => this.closeImportModal());
+    }
+
+    if (this.btnImportReplace) {
+      this.btnImportReplace.addEventListener('click', () => {
+        if (!this.pendingImportJson) return;
+        const res = storage.importBackupData(this.pendingImportJson, 'replace', this.tool);
+        this.closeImportModal();
+        if (res.success) {
+          this.syncControlsWithSettings();
+          this.syncNumberingControls();
+          this.syncLocationInputs();
+          this.renderPresetsList();
+          this.renderFieldsList();
+          this.scheduleAutoSave();
+          this.app.requestRender();
+          if (this.app?.showToast) this.app.showToast('Configurações substituídas com sucesso!');
+        } else {
+          alert(`Erro na importação: ${res.error}`);
+        }
+      });
+    }
+
+    if (this.btnImportMerge) {
+      this.btnImportMerge.addEventListener('click', () => {
+        if (!this.pendingImportJson) return;
+        const res = storage.importBackupData(this.pendingImportJson, 'merge', this.tool);
+        this.closeImportModal();
+        if (res.success) {
+          this.syncControlsWithSettings();
+          this.syncNumberingControls();
+          this.syncLocationInputs();
+          this.renderPresetsList();
+          this.renderFieldsList();
+          this.scheduleAutoSave();
+          this.app.requestRender();
+          if (this.app?.showToast) this.app.showToast('Modelos e configurações mesclados com sucesso!');
+        } else {
+          alert(`Erro na importação: ${res.error}`);
+        }
+      });
+    }
+
+    // Apagar Dados Deste Navegador (Limpeza de localStorage e IndexedDB)
+    if (this.btnClearAllBrowserData) {
+      this.btnClearAllBrowserData.addEventListener('click', () => {
+        this.showConfirmDialog({
+          title: 'Apagar Dados Deste Navegador',
+          message: 'Atenção: Todos os dados salvos neste navegador (modelos personalizados, configurações, preferências e fotos em rascunho) serão apagados permanentemente. Deseja prosseguir?',
+          confirmText: 'Apagar Tudo',
+          onConfirm: async () => {
+            await storage.clearAllData();
+            this.tool.clearWorkspace();
+            this.syncControlsWithSettings();
+            this.syncNumberingControls();
+            this.syncLocationInputs();
+            this.renderPresetsList();
+            this.renderFieldsList();
+            this.app.requestRender();
+            this.updateSaveIndicator('saved');
+            if (this.draftRestoreBanner) this.draftRestoreBanner.style.display = 'none';
+            if (this.app?.showToast) this.app.showToast('Todos os dados locais foram apagados com sucesso.');
+          }
+        });
+      });
+    }
+
+    // Banner de Retomada de Trabalho Anterior
+    if (this.btnRestoreDraft) {
+      this.btnRestoreDraft.addEventListener('click', async () => {
+        const draft = await storage.getDraftPhoto();
+        if (draft && draft.dataUrl) {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = draft.width || img.naturalWidth;
+            canvas.height = draft.height || img.naturalHeight;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0);
+
+            this.tool.photo = {
+              canvas,
+              width: canvas.width,
+              height: canvas.height,
+              filename: draft.filename || 'rascunho.jpg',
+              fileSize: draft.fileSize || 0
+            };
+            this.tool.exif = draft.exif || {};
+            if (draft.customPosX !== undefined) this.tool.settings.customPosX = draft.customPosX;
+            if (draft.customPosY !== undefined) this.tool.settings.customPosY = draft.customPosY;
+
+            this.syncPhotoState();
+            this.app.requestRender();
+            if (this.draftRestoreBanner) this.draftRestoreBanner.style.display = 'none';
+            if (this.app?.showToast) this.app.showToast('Fotografia anterior retomada com sucesso!');
+          };
+          img.src = draft.dataUrl;
+        } else {
+          if (this.draftRestoreBanner) this.draftRestoreBanner.style.display = 'none';
+        }
+      });
+    }
+
+    if (this.btnDiscardDraft) {
+      this.btnDiscardDraft.addEventListener('click', async () => {
+        await storage.clearDraftPhoto();
+        if (this.draftRestoreBanner) this.draftRestoreBanner.style.display = 'none';
+        if (this.app?.showToast) this.app.showToast('Rascunho anterior descartado.');
+      });
+    }
 
     // Selo de Origem [EXIF] / [MANUAL] no Carimbo
     if (this.checkOriginStampBadge) {
@@ -491,6 +810,37 @@ export class StampCameraUI {
       this.cameraInput.addEventListener('change', (e) => {
         if (e.target.files && e.target.files[0]) {
           this.handleCameraCapture(e.target.files[0]);
+        }
+      });
+    }
+
+    // Rotação de Imagem (Horário e Anti-Horário)
+    if (this.btnRotateLeft) {
+      this.btnRotateLeft.addEventListener('click', async () => {
+        if (!this.tool.photo) return;
+        this.tool.rotatePhoto('left');
+        this.syncPhotoState();
+        this.app.requestRender();
+        if (this.app && typeof this.app.saveCurrentDraft === 'function') {
+          await this.app.saveCurrentDraft();
+        }
+        if (this.app && typeof this.app.showToast === 'function') {
+          this.app.showToast('Fotografia girada 90° à esquerda.');
+        }
+      });
+    }
+
+    if (this.btnRotateRight) {
+      this.btnRotateRight.addEventListener('click', async () => {
+        if (!this.tool.photo) return;
+        this.tool.rotatePhoto('right');
+        this.syncPhotoState();
+        this.app.requestRender();
+        if (this.app && typeof this.app.saveCurrentDraft === 'function') {
+          await this.app.saveCurrentDraft();
+        }
+        if (this.app && typeof this.app.showToast === 'function') {
+          this.app.showToast('Fotografia girada 90° à direita.');
         }
       });
     }
@@ -708,6 +1058,7 @@ export class StampCameraUI {
         this.updateSourceBadges();
         this.updateFieldInputValue('lat', this.tool.getFieldValue('lat'));
         this.updateFieldInputValue('coordinates', this.tool.getFieldValue('coordinates'));
+        this.scheduleAutoSave();
         this.app.requestRender();
       }
     });
@@ -721,42 +1072,53 @@ export class StampCameraUI {
         this.updateSourceBadges();
         this.updateFieldInputValue('lon', this.tool.getFieldValue('lon'));
         this.updateFieldInputValue('coordinates', this.tool.getFieldValue('coordinates'));
+        this.scheduleAutoSave();
         this.app.requestRender();
       }
     });
 
-    // Altitude manual
-    this.inputAlt.addEventListener('input', (e) => {
-      const val = parseFloat(e.target.value);
-      this.tool.location.altitude = isNaN(val) ? null : val;
-      this.tool.location.sources.altitude = 'MANUAL';
-      this.updateSourceBadges();
-      this.updateFieldInputValue('altitude', this.tool.getFieldValue('altitude'));
-      this.app.requestRender();
-    });
+    // Altitude manual (se presente)
+    if (this.inputAlt) {
+      this.inputAlt.addEventListener('input', (e) => {
+        const val = parseFloat(e.target.value);
+        this.tool.location.altitude = isNaN(val) ? null : val;
+        this.tool.location.sources.altitude = 'MANUAL';
+        this.updateSourceBadges();
+        this.updateFieldInputValue('altitude', this.tool.getFieldValue('altitude'));
+        this.scheduleAutoSave();
+        this.app.requestRender();
+      });
+    }
 
     // Data manual
-    this.inputDate.addEventListener('input', (e) => {
-      this.tool.location.date = e.target.value;
-      this.tool.location.sources.date = 'MANUAL';
-      this.updateSourceBadges();
-      this.updateFieldInputValue('date', e.target.value);
-      this.updateFieldInputValue('datetime', this.tool.getFieldValue('datetime'));
-      this.app.requestRender();
-    });
+    if (this.inputDate) {
+      this.inputDate.addEventListener('input', (e) => {
+        this.tool.location.date = e.target.value;
+        this.tool.location.sources.date = 'MANUAL';
+        this.updateSourceBadges();
+        this.updateFieldInputValue('date', e.target.value);
+        this.updateFieldInputValue('datetime', this.tool.getFieldValue('datetime'));
+        this.scheduleAutoSave();
+        this.app.requestRender();
+      });
+    }
 
     // Hora manual
-    this.inputTime.addEventListener('input', (e) => {
-      this.tool.location.time = e.target.value;
-      this.tool.location.sources.time = 'MANUAL';
-      this.updateSourceBadges();
-      this.updateFieldInputValue('time', e.target.value);
-      this.updateFieldInputValue('datetime', this.tool.getFieldValue('datetime'));
-      this.app.requestRender();
-    });
+    if (this.inputTime) {
+      this.inputTime.addEventListener('input', (e) => {
+        this.tool.location.time = e.target.value;
+        this.tool.location.sources.time = 'MANUAL';
+        this.updateSourceBadges();
+        this.updateFieldInputValue('time', e.target.value);
+        this.updateFieldInputValue('datetime', this.tool.getFieldValue('datetime'));
+        this.scheduleAutoSave();
+        this.app.requestRender();
+      });
+    }
 
     // Campos de Endereço e Dados Técnicos
     const bindText = (inputElem, key, fieldId, relatedFieldIds = []) => {
+      if (!inputElem) return;
       inputElem.addEventListener('input', (e) => {
         this.tool.location[key] = e.target.value;
         this.tool.location.sources[key] = 'MANUAL';
@@ -764,6 +1126,7 @@ export class StampCameraUI {
         for (const relId of relatedFieldIds) {
           this.updateFieldInputValue(relId, this.tool.getFieldValue(relId));
         }
+        this.scheduleAutoSave();
         this.app.requestRender();
       });
     };
@@ -926,21 +1289,21 @@ export class StampCameraUI {
     this.photoMetaText.textContent = `${this.tool.photo.filename} • ${w} × ${h} px • ${sizeMb} MB`;
 
     // Sincroniza TODOS os inputs do painel direito com os dados da localização
-    this.inputLat.value = this.tool.location.latitude !== null ? this.tool.location.latitude.toFixed(8) : '';
-    this.inputLon.value = this.tool.location.longitude !== null ? this.tool.location.longitude.toFixed(8) : '';
-    this.inputAlt.value = this.tool.location.altitude !== null ? this.tool.location.altitude.toFixed(1) : '';
-    this.inputDate.value = this.tool.location.date || '';
-    this.inputTime.value = this.tool.location.time || '';
-    this.inputStreet.value = this.tool.location.street || '';
-    this.inputNumber.value = this.tool.location.number || '';
-    this.inputNeighborhood.value = this.tool.location.neighborhood || '';
-    this.inputCity.value = this.tool.location.city || '';
-    this.inputState.value = this.tool.location.state || '';
-    this.inputCountry.value = this.tool.location.country || '';
-    this.inputPostalCode.value = this.tool.location.postalCode || '';
-    this.inputProjectName.value = this.tool.location.projectName || '';
-    this.inputProcess.value = this.tool.location.process || '';
-    this.inputResponsible.value = this.tool.location.responsible || '';
+    if (this.inputLat) this.inputLat.value = this.tool.location.latitude !== null ? this.tool.location.latitude.toFixed(8) : '';
+    if (this.inputLon) this.inputLon.value = this.tool.location.longitude !== null ? this.tool.location.longitude.toFixed(8) : '';
+    if (this.inputAlt) this.inputAlt.value = this.tool.location.altitude !== null ? this.tool.location.altitude.toFixed(1) : '';
+    if (this.inputDate) this.inputDate.value = this.tool.location.date || '';
+    if (this.inputTime) this.inputTime.value = this.tool.location.time || '';
+    if (this.inputStreet) this.inputStreet.value = this.tool.location.street || '';
+    if (this.inputNumber) this.inputNumber.value = this.tool.location.number || '';
+    if (this.inputNeighborhood) this.inputNeighborhood.value = this.tool.location.neighborhood || '';
+    if (this.inputCity) this.inputCity.value = this.tool.location.city || '';
+    if (this.inputState) this.inputState.value = this.tool.location.state || '';
+    if (this.inputCountry) this.inputCountry.value = this.tool.location.country || '';
+    if (this.inputPostalCode) this.inputPostalCode.value = this.tool.location.postalCode || '';
+    if (this.inputProjectName) this.inputProjectName.value = this.tool.location.projectName || '';
+    if (this.inputProcess) this.inputProcess.value = this.tool.location.process || '';
+    if (this.inputResponsible) this.inputResponsible.value = this.tool.location.responsible || '';
 
     // Alertas de Metadados
     const exif = this.tool.exif;
@@ -1021,6 +1384,192 @@ export class StampCameraUI {
     }
 
     this.presetsSelect.value = this.tool.selectedModelId;
+    this.updateModelButtonsState();
+  }
+
+  isBuiltInModel(presetId) {
+    if (!presetId) return true;
+    return BUILT_IN_MODELS.some(m => m.id === presetId) || PRESET_CATEGORIES.some(p => p.id === presetId);
+  }
+
+  getSelectedModelObject() {
+    const id = this.tool.selectedModelId;
+    return BUILT_IN_MODELS.find(m => m.id === id) ||
+           PRESET_CATEGORIES.find(p => p.id === id) ||
+           storage.getCustomPresets().find(c => c.id === id) ||
+           null;
+  }
+
+  updateModelButtonsState() {
+    const isBuiltIn = this.isBuiltInModel(this.tool.selectedModelId);
+    if (this.btnRenamePreset) {
+      this.btnRenamePreset.disabled = isBuiltIn;
+      this.btnRenamePreset.title = isBuiltIn ? 'Modelos de fábrica não podem ser renomeados' : 'Renomear este modelo';
+    }
+    if (this.btnDeletePreset) {
+      this.btnDeletePreset.disabled = isBuiltIn;
+      this.btnDeletePreset.title = isBuiltIn ? 'Modelos de fábrica não podem ser apagados' : 'Excluir este modelo';
+    }
+    if (this.modelFactoryNote) {
+      this.modelFactoryNote.style.display = isBuiltIn ? 'block' : 'none';
+    }
+  }
+
+  closeImportModal() {
+    if (this.importChoiceModal) {
+      this.importChoiceModal.style.display = 'none';
+    }
+    this.pendingImportJson = null;
+    if (this.backupFileInput) {
+      this.backupFileInput.value = '';
+    }
+  }
+
+  showDraftBanner(draft) {
+    if (!this.draftRestoreBanner) return;
+    const details = document.getElementById('draftResumeDetails');
+    if (details && draft.filename) {
+      const dateStr = draft.savedAt ? new Date(draft.savedAt).toLocaleTimeString('pt-BR') : '';
+      details.textContent = `Fotografia "${draft.filename}" de sessão anterior${dateStr ? ` (${dateStr})` : ''}.`;
+    }
+    this.draftRestoreBanner.style.display = 'flex';
+  }
+
+  hideDraftBanner() {
+    if (this.draftRestoreBanner) {
+      this.draftRestoreBanner.style.display = 'none';
+    }
+  }
+
+  /**
+   * Restaura o estado salvo a partir do Schema 1 e sincroniza todos os controles
+   * @param {Object} savedState
+   */
+  restoreState(savedState) {
+    if (!savedState) {
+      this.renderPresetsList();
+      this.syncControlsWithSettings();
+      this.syncLocationInputs();
+      this.syncNumberingControls();
+      this.renderFieldsList();
+      this.updateModelButtonsState();
+      if (!storage.isStorageAvailable()) {
+        this.updateSaveIndicator('unavailable');
+      } else {
+        this.updateSaveIndicator('saved');
+      }
+      return;
+    }
+
+    this.tool.loadState(savedState);
+    this.renderPresetsList();
+    if (savedState.selectedModelId && this.presetsSelect) {
+      this.presetsSelect.value = savedState.selectedModelId;
+    }
+    this.syncControlsWithSettings();
+    this.syncLocationInputs();
+    this.syncNumberingControls();
+    this.renderFieldsList();
+    this.updateModelButtonsState();
+
+    if (!storage.isStorageAvailable()) {
+      this.updateSaveIndicator('unavailable');
+    } else {
+      this.updateSaveIndicator('saved');
+    }
+  }
+
+  scheduleAutoSave() {
+    if (!storage.isStorageAvailable()) {
+      this.updateSaveIndicator('unavailable');
+      return;
+    }
+    this.updateSaveIndicator('saving');
+    if (this.autoSaveTimer) clearTimeout(this.autoSaveTimer);
+    this.autoSaveTimer = setTimeout(() => {
+      this.performAutoSave();
+    }, 500);
+  }
+
+  performAutoSave() {
+    try {
+      if (!storage.isStorageAvailable()) {
+        this.updateSaveIndicator('unavailable');
+        return;
+      }
+      const stateToSave = {
+        config: { ...this.tool.settings },
+        counter: { ...this.tool.numbering },
+        location: { ...this.tool.location },
+        activeFields: this.tool.activeFields.map(f => ({ ...f })),
+        selectedModelId: this.tool.selectedModelId,
+        models: storage.getCustomPresets()
+      };
+      storage.saveAppState(stateToSave);
+
+      if (this.tool.photo) {
+        storage.updateDraftPosition(this.tool.settings.customPosX, this.tool.settings.customPosY);
+      }
+
+      this.updateSaveIndicator('saved');
+    } catch (e) {
+      console.warn('Erro ao executar auto-save:', e);
+      this.updateSaveIndicator('unavailable');
+    }
+  }
+
+  updateSaveIndicator(status) {
+    if (!this.saveStatusIndicator || !this.saveStatusText) return;
+
+    this.saveStatusIndicator.classList.remove('saving', 'unavailable', 'near-full');
+
+    switch (status) {
+      case 'saving':
+        this.saveStatusIndicator.classList.add('saving');
+        this.saveStatusText.textContent = 'Salvando...';
+        break;
+      case 'unavailable':
+        this.saveStatusIndicator.classList.add('unavailable');
+        this.saveStatusText.textContent = 'Salvamento local indisponível neste navegador';
+        this.saveStatusIndicator.title = 'Armazenamento restrito ou navegação anônima sem persistência';
+        break;
+      case 'near-full':
+        this.saveStatusIndicator.classList.add('near-full');
+        this.saveStatusText.textContent = 'Armazenamento quase cheio (>80%)';
+        break;
+      case 'saved':
+      default:
+        this.saveStatusText.textContent = 'Salvo neste navegador ✓';
+        this.saveStatusIndicator.title = 'Todas as alterações são salvas localmente neste navegador';
+        break;
+    }
+  }
+
+  syncNumberingControls() {
+    if (this.inputNumberStart) this.inputNumberStart.value = this.tool.numbering.startNumber;
+    if (this.inputNumberPrefix) this.inputNumberPrefix.value = this.tool.numbering.prefix;
+    if (this.inputNumberDigits) this.inputNumberDigits.value = this.tool.numbering.digits;
+    if (this.checkAutoNumber) this.checkAutoNumber.checked = !!this.tool.numbering.enabled;
+  }
+
+  syncLocationInputs() {
+    const loc = this.tool.location;
+    if (this.inputLat) this.inputLat.value = loc.latitude !== null ? loc.latitude : '';
+    if (this.inputLon) this.inputLon.value = loc.longitude !== null ? loc.longitude : '';
+    if (this.inputAlt) this.inputAlt.value = loc.altitude !== null ? loc.altitude : '';
+    if (this.inputDate) this.inputDate.value = loc.date || '';
+    if (this.inputTime) this.inputTime.value = loc.time || '';
+    if (this.inputStreet) this.inputStreet.value = loc.street || '';
+    if (this.inputNumber) this.inputNumber.value = loc.number || '';
+    if (this.inputNeighborhood) this.inputNeighborhood.value = loc.neighborhood || '';
+    if (this.inputCity) this.inputCity.value = loc.city || '';
+    if (this.inputState) this.inputState.value = loc.state || '';
+    if (this.inputCountry) this.inputCountry.value = loc.country || '';
+    if (this.inputPostalCode) this.inputPostalCode.value = loc.postalCode || '';
+    if (this.inputProjectName) this.inputProjectName.value = loc.projectName || '';
+    if (this.inputProcess) this.inputProcess.value = loc.process || '';
+    if (this.inputResponsible) this.inputResponsible.value = loc.responsible || '';
+    this.updateSourceBadges();
   }
 
   loadSelectedPreset(presetId) {
@@ -1029,6 +1578,8 @@ export class StampCameraUI {
       this.tool.applyModel(model);
       this.syncControlsWithSettings();
       this.renderFieldsList();
+      this.updateModelButtonsState();
+      this.scheduleAutoSave();
       this.app.requestRender();
       return;
     }
@@ -1053,6 +1604,8 @@ export class StampCameraUI {
 
       this.syncControlsWithSettings();
       this.renderFieldsList();
+      this.updateModelButtonsState();
+      this.scheduleAutoSave();
       this.app.requestRender();
       return;
     }
@@ -1063,6 +1616,8 @@ export class StampCameraUI {
       this.tool.applyModel(userPreset);
       this.syncControlsWithSettings();
       this.renderFieldsList();
+      this.updateModelButtonsState();
+      this.scheduleAutoSave();
       this.app.requestRender();
     }
   }
@@ -1173,6 +1728,7 @@ export class StampCameraUI {
       this.tool.addCustomField('Campo Personalizado', 'Valor');
       this.addFieldMenu.style.display = 'none';
       this.renderFieldsList();
+      this.scheduleAutoSave();
       this.app.requestRender();
     });
     this.addFieldMenu.appendChild(btnCustom);
@@ -1202,6 +1758,7 @@ export class StampCameraUI {
           this.tool.addStandardField(field.id);
           this.addFieldMenu.style.display = 'none';
           this.renderFieldsList();
+          this.scheduleAutoSave();
           this.app.requestRender();
           if (this.app && typeof this.app.showToast === 'function') {
             this.app.showToast(`Campo "${field.label}" adicionado.`);
@@ -1312,6 +1869,7 @@ export class StampCameraUI {
         field.enabled = e.target.checked;
         row.classList.toggle('enabled', field.enabled);
         row.classList.toggle('disabled', !field.enabled);
+        this.scheduleAutoSave();
         this.app.requestRender();
       });
 
@@ -1323,6 +1881,7 @@ export class StampCameraUI {
       labelInput.title = 'Rótulo exibido no carimbo (ex: DATA, LOCAL, OBRA)';
       labelInput.addEventListener('input', (e) => {
         field.label = e.target.value;
+        this.scheduleAutoSave();
         this.app.requestRender();
       });
 
@@ -1345,7 +1904,7 @@ export class StampCameraUI {
         // Sincroniza com os inputs correspondentes no painel direito se existirem
         this.syncRightPanelInput(field.id, newVal);
 
-        // Se o campo estiver desmarcado mas o usuário digitou, pode continuar ou manter o estado
+        this.scheduleAutoSave();
         this.app.requestRender();
       });
 
@@ -1361,6 +1920,7 @@ export class StampCameraUI {
       toggleLabelBtn.addEventListener('click', () => {
         field.showLabel = !field.showLabel;
         toggleLabelBtn.classList.toggle('active', field.showLabel);
+        this.scheduleAutoSave();
         this.app.requestRender();
       });
 
@@ -1373,6 +1933,7 @@ export class StampCameraUI {
       btnUp.addEventListener('click', () => {
         this.tool.moveField(field.id, 'up');
         this.renderFieldsList();
+        this.scheduleAutoSave();
         this.app.requestRender();
       });
 
@@ -1385,6 +1946,7 @@ export class StampCameraUI {
       btnDown.addEventListener('click', () => {
         this.tool.moveField(field.id, 'down');
         this.renderFieldsList();
+        this.scheduleAutoSave();
         this.app.requestRender();
       });
 
@@ -1407,6 +1969,7 @@ export class StampCameraUI {
             onConfirm: () => {
               this.tool.splitLocality();
               this.renderFieldsList();
+              this.scheduleAutoSave();
               this.app.requestRender();
               if (this.app && typeof this.app.showToast === 'function') {
                 this.app.showToast('Localidade separada em Cidade, Estado e País.');
@@ -1429,6 +1992,7 @@ export class StampCameraUI {
             onConfirm: () => {
               this.tool.unifyLocality();
               this.renderFieldsList();
+              this.scheduleAutoSave();
               this.app.requestRender();
               if (this.app && typeof this.app.showToast === 'function') {
                 this.app.showToast('Cidade, Estado e País unificados em Localidade.');
@@ -1451,6 +2015,7 @@ export class StampCameraUI {
             onConfirm: () => {
               this.tool.splitAddress();
               this.renderFieldsList();
+              this.scheduleAutoSave();
               this.app.requestRender();
               if (this.app && typeof this.app.showToast === 'function') {
                 this.app.showToast('Endereço e Bairro separados.');
@@ -1473,6 +2038,7 @@ export class StampCameraUI {
             onConfirm: () => {
               this.tool.unifyAddress();
               this.renderFieldsList();
+              this.scheduleAutoSave();
               this.app.requestRender();
               if (this.app && typeof this.app.showToast === 'function') {
                 this.app.showToast('Endereço e Bairro unificados.');
@@ -1495,6 +2061,7 @@ export class StampCameraUI {
             onConfirm: () => {
               this.tool.splitDateTime();
               this.renderFieldsList();
+              this.scheduleAutoSave();
               this.app.requestRender();
               if (this.app && typeof this.app.showToast === 'function') {
                 this.app.showToast('Data e Hora separadas em linhas individuais.');
@@ -1517,6 +2084,7 @@ export class StampCameraUI {
             onConfirm: () => {
               this.tool.unifyDateTime();
               this.renderFieldsList();
+              this.scheduleAutoSave();
               this.app.requestRender();
               if (this.app && typeof this.app.showToast === 'function') {
                 this.app.showToast('Data e Hora unificadas na mesma linha.');
@@ -1539,6 +2107,7 @@ export class StampCameraUI {
             onConfirm: () => {
               this.tool.splitCoordinates();
               this.renderFieldsList();
+              this.scheduleAutoSave();
               this.app.requestRender();
               if (this.app && typeof this.app.showToast === 'function') {
                 this.app.showToast('Coordenadas separadas em Lat e Long.');
@@ -1561,6 +2130,7 @@ export class StampCameraUI {
             onConfirm: () => {
               this.tool.unifyCoordinates();
               this.renderFieldsList();
+              this.scheduleAutoSave();
               this.app.requestRender();
               if (this.app && typeof this.app.showToast === 'function') {
                 this.app.showToast('Latitude e Longitude unificadas na mesma linha.');
@@ -1580,6 +2150,7 @@ export class StampCameraUI {
         btnDelete.addEventListener('click', () => {
           this.tool.removeField(field.id);
           this.renderFieldsList();
+          this.scheduleAutoSave();
           this.app.requestRender();
         });
         actionsDiv.appendChild(btnDelete);
@@ -2020,6 +2591,11 @@ export class StampCameraUI {
         preserveExif,
         zipFilename: `fotos_carimbadas_${Date.now()}.zip`
       });
+
+      // Avança a numeração pela quantidade de fotos exportadas no lote
+      this.tool.advanceNumbering(total);
+      this.syncNumberingControls();
+      this.scheduleAutoSave();
 
       if (this.batchProgressText) {
         this.batchProgressText.textContent = `✓ Lote concluído! Download do ZIP iniciado.`;

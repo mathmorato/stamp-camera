@@ -118,8 +118,8 @@ export const BUILT_IN_MODELS = [
       { id: 'datetime', label: 'DATA E HORA', enabled: true, showLabel: true },
       { id: 'coordinates', label: 'COORDENADAS', enabled: true, showLabel: true },
       { id: 'city_state_country', label: 'LOCAL', enabled: true, showLabel: true },
-      { id: 'process', label: 'PROCESSO', enabled: true, showLabel: true, defaultValue: '5557293-56.2020.8.09.0097' },
-      { id: 'responsible', label: 'PERITO RESPONSÁVEL', enabled: true, showLabel: true, defaultValue: 'Eng. Perito' }
+      { id: 'project_name', label: 'OBRA / LOCAL', enabled: true, showLabel: true, defaultValue: 'Residência Jussara' },
+      { id: 'report_num', label: 'LAUDO / RELATÓRIO', enabled: true, showLabel: true, defaultValue: 'Laudo 01/2026' }
     ]
   },
   {
@@ -148,7 +148,6 @@ export const BUILT_IN_MODELS = [
       { id: 'coordinates', label: 'Coordenadas', enabled: true, showLabel: true },
       { id: 'city_state_country', label: 'Local', enabled: true, showLabel: true },
       { id: 'address_neighborhood', label: 'Endereço', enabled: false, showLabel: true },
-      { id: 'altitude', label: 'Altitude', enabled: false, showLabel: true },
       { id: 'project_name', label: 'Obra', enabled: false, showLabel: true, defaultValue: 'Residência Jussara' },
       { id: 'custom_text', label: 'Observação', enabled: false, showLabel: false, defaultValue: 'Inspeção de rotina' }
     ]
@@ -193,10 +192,9 @@ export const PRESET_CATEGORIES = [
     id: 'preset_obra',
     name: 'Obra & Construção Civil',
     baseModelId: 'model_3_technical',
-    enabledFields: ['project_name', 'responsible', 'datetime', 'coordinates', 'city_state_country'],
+    enabledFields: ['project_name', 'datetime', 'coordinates', 'city_state_country'],
     fieldDefaults: {
-      project_name: 'Residência Jussara',
-      responsible: 'Engenheiro Civil'
+      project_name: 'Residência Jussara'
     }
   },
   {
@@ -248,7 +246,6 @@ export const STANDARD_FIELD_DEFS = [
   { id: 'coordinates', name: 'Coordenadas (Lat/Long)', category: 'location', defaultLabel: 'Coordenadas', placeholder: 'Ex: 15.869969° S, 50.852275° W' },
   { id: 'lat', name: 'Latitude', category: 'location', defaultLabel: 'Lat', placeholder: 'Ex: 15.869969° S' },
   { id: 'lon', name: 'Longitude', category: 'location', defaultLabel: 'Long', placeholder: 'Ex: 50.852275° W' },
-  { id: 'altitude', name: 'Altitude', category: 'location', defaultLabel: 'Altitude', placeholder: 'Ex: 312.5 m' },
   { id: 'street', name: 'Rua / Logradouro', category: 'location', defaultLabel: 'Rua', placeholder: 'Ex: Av. José Vicente' },
   { id: 'number', name: 'Número', category: 'location', defaultLabel: 'Nº', placeholder: 'Ex: 100' },
   { id: 'address_street_num', name: 'Rua e Número combinados', category: 'location', defaultLabel: 'Endereço', placeholder: 'Ex: Av. José Vicente, nº 100' },
@@ -261,8 +258,6 @@ export const STANDARD_FIELD_DEFS = [
   { id: 'city_state_country', name: 'Cidade, Estado, País', category: 'location', defaultLabel: 'Localidade', placeholder: 'Ex: Jussara, Goiás, Brasil' },
   { id: 'postal_code', name: 'CEP', category: 'location', defaultLabel: 'CEP', placeholder: 'Ex: 76270-000' },
   { id: 'project_name', name: 'Nome da Obra / Projeto', category: 'technical', defaultLabel: 'Obra', placeholder: 'Ex: Residência Jussara' },
-  { id: 'process', name: 'Processo Judicial / Administrativo', category: 'technical', defaultLabel: 'Processo', placeholder: 'Ex: 5557293-56.2020.8.09.0097' },
   { id: 'report_num', name: 'Relatório / Laudo nº', category: 'technical', defaultLabel: 'Relatório', placeholder: 'Ex: Laudo 04/2022' },
-  { id: 'responsible', name: 'Responsável Técnico / Perito', category: 'technical', defaultLabel: 'Responsável', placeholder: 'Ex: Eng. Perito Especialista' },
   { id: 'custom_text', name: 'Texto Personalizado', category: 'custom', defaultLabel: 'Observações', placeholder: 'Ex: Vistoria técnica' }
 ];

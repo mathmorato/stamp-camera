@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="50%" stop-color="#1e293b" />
+      <stop offset="100%" stop-color="#090d16" />
+    </linearGradient>
+    <linearGradient id="lensGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0284c7" />
+      <stop offset="50%" stop-color="#2563eb" />
+      <stop offset="100%" stop-color="#1d4ed8" />
+    </linearGradient>
+    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#818cf8" />
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Fundo com cantos arredondados estilo app icon -->
+  <rect width="512" height="512" rx="108" fill="url(#bgGrad)" />
+  <rect x="12" y="12" width="488" height="488" rx="96" fill="none" stroke="#334155" stroke-width="4" stroke-opacity="0.6" />
+
+  <!-- Grid técnico de fundo -->
+  <path d="M 64 256 H 448 M 256 64 V 448" stroke="#334155" stroke-width="1.5" stroke-dasharray="6,6" stroke-opacity="0.4" />
+  <circle cx="256" cy="256" r="180" fill="none" stroke="#334155" stroke-width="1.5" stroke-dasharray="6,6" stroke-opacity="0.3" />
+
+  <!-- Corpo da Câmera Técnica -->
+  <g transform="translate(0, 10)">
+    <!-- Topo da câmera (visor / pentaprisma) -->
+    <path d="M 196 148 L 220 118 H 292 L 316 148 Z" fill="#1e293b" stroke="#475569" stroke-width="6" stroke-linejoin="round" />
+    <!-- Flash / LED técnico -->
+    <circle cx="160" cy="180" r="12" fill="#38bdf8" opacity="0.9" filter="url(#glow)" />
+    <!-- Botão disparador -->
+    <rect x="330" y="126" width="34" height="16" rx="4" fill="#64748b" stroke="#475569" stroke-width="3" />
+
+    <!-- Corpo principal da câmera -->
+    <rect x="96" y="148" width="320" height="230" rx="36" fill="#1e293b" stroke="#475569" stroke-width="7" />
+    <rect x="110" y="162" width="292" height="202" rx="24" fill="#0f172a" fill-opacity="0.6" />
+
+    <!-- Lente e Retículo GPS -->
+    <circle cx="256" cy="265" r="92" fill="url(#lensGrad)" stroke="#38bdf8" stroke-width="7" />
+    <circle cx="256" cy="265" r="76" fill="#0f172a" stroke="#60a5fa" stroke-width="3" stroke-dasharray="10,5" />
+    <circle cx="256" cy="265" r="48" fill="#1e293b" stroke="#38bdf8" stroke-width="4" />
+    <circle cx="256" cy="265" r="16" fill="#38bdf8" filter="url(#glow)" />
+
+    <!-- Marcador Geográfico (Pin / Crosshair) -->
+    <line x1="256" y1="185" x2="256" y2="215" stroke="#38bdf8" stroke-width="5" stroke-linecap="round" />
+    <line x1="256" y1="315" x2="256" y2="345" stroke="#38bdf8" stroke-width="5" stroke-linecap="round" />
+    <line x1="176" y1="265" x2="206" y2="265" stroke="#38bdf8" stroke-width="5" stroke-linecap="round" />
+    <line x1="306" y1="265" x2="336" y2="265" stroke="#38bdf8" stroke-width="5" stroke-linecap="round" />
+
+    <!-- Tarja técnica de carimbo com coordenadas simuladas -->
+    <rect x="120" y="336" width="272" height="28" rx="6" fill="#0f172a" fill-opacity="0.9" stroke="#38bdf8" stroke-width="1.5" />
+    <text x="256" y="355" font-family="system-ui, -apple-system, sans-serif" font-weight="700" font-size="12" fill="#38bdf8" text-anchor="middle" letter-spacing="1.5">
+      GPS • DATA • HORA • EXIF
+    </text>
+  </g>
+</svg>

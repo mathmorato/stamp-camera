@@ -22,9 +22,7 @@ import { reverseGeocode } from '../../geocoder.js';
 export const OPTIONAL_ON_DEMAND_FIELDS = [
   'photo_id',
   'project_name',
-  'process',
   'report_num',
-  'responsible',
   'custom_text'
 ];
 
@@ -959,4 +957,94 @@ export class StampCameraTool {
     }
     return true;
   }
+
+  /**
+   * Avança o contador de numeração após uma exportação concluída com sucesso.
+   * Nunca avança ao simplesmente abrir uma fotografia.
+   */
+  advanceNumbering(count = 1) {
+    const current = parseInt(this.numbering.startNumber, 10) || 1;
+    this.numbering.startNumber = current + (parseInt(count, 10) || 1);
+    return this.numbering.startNumber;
+  }
+
+  /**
+   * Redefine o contador de numeração para o número inicial (1)
+   */
+  resetNumbering() {
+    this.numbering.startNumber = 1;
+    return this.numbering.startNumber;
+  }
+
+  /**
+   * Rotaciona a fotografia atual em 90 graus (horário ou anti-horário).
+   * Atualiza dimensões e renderiza de forma 100% sem perdas.
+   * @param {'right'|'left'} direction
+   * @returns {Object|null} Objeto da foto atualizado
+   */
+  rotatePhoto(direction = 'right') {
+    if (!this.photo || !this.photo.canvas) return null;
+    const oldCanvas = this.photo.canvas;
+    const newCanvas = document.createElement('canvas');
+    newCanvas.width = oldCanvas.height;
+    newCanvas.height = oldCanvas.width;
+    const ctx = newCanvas.getContext('2d');
+
+    if (direction === 'left') {
+      ctx.translate(0, newCanvas.height);
+      ctx.rotate(-Math.PI / 2);
+    } else {
+      ctx.translate(newCanvas.width, 0);
+      ctx.rotate(Math.PI / 2);
+    }
+    ctx.drawImage(oldCanvas, 0, 0);
+
+    this.photo.canvas = newCanvas;
+    this.photo.width = newCanvas.width;
+    this.photo.height = newCanvas.height;
+
+    // Atualiza customPosX e customPosY se houver posição personalizada
+    if (this.settings.customPosX !== null && this.settings.customPosY !== null) {
+      const oldX = this.settings.customPosX;
+      const oldY = this.settings.customPosY;
+      if (direction === 'right') {
+        this.settings.customPosX = 1 - oldY;
+        this.settings.customPosY = oldX;
+      } else {
+        this.settings.customPosX = oldY;
+        this.settings.customPosY = 1 - oldX;
+      }
+    }
+
+    return this.photo;
+  }
+
+  /**
+   * Restaura o estado salvo a partir do Schema 1
+   * @param {Object} state
+   */
+  loadState(state) {
+    if (!state) return;
+    if (state.config) {
+      this.settings = { ...this.settings, ...state.config };
+    }
+    if (state.counter) {
+      this.numbering = { ...this.numbering, ...state.counter };
+    }
+    const loc = state.data?.location || state.location;
+    if (loc) {
+      this.location = { ...this.location, ...loc };
+      if (loc.sources) {
+        this.location.sources = { ...this.location.sources, ...loc.sources };
+      }
+    }
+    const fields = state.data?.activeFields || state.activeFields;
+    if (Array.isArray(fields) && fields.length > 0) {
+      this.activeFields = fields.map(f => ({ ...f }));
+    }
+    if (state.selectedModelId) {
+      this.selectedModelId = state.selectedModelId;
+    }
+  }
 }
+

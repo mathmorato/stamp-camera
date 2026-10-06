@@ -1024,6 +1024,55 @@
   margin-left: 4px;
 }
 
+/* Resumo do carimbo configurado no lote */
+.batch-stamp-preview-summary {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.batch-stamp-preview-summary .summary-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--color-success);
+}
+
+.batch-stamp-preview-summary .summary-details {
+  font-size: 11px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+/* Área de Drop / Seleção de múltiplas fotos no lote */
+.batch-upload-dropzone {
+  border: 2px dashed var(--border-color);
+  border-radius: var(--radius-sm);
+  background-color: var(--bg-surface);
+  padding: 20px 16px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  transition: border-color var(--transition-fast), background-color var(--transition-fast);
+}
+
+.batch-upload-dropzone:hover,
+.batch-upload-dropzone.drag-over {
+  border-color: var(--primary);
+  background-color: rgba(59, 130, 246, 0.05);
+}
+
 /* Botões de Ação para Separar e Unificar Campos */
 .btn-split-unify {
   display: inline-flex;
@@ -1092,3 +1141,139 @@
   justify-content: center;
   flex-shrink: 0;
 }
+
+/* Indicador Discreto de Salvamento no Topo */
+.save-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  padding: 3px 9px;
+  border-radius: var(--radius-xs);
+  font-size: 10.5px;
+  font-weight: 500;
+  color: var(--text-muted);
+  transition: all var(--transition-fast);
+}
+
+.save-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--success);
+  flex-shrink: 0;
+  transition: background-color var(--transition-fast);
+}
+
+.save-status-pill.saving .save-status-dot {
+  background-color: var(--primary);
+  animation: pulse 1s infinite alternate;
+}
+
+.save-status-pill.saving {
+  color: var(--primary);
+}
+
+.save-status-pill.unavailable .save-status-dot {
+  background-color: #f59e0b;
+}
+
+.save-status-pill.unavailable {
+  color: #f59e0b;
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+.save-status-pill.near-full .save-status-dot {
+  background-color: #ef4444;
+}
+
+.save-status-pill.near-full {
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+/* Banner de Retomada de Trabalho Anterior (Foto em Rascunho) */
+.draft-restore-banner {
+  background-color: var(--bg-surface-elevated);
+  border-bottom: 1px solid var(--primary);
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  animation: slideDown 0.25s ease-out;
+  z-index: 15;
+}
+
+.draft-banner-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.draft-banner-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-xs);
+  background-color: rgba(59, 130, 246, 0.15);
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.draft-banner-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.draft-banner-text strong {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.draft-banner-text span {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.draft-banner-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Ações de Modelos e Botões Específicos */
+.model-actions-grid button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.btn-delete-preset:hover:not(:disabled) {
+  border-color: rgba(239, 68, 68, 0.5) !important;
+  color: #ef4444 !important;
+  background-color: rgba(239, 68, 68, 0.08) !important;
+}
+
+.btn-clear-data:hover {
+  background-color: rgba(239, 68, 68, 0.1) !important;
+  border-color: #ef4444 !important;
+}
+
