@@ -44,14 +44,17 @@ class StampCameraApp {
 
     const themeToggleBtn = document.getElementById('themeToggleBtn');
     if (themeToggleBtn) {
-      themeToggleBtn.innerHTML = savedTheme === 'dark' ? '☀️' : '🌙';
+      const sunSvg = `<svg class="svg-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>`;
+      const moonSvg = `<svg class="svg-icon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`;
+
+      themeToggleBtn.innerHTML = savedTheme === 'dark' ? sunSvg : moonSvg;
       themeToggleBtn.title = savedTheme === 'dark' ? 'Mudar para Tema Claro' : 'Mudar para Tema Escuro';
       themeToggleBtn.addEventListener('click', () => {
         const current = document.documentElement.getAttribute('data-theme');
         const next = current === 'dark' ? 'light' : 'dark';
         document.documentElement.setAttribute('data-theme', next);
         storage.setTheme(next);
-        themeToggleBtn.innerHTML = next === 'dark' ? '☀️' : '🌙';
+        themeToggleBtn.innerHTML = next === 'dark' ? sunSvg : moonSvg;
         themeToggleBtn.title = next === 'dark' ? 'Mudar para Tema Claro' : 'Mudar para Tema Escuro';
       });
     }
@@ -248,7 +251,7 @@ class StampCameraApp {
     try {
       const btnExport = document.getElementById('btnExport');
       const originalHtml = btnExport.innerHTML;
-      btnExport.innerHTML = '⏳';
+      btnExport.innerHTML = `<svg class="svg-icon" style="animation: spin 0.7s linear infinite;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-opacity="0.25"/><path d="M12 2a10 10 0 0 1 10 10"/></svg><span>Gerando...</span>`;
       btnExport.disabled = true;
 
       // Criar canvas de alta resolução 1:1 para exportação sem perda de qualidade
@@ -284,7 +287,7 @@ class StampCameraApp {
     } catch (err) {
       const btnExport = document.getElementById('btnExport');
       if (btnExport) {
-        btnExport.innerHTML = '💾';
+        btnExport.innerHTML = `<svg class="svg-icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span>Exportar Foto</span>`;
         btnExport.disabled = false;
       }
       alert(`Falha ao exportar imagem: ${err.message}`);

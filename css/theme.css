@@ -1,92 +1,150 @@
 /**
- * STAMP-CAMERA - Tema e Paleta de Cores (WCAG AA)
- * Suporte a Tema Escuro e Tema Claro
+ * STAMP-CAMERA - Design System & Tokens
+ * Estética: Technical Precision (Software de Engenharia & Perícia Fotográfica)
+ * Suporte a Tema Escuro (Padrão de inspeção) e Tema Claro
  */
 
 :root {
-  /* Fontes */
+  /* Tipografia Técnica */
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  --font-mono: 'JetBrains Mono', 'SF Mono', Consolas, Menlo, monospace;
+  --font-mono: 'JetBrains Mono', 'SF Mono', ui-monospace, Menlo, Consolas, monospace;
 
-  /* Transições suaves */
-  --transition-fast: 0.15s ease;
-  --transition-normal: 0.25s ease;
+  /* Escala de Espaçamento Modular (Grid de 4px) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+
+  /* Raios de Canto Sutis (Sem excesso de arredondamento) */
+  --radius-xs: 3px;
+  --radius-sm: 5px;
+  --radius-md: 7px;
+  --radius-lg: 10px;
+  --radius-full: 9999px;
+
+  /* Transições Precisas e Discretas */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-fast: 0.12s var(--ease-out);
+  --transition-normal: 0.2s var(--ease-out);
 }
 
-/* Modo Escuro (Padrão de Engenharia & Perícia) */
+/* TEMA ESCURO (Dark Studio / Padrão) */
 :root[data-theme="dark"], :root:not([data-theme="light"]) {
-  --bg-app: #090d16;
-  --bg-surface: #0f172a;
-  --bg-card: #1e293b;
-  --bg-card-hover: #273549;
-  --bg-input: #0b1120;
-  --bg-canvas-backdrop: #06090f;
+  /* Camadas de Fundo */
+  --bg-app: #0d1117;
+  --bg-surface: #161b22;
+  --bg-surface-elevated: #1f242c;
+  --bg-card: #181d24;
+  --bg-card-hover: #222730;
+  --bg-input: #0d1117;
+  --bg-input-hover: #13171f;
+  --bg-canvas-backdrop: #080a0e;
 
-  --border-color: #334155;
-  --border-subtle: #1e293b;
+  /* Bordas Técnicas Sutis */
+  --border-color: #2b313a;
+  --border-subtle: #20262f;
   --border-focus: #3b82f6;
 
-  --text-main: #f8fafc;
-  --text-muted: #94a3b8;
-  --text-subtle: #64748b;
+  /* Hierarquia de Texto */
+  --text-main: #f0f3f8;
+  --text-muted: #8b94a2;
+  --text-subtle: #57606e;
+  --text-disabled: #3d4450;
 
-  --primary: #3b82f6;
-  --primary-hover: #2563eb;
+  /* Cor de Ação Primária (Azul Técnico Sóbrio) */
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
+  --primary-active: #1e40af;
+  --primary-subtle: rgba(37, 99, 235, 0.15);
   --primary-text: #ffffff;
 
-  --accent-cyan: #06b6d4;
+  /* Cores Semânticas de Estado */
   --success: #10b981;
-  --success-bg: rgba(16, 185, 129, 0.12);
+  --success-bg: rgba(16, 185, 129, 0.1);
+  --success-border: rgba(16, 185, 129, 0.25);
+
   --warning: #f59e0b;
-  --warning-bg: rgba(245, 158, 11, 0.12);
+  --warning-bg: rgba(245, 158, 11, 0.1);
+  --warning-border: rgba(245, 158, 11, 0.25);
+
   --danger: #ef4444;
-  --danger-bg: rgba(239, 68, 68, 0.12);
+  --danger-bg: rgba(239, 68, 68, 0.1);
+  --danger-border: rgba(239, 68, 68, 0.25);
 
-  --badge-auto-bg: #1e3a8a;
-  --badge-auto-text: #93c5fd;
-  --badge-manual-bg: #451a03;
-  --badge-manual-text: #fcd34d;
+  /* Badges de Origem Técnica (AUTO / MANUAL) */
+  --badge-auto-bg: rgba(16, 185, 129, 0.12);
+  --badge-auto-border: rgba(16, 185, 129, 0.3);
+  --badge-auto-text: #34d399;
 
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.6);
+  --badge-manual-bg: rgba(148, 163, 184, 0.08);
+  --badge-manual-border: rgba(148, 163, 184, 0.25);
+  --badge-manual-text: #cbd5e1;
+
+  /* Sombras Precisas (Discretas, sem blur artificial) */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 3px 8px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.6);
+  --shadow-canvas: 0 12px 36px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.06);
 }
 
-/* Modo Claro */
+/* TEMA CLARO (Light Inspection) */
 :root[data-theme="light"] {
-  --bg-app: #f1f5f9;
+  /* Camadas de Fundo */
+  --bg-app: #f4f6f8;
   --bg-surface: #ffffff;
+  --bg-surface-elevated: #ffffff;
   --bg-card: #f8fafc;
   --bg-card-hover: #f1f5f9;
   --bg-input: #ffffff;
+  --bg-input-hover: #f8fafc;
   --bg-canvas-backdrop: #e2e8f0;
 
-  --border-color: #cbd5e1;
-  --border-subtle: #e2e8f0;
+  /* Bordas Técnicas */
+  --border-color: #d8dee4;
+  --border-subtle: #e9eef2;
   --border-focus: #2563eb;
 
-  --text-main: #0f172a;
-  --text-muted: #475569;
-  --text-subtle: #64748b;
+  /* Hierarquia de Texto */
+  --text-main: #111827;
+  --text-muted: #526071;
+  --text-subtle: #8c9ba8;
+  --text-disabled: #cbd5e1;
 
+  /* Cor de Ação Primária */
   --primary: #2563eb;
   --primary-hover: #1d4ed8;
+  --primary-active: #1e40af;
+  --primary-subtle: rgba(37, 99, 235, 0.1);
   --primary-text: #ffffff;
 
-  --accent-cyan: #0891b2;
+  /* Cores Semânticas de Estado */
   --success: #059669;
-  --success-bg: rgba(5, 150, 105, 0.1);
+  --success-bg: rgba(5, 150, 105, 0.08);
+  --success-border: rgba(5, 150, 105, 0.2);
+
   --warning: #d97706;
-  --warning-bg: rgba(217, 119, 6, 0.1);
+  --warning-bg: rgba(217, 119, 6, 0.08);
+  --warning-border: rgba(217, 119, 6, 0.2);
+
   --danger: #dc2626;
-  --danger-bg: rgba(220, 38, 38, 0.1);
+  --danger-bg: rgba(220, 38, 38, 0.08);
+  --danger-border: rgba(220, 38, 38, 0.2);
 
-  --badge-auto-bg: #dbeafe;
-  --badge-auto-text: #1e40af;
-  --badge-manual-bg: #fef3c7;
-  --badge-manual-text: #92400e;
+  /* Badges de Origem Técnica */
+  --badge-auto-bg: rgba(5, 150, 105, 0.1);
+  --badge-auto-border: rgba(5, 150, 105, 0.3);
+  --badge-auto-text: #047857;
 
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  --badge-manual-bg: rgba(100, 116, 139, 0.08);
+  --badge-manual-border: rgba(100, 116, 139, 0.2);
+  --badge-manual-text: #475569;
+
+  /* Sombras */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 2px 6px rgba(0, 0, 0, 0.07);
+  --shadow-lg: 0 6px 18px rgba(0, 0, 0, 0.1);
+  --shadow-canvas: 0 10px 28px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.08);
 }

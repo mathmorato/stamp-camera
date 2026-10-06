@@ -4,12 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>STAMP-CAMERA • Carimbo Técnico e Geográfico para Fotografias</title>
-  <meta name="description" content="Aplicação web 100% client-side para inserção de carimbos técnicos e georreferenciados em fotografias para perícias, obras, inspeções e laudos.">
+  <meta name="description" content="Ferramenta profissional 100% client-side para inserção de carimbos técnicos e georreferenciados em fotografias de perícia, engenharia, fiscalização e laudos.">
   
   <!-- Favicon SVG inline -->
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📷</text></svg>">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232563eb' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='3'/><path d='M4 8V6a2 2 0 0 1 2-2h2'/><path d='M4 16v2a2 2 0 0 0 2 2h2'/><path d='M16 4h2a2 2 0 0 1 2 2v2'/><path d='M16 20h2a2 2 0 0 0 2-2v-2'/></svg>">
   
-  <!-- Estilos -->
+  <!-- Estilos Técnicos -->
   <link rel="stylesheet" href="css/theme.css">
   <link rel="stylesheet" href="css/main.css">
   <link rel="stylesheet" href="css/stamp-camera.css">
@@ -20,55 +20,73 @@
   <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp" style="display: none;">
 
   <div class="app-container">
-    <!-- Header Principal -->
+    <!-- Cabeçalho Principal (Top Command Bar) -->
     <header class="app-header">
       <div class="brand-section">
         <div class="logo-badge">
-          <div class="logo-icon">SC</div>
+          <div class="logo-icon" title="STAMP-CAMERA">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3.5"/>
+              <path d="M4 8V6a2 2 0 0 1 2-2h2"/>
+              <path d="M4 16v2a2 2 0 0 0 2 2h2"/>
+              <path d="M16 4h2a2 2 0 0 1 2 2v2"/>
+              <path d="M16 20h2a2 2 0 0 0 2-2v-2"/>
+            </svg>
+          </div>
           <span class="logo-title">STAMP-CAMERA</span>
         </div>
         <span class="logo-subtitle">Carimbo técnico e geográfico para fotografias</span>
       </div>
 
       <div class="header-actions">
-        <div class="privacy-pill" title="Nenhum dado ou imagem sai do seu computador. Todo o processamento é executado localmente no navegador.">
+        <div class="privacy-pill" title="Processamento 100% no navegador. Nenhuma imagem ou coordenada trafega pela rede.">
           <span class="privacy-dot"></span>
-          <span>100% Local</span>
+          <span>Local / Offline</span>
         </div>
 
-        <button type="button" class="btn-icon header-btn-icon" id="btnOpenPhoto" title="Abrir Fotografia (do dispositivo)" aria-label="Abrir Fotografia">
-          📁
+        <button type="button" class="btn-icon header-btn-icon" id="btnOpenPhoto" title="Abrir Fotografia (Ctrl+O)" aria-label="Abrir Fotografia">
+          <svg class="svg-icon" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg>
         </button>
 
-        <button type="button" class="btn-icon header-btn-icon" id="btnClearWorkspace" title="Limpar Fotografia e Campos" aria-label="Limpar Espaço de Trabalho">
-          🗑️
+        <button type="button" class="btn-icon header-btn-icon" id="btnClearWorkspace" title="Limpar Imagem e Resetar Campos" aria-label="Limpar Espaço de Trabalho">
+          <svg class="svg-icon" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
         </button>
 
         <select id="langSelect" class="form-select header-lang-select" title="Selecionar Idioma" aria-label="Selecionar Idioma">
-          <option value="pt-BR">🇧🇷</option>
-          <option value="en">🇺🇸</option>
-          <option value="es">🇪🇸</option>
+          <option value="pt-BR">PT-BR</option>
+          <option value="en">EN</option>
+          <option value="es">ES</option>
         </select>
 
         <button type="button" class="btn-icon header-btn-icon" id="themeToggleBtn" title="Alternar Modo Escuro / Claro" aria-label="Alternar Tema">
-          ☀️
+          <svg class="svg-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
         </button>
 
-        <button type="button" class="btn-icon header-btn-icon btn-export-icon" id="btnExport" title="Exportar e Baixar Fotografia" aria-label="Exportar Fotografia">
-          💾
+        <button type="button" class="btn btn-primary btn-sm" id="btnExport" title="Exportar fotografia carimbada na resolução nativa" aria-label="Exportar Fotografia">
+          <svg class="svg-icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span>Exportar Foto</span>
         </button>
       </div>
     </header>
 
-    <!-- Layout 3 Colunas -->
+    <!-- Layout 3 Colunas: Configurações | Viewport do Estúdio | Propriedades -->
     <main class="main-layout">
 
       <!-- PAINEL ESQUERDO: Configurações do Carimbo -->
       <aside class="panel panel-left" aria-label="Painel de Configuração do Carimbo">
         <div class="panel-tabs">
-          <button type="button" class="tab-btn active" data-tab="models">Modelos</button>
-          <button type="button" class="tab-btn" data-tab="fields">Campos</button>
-          <button type="button" class="tab-btn" data-tab="style">Estilo</button>
+          <button type="button" class="tab-btn active" data-tab="models">
+            <svg class="svg-icon-sm" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+            <span>Modelos</span>
+          </button>
+          <button type="button" class="tab-btn" data-tab="fields">
+            <svg class="svg-icon-sm" viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+            <span>Campos</span>
+          </button>
+          <button type="button" class="tab-btn" data-tab="style">
+            <svg class="svg-icon-sm" viewBox="0 0 24 24"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+            <span>Estilo</span>
+          </button>
         </div>
 
         <div class="panel-content">
@@ -79,35 +97,36 @@
                 <span>Modelo do Carimbo</span>
               </div>
               <div class="form-group">
-                <label for="presetsSelect" class="form-label">Selecione o Modelo / Preset</label>
+                <label for="presetsSelect" class="form-label">Modelo ou Preset Técnico</label>
                 <select id="presetsSelect" class="form-select"></select>
               </div>
               <button type="button" class="btn btn-secondary btn-sm" id="btnSavePreset" style="width: 100%;">
-                ⭐ Salvar Modelo Personalizado
+                <svg class="svg-icon" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                <span>Salvar Configuração Atual</span>
               </button>
             </div>
 
             <div class="section-block">
               <div class="section-title">
-                <span>Numeração Automática</span>
+                <span>Numeração de Fotografias</span>
               </div>
               <div class="form-group" style="display: flex; align-items: center; gap: 8px;">
-                <input type="checkbox" id="checkAutoNumber" id="checkAutoNumber" class="field-checkbox">
-                <label for="checkAutoNumber" style="font-size: 13px; font-weight: 500; cursor: pointer;">Habilitar numeração automática</label>
+                <input type="checkbox" id="checkAutoNumber" class="field-checkbox">
+                <label for="checkAutoNumber" style="font-size: 12px; font-weight: 500; cursor: pointer;">Incrementar número automaticamente</label>
               </div>
 
               <div class="form-group">
-                <label for="inputNumberPrefix" class="form-label">Prefixo da Fotografia</label>
+                <label for="inputNumberPrefix" class="form-label">Prefixo</label>
                 <input type="text" id="inputNumberPrefix" class="form-input" value="FOTOGRAFIA ">
               </div>
 
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
                 <div class="form-group">
-                  <label for="inputNumberStart" class="form-label">Número Inicial</label>
+                  <label for="inputNumberStart" class="form-label">Início</label>
                   <input type="number" id="inputNumberStart" class="form-input" value="1" min="1">
                 </div>
                 <div class="form-group">
-                  <label for="inputNumberDigits" class="form-label">Dígitos (Zeros)</label>
+                  <label for="inputNumberDigits" class="form-label">Dígitos</label>
                   <input type="number" id="inputNumberDigits" class="form-input" value="2" min="1" max="6">
                 </div>
               </div>
@@ -115,21 +134,21 @@
 
             <div class="section-block">
               <div class="section-title">
-                <span>Posição Rápida (Grade 3x3)</span>
+                <span>Posição na Imagem</span>
               </div>
               <div class="pos-grid">
-                <button type="button" class="pos-btn" data-pos="top-left" title="Superior Esquerdo">Sup. Esq</button>
-                <button type="button" class="pos-btn" data-pos="top-center" title="Superior Centro">Sup. Cen</button>
-                <button type="button" class="pos-btn" data-pos="top-right" title="Superior Direito">Sup. Dir</button>
-                <button type="button" class="pos-btn" data-pos="center-left" title="Centro Esquerdo">Cen. Esq</button>
-                <button type="button" class="pos-btn" data-pos="center" title="Centro">Centro</button>
-                <button type="button" class="pos-btn" data-pos="center-right" title="Centro Direito">Cen. Dir</button>
-                <button type="button" class="pos-btn active" data-pos="bottom-left" title="Inferior Esquerdo">Inf. Esq</button>
-                <button type="button" class="pos-btn" data-pos="bottom-center" title="Inferior Centro">Inf. Cen</button>
-                <button type="button" class="pos-btn" data-pos="bottom-right" title="Inferior Direito">Inf. Dir</button>
+                <button type="button" class="pos-btn" data-pos="top-left" title="Superior Esquerdo" aria-label="Superior Esquerdo"></button>
+                <button type="button" class="pos-btn" data-pos="top-center" title="Superior Centro" aria-label="Superior Centro"></button>
+                <button type="button" class="pos-btn" data-pos="top-right" title="Superior Direito" aria-label="Superior Direito"></button>
+                <button type="button" class="pos-btn" data-pos="center-left" title="Centro Esquerdo" aria-label="Centro Esquerdo"></button>
+                <button type="button" class="pos-btn" data-pos="center" title="Centro" aria-label="Centro"></button>
+                <button type="button" class="pos-btn" data-pos="center-right" title="Centro Direito" aria-label="Centro Direito"></button>
+                <button type="button" class="pos-btn active" data-pos="bottom-left" title="Inferior Esquerdo" aria-label="Inferior Esquerdo"></button>
+                <button type="button" class="pos-btn" data-pos="bottom-center" title="Inferior Centro" aria-label="Inferior Centro"></button>
+                <button type="button" class="pos-btn" data-pos="bottom-right" title="Inferior Direito" aria-label="Inferior Direito"></button>
               </div>
-              <p style="font-size: 11px; color: var(--text-subtle); margin-top: 6px;">
-                💡 Ou arraste o carimbo livremente sobre a imagem no centro.
+              <p style="font-size: 11px; color: var(--text-subtle); margin-top: 6px; line-height: 1.4;">
+                O carimbo também pode ser arrastado livremente sobre a imagem.
               </p>
             </div>
           </div>
@@ -137,11 +156,11 @@
           <!-- ABA 2: Campos do Carimbo -->
           <div class="tab-panel" id="tab-fields">
             <div class="section-title">
-              <span>Campos Ativos no Carimbo</span>
-              <button type="button" class="btn btn-secondary btn-sm" id="btnAddField">+ Campo</button>
+              <span>Campos Visíveis</span>
+              <button type="button" class="btn btn-secondary btn-sm" id="btnAddField">+ Novo Campo</button>
             </div>
-            <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 12px;">
-              Marque os campos desejados, reordene nas setas ou edite os rótulos.
+            <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 12px; line-height: 1.4;">
+              Ative ou desative itens, altere os rótulos ou edite os valores diretamente.
             </p>
             <div class="fields-list" id="fieldsContainer">
               <!-- Renderizado dinamicamente pelo UI Controller -->
@@ -152,21 +171,21 @@
           <div class="tab-panel" id="tab-style">
             <div class="section-block">
               <div class="section-title">
-                <span>Formato dos Rótulos e Ícones</span>
+                <span>Formato dos Rótulos & Disposição</span>
               </div>
               <div class="form-group">
-                <label for="selectLabelMode" class="form-label">Estilo dos Identificadores</label>
+                <label for="selectLabelMode" class="form-label">Identificadores dos Dados</label>
                 <select id="selectLabelMode" class="form-select">
-                  <option value="icons" selected>📍 Somente Ícones Inline (📅 📍 🕒 🏙️)</option>
-                  <option value="text">🏷️ Rótulo em Texto (DATA:, LAT:, LOCAL:)</option>
-                  <option value="none">🚫 Ocultar Rótulos e Ícones (Apenas Valores)</option>
+                  <option value="icons" selected>Somente Ícones Inline (📅 📍 🕒 🏙️)</option>
+                  <option value="text">Rótulo em Texto (DATA:, LAT:, LOCAL:)</option>
+                  <option value="none">Ocultar Rótulos (Apenas Valores)</option>
                 </select>
               </div>
               <div class="form-group">
-                <label for="selectInlineLayout" class="form-label">Disposição do Carimbo</label>
+                <label for="selectInlineLayout" class="form-label">Estrutura das Linhas</label>
                 <select id="selectInlineLayout" class="form-select">
-                  <option value="multiline" selected>☰ Múltiplas Linhas (Ícone + Valor por Linha)</option>
-                  <option value="single_line">─ Linha Única Inline (Faixa Contínua)</option>
+                  <option value="multiline" selected>Múltiplas Linhas (Ícone + Valor)</option>
+                  <option value="single_line">Linha Única Inline (Faixa contínua)</option>
                 </select>
               </div>
             </div>
@@ -183,7 +202,7 @@
                   <option value="Arial, sans-serif">Arial</option>
                   <option value="Helvetica, sans-serif">Helvetica</option>
                   <option value="system-ui, sans-serif">System UI</option>
-                  <option value="'JetBrains Mono', monospace">Monospace</option>
+                  <option value="'JetBrains Mono', monospace">Monospace Técnico</option>
                 </select>
               </div>
 
@@ -195,19 +214,19 @@
                 <input type="range" id="rangeFontSize" class="form-range" min="14" max="42" value="20" step="1">
               </div>
 
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
-                <label style="display: flex; align-items: center; gap: 6px; font-size: 12px; cursor: pointer;">
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px;">
+                <label style="display: flex; align-items: center; gap: 6px; font-size: 11.5px; cursor: pointer;">
                   <input type="checkbox" id="checkBold" checked class="field-checkbox">
-                  <strong>Negrito</strong>
+                  <span>Negrito</span>
                 </label>
-                <label style="display: flex; align-items: center; gap: 6px; font-size: 12px; cursor: pointer;">
+                <label style="display: flex; align-items: center; gap: 6px; font-size: 11.5px; cursor: pointer;">
                   <input type="checkbox" id="checkItalic" class="field-checkbox">
-                  <em>Itálico</em>
+                  <span>Itálico</span>
                 </label>
               </div>
 
               <div class="form-group">
-                <label for="selectTextAlign" class="form-label">Alinhamento do Texto</label>
+                <label for="selectTextAlign" class="form-label">Alinhamento</label>
                 <select id="selectTextAlign" class="form-select">
                   <option value="left">Esquerda</option>
                   <option value="center">Centralizado</option>
@@ -219,18 +238,18 @@
                 <label for="colorText" class="form-label">Cor do Texto</label>
                 <div class="color-picker-wrapper">
                   <input type="color" id="colorText" value="#ffffff">
-                  <span style="font-family: var(--font-mono); font-size: 12px; color: var(--text-muted);">Texto</span>
+                  <span style="font-family: var(--font-mono); font-size: 11.5px; color: var(--text-muted);">#ffffff</span>
                 </div>
               </div>
             </div>
 
             <div class="section-block">
               <div class="section-title">
-                <span>Fundo e Moldura</span>
+                <span>Caixa do Carimbo</span>
               </div>
 
               <div class="form-group">
-                <label for="selectBgType" class="form-label">Estilo do Fundo</label>
+                <label for="selectBgType" class="form-label">Preenchimento</label>
                 <select id="selectBgType" class="form-select">
                   <option value="semitransparent">Fundo Semitransparente</option>
                   <option value="solid">Fundo Sólido</option>
@@ -247,21 +266,21 @@
               </div>
 
               <div class="form-group">
-                <label for="colorBg" class="form-label">Cor do Fundo</label>
+                <label for="colorBg" class="form-label">Cor de Fundo</label>
                 <div class="color-picker-wrapper">
                   <input type="color" id="colorBg" value="#0f172a">
-                  <span style="font-family: var(--font-mono); font-size: 12px; color: var(--text-muted);">Caixa</span>
+                  <span style="font-family: var(--font-mono); font-size: 11.5px; color: var(--text-muted);">#0f172a</span>
                 </div>
               </div>
 
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
                 <div class="form-group">
                   <label for="selectBorderWidth" class="form-label">Borda</label>
                   <select id="selectBorderWidth" class="form-select">
                     <option value="0">Sem Borda</option>
-                    <option value="1">Fina (1px)</option>
-                    <option value="2">Média (2px)</option>
-                    <option value="4">Grossa (4px)</option>
+                    <option value="1">1px (Fina)</option>
+                    <option value="2">2px (Média)</option>
+                    <option value="4">4px (Grossa)</option>
                   </select>
                 </div>
                 <div class="form-group">
@@ -282,59 +301,60 @@
 
               <div class="form-group" style="display: flex; align-items: center; gap: 8px;">
                 <input type="checkbox" id="checkShadow" checked class="field-checkbox">
-                <label for="checkShadow" style="font-size: 12px; cursor: pointer;">Sombra projetada</label>
+                <label for="checkShadow" style="font-size: 11.5px; cursor: pointer;">Sombra projetada</label>
               </div>
             </div>
           </div>
         </div>
       </aside>
 
-      <!-- CENTRO: Preview da Fotografia -->
+      <!-- CENTRO: Viewport do Estúdio de Fotografia -->
       <section class="preview-panel" aria-label="Área de Pré-visualização da Imagem">
         <div class="preview-toolbar">
-          <div id="imageInfoBar" style="display: none; align-items: center; gap: 8px;">
-            <span style="color: var(--primary);">📷</span>
+          <div id="imageInfoBar" style="display: none;">
+            <svg class="svg-icon-sm" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
             <span id="photoMetaText" style="font-weight: 500;">fotografia.jpg</span>
-            <button type="button" class="btn-icon btn-sm" id="btnClearPhoto" title="Remover fotografia e limpar tela" style="width: 22px; height: 22px; font-size: 11px;">
-              ✕
+            <button type="button" class="btn-icon btn-sm" id="btnClearPhoto" title="Remover fotografia" aria-label="Remover fotografia">
+              <svg class="svg-icon-sm" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
           </div>
           <div style="margin-left: auto; display: flex; align-items: center; gap: 8px;">
-            <span style="font-size: 11px; color: var(--text-subtle);">Pré-visualização em tempo real</span>
+            <span style="font-size: 11px; color: var(--text-subtle);">Renderização 2D em Alta Fidelidade</span>
           </div>
         </div>
 
         <div class="preview-canvas-container" id="previewContainer">
-          <!-- Placeholder quando não há foto carregada -->
+          <!-- Drop Zone Técnica quando não há foto carregada -->
           <div class="empty-placeholder" id="emptyPlaceholder">
-            <div class="empty-icon">📷</div>
-            <h2 class="empty-title">Selecione ou Arraste uma Fotografia</h2>
+            <div class="empty-icon">
+              <svg class="svg-icon-lg" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            </div>
+            <h2 class="empty-title">Nenhuma Fotografia Carregada</h2>
             <p class="empty-desc">
-              Carregue uma imagem do seu dispositivo para ler metadados EXIF, detectar GPS e gerar o carimbo técnico.
+              Arraste uma fotografia para este espaço ou selecione do computador. Os metadados EXIF e GPS serão lidos localmente.
             </p>
             <div class="empty-buttons">
               <button type="button" class="btn btn-primary" id="btnDropOpen">
-                Selecionar Imagem do Dispositivo
+                <svg class="svg-icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                <span>Selecionar Imagem do Dispositivo</span>
               </button>
               <div class="empty-demo-group">
-                <button type="button" class="btn btn-secondary btn-sm" id="btnDemoWithGps" title="Testar fluxo com coordenadas GPS de Jussara/GO">
-                  🧪 Teste com GPS
+                <button type="button" class="btn btn-secondary btn-sm" id="btnDemoWithGps" title="Carregar amostra com GPS em Jussara/GO">
+                  Exemplo com GPS
                 </button>
-                <button type="button" class="btn btn-secondary btn-sm" id="btnDemoWithoutGps" title="Testar fluxo sem coordenadas nos metadados">
-                  ⚠️ Teste sem GPS
+                <button type="button" class="btn btn-secondary btn-sm" id="btnDemoWithoutGps" title="Carregar amostra sem GPS">
+                  Exemplo sem GPS
                 </button>
               </div>
             </div>
-            <span style="font-size: 11px; color: var(--success); font-weight: 600;">
-              🔒 100% Seguro: Nenhum arquivo é enviado para servidores.
-            </span>
           </div>
 
           <!-- Canvas Interativo de Preview -->
           <canvas id="previewCanvas" style="display: none;"></canvas>
 
           <div class="drag-hint-pill" id="dragHintPill" style="display: none;">
-            🖐️ Clique e arraste o carimbo para posicioná-lo livremente
+            <svg class="svg-icon-sm" viewBox="0 0 24 24"><path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0"/><path d="M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v2"/><path d="M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></svg>
+            <span>Arraste o carimbo para posicionar livremente</span>
           </div>
         </div>
       </section>
@@ -342,54 +362,63 @@
       <!-- PAINEL DIREITO: Metadados EXIF e Localização -->
       <aside class="panel panel-right" aria-label="Painel de Metadados e Localização">
         <div class="panel-tabs">
-          <button type="button" class="tab-btn active" data-tab="location">Localização</button>
-          <button type="button" class="tab-btn" data-tab="technical">Técnico</button>
-          <button type="button" class="tab-btn" data-tab="export">Exportar</button>
+          <button type="button" class="tab-btn active" data-tab="location">
+            <svg class="svg-icon-sm" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            <span>Localização</span>
+          </button>
+          <button type="button" class="tab-btn" data-tab="technical">
+            <svg class="svg-icon-sm" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            <span>Laudo</span>
+          </button>
+          <button type="button" class="tab-btn" data-tab="export">
+            <svg class="svg-icon-sm" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <span>Exportação</span>
+          </button>
         </div>
 
         <div class="panel-content">
           <!-- ABA 1: Localização & Coordenadas -->
           <div class="tab-panel active" id="tab-location">
-            <!-- Alertas de Ausência / Sucesso de Metadados -->
+            <!-- Alertas e Status de Metadados -->
             <div class="alert-box alert-warning" id="alertNoGps" style="display: none;">
-              <span class="alert-icon">⚠️</span>
+              <svg class="svg-icon alert-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
               <div>
-                <strong>Sem coordenadas GPS</strong>
-                <p>Esta fotografia não possui dados de GPS no EXIF. Você pode inserir as coordenadas manualmente abaixo.</p>
+                <strong>Sem Coordenadas GPS</strong>
+                <p>Nenhum dado geográfico encontrado no EXIF. Coordenadas manuais podem ser informadas abaixo.</p>
               </div>
             </div>
 
             <div class="alert-box alert-warning" id="alertNoDate" style="display: none;">
-              <span class="alert-icon">⚠️</span>
+              <svg class="svg-icon alert-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
               <div>
-                <strong>Data/Hora não encontrada</strong>
-                <p>Metadados temporais ausentes. Insira manualmente.</p>
+                <strong>Data Não Identificada</strong>
+                <p>Metadados temporais ausentes no arquivo.</p>
               </div>
             </div>
 
             <div class="alert-box alert-success" id="alertMetaSuccess" style="display: none;">
-              <span class="alert-icon">✓</span>
+              <svg class="svg-icon alert-icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
               <div>
-                <strong>Metadados EXIF Detectados</strong>
-                <p>GPS e data/hora extraídos automaticamente da fotografia.</p>
+                <strong>Metadados EXIF Identificados</strong>
+                <p>GPS e data/hora extraídos com sucesso da fotografia.</p>
               </div>
             </div>
 
             <!-- Formato das Coordenadas -->
             <div class="section-block">
               <div class="section-title">
-                <span>Formato das Coordenadas</span>
+                <span>Notação de Coordenadas</span>
               </div>
               <div class="form-group">
                 <select id="selectCoordFormat" class="form-select">
                   <option value="decimal_cardinal">Decimal Cardinal (15.869969° S, 50.852275° W)</option>
                   <option value="dms">Graus, Minutos e Segundos (15°52'11.89"S, 50°51'08.19"W)</option>
                   <option value="ddm">Graus e Minutos Decimais (15°52.198'S, 50°51.136'W)</option>
-                  <option value="decimal_signed">Apenas Decimal (Lat: -15.869969, Long: -50.852275)</option>
+                  <option value="decimal_signed">Decimal com Sinal (Lat: -15.869969, Long: -50.852275)</option>
                 </select>
               </div>
 
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
                 <div class="form-group">
                   <label for="inputLat" class="form-label">
                     <span>Latitude</span>
@@ -414,22 +443,23 @@
                 <input type="number" step="any" id="inputAlt" class="form-input" placeholder="Ex: 312.5">
               </div>
 
-              <button type="button" class="btn btn-secondary btn-sm" id="btnAutoGeocode" style="width: 100%; margin-top: 4px;" title="Buscar Cidade, Estado e País com base nas coordenadas">
-                📍 Identificar Cidade, Estado e País
+              <button type="button" class="btn btn-secondary btn-sm" id="btnAutoGeocode" style="width: 100%; margin-top: 4px;" title="Identificar Cidade, Estado e País com base nas coordenadas">
+                <svg class="svg-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                <span>Identificar Cidade, Estado e País</span>
               </button>
             </div>
 
             <!-- Data e Horário -->
             <div class="section-block">
               <div class="section-title">
-                <span>Data e Horário</span>
+                <span>Data & Horário</span>
               </div>
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
                 <div class="form-group">
                   <label for="selectDateFormat" class="form-label">Padrão da Data</label>
                   <select id="selectDateFormat" class="form-select">
-                    <option value="pt-BR">Brasileiro (DD/MM/AAAA)</option>
-                    <option value="iso">Internacional (AAAA-MM-DD)</option>
+                    <option value="pt-BR">DD/MM/AAAA</option>
+                    <option value="iso">AAAA-MM-DD</option>
                     <option value="textual">Textual Extenso</option>
                   </select>
                 </div>
@@ -443,7 +473,7 @@
                 </div>
               </div>
 
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
                 <div class="form-group">
                   <label for="inputDate" class="form-label">
                     <span>Data</span>
@@ -461,19 +491,16 @@
               </div>
             </div>
 
-            <!-- Dados de Endereço (Processamento Local) -->
+            <!-- Dados de Endereço -->
             <div class="section-block">
               <div class="section-title">
-                <span>Endereço e Logradouro</span>
+                <span>Logradouro & Localidade</span>
               </div>
-              <p style="font-size: 11px; color: var(--text-subtle); margin-bottom: 8px;">
-                Informações declaradas pelo usuário (não inventadas).
-              </p>
 
-              <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px;">
+              <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 8px;">
                 <div class="form-group">
                   <label for="inputStreet" class="form-label">Logradouro / Rua</label>
-                  <input type="text" id="inputStreet" class="form-input" placeholder="Rua / Av.">
+                  <input type="text" id="inputStreet" class="form-input" placeholder="Av. / Rua">
                 </div>
                 <div class="form-group">
                   <label for="inputNumber" class="form-label">Número</label>
@@ -486,49 +513,49 @@
                 <input type="text" id="inputNeighborhood" class="form-input" placeholder="Bairro">
               </div>
 
-              <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px;">
+              <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 8px;">
                 <div class="form-group">
                   <label for="inputCity" class="form-label">Cidade</label>
                   <input type="text" id="inputCity" class="form-input" placeholder="Cidade">
                 </div>
                 <div class="form-group">
                   <label for="inputState" class="form-label">Estado / UF</label>
-                  <input type="text" id="inputState" class="form-input" placeholder="GO">
+                  <input type="text" id="inputState" class="form-input" placeholder="UF">
                 </div>
               </div>
 
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
                 <div class="form-group">
                   <label for="inputCountry" class="form-label">País</label>
-                  <input type="text" id="inputCountry" class="form-input" placeholder="Brasil">
+                  <input type="text" id="inputCountry" class="form-input" placeholder="País">
                 </div>
                 <div class="form-group">
                   <label for="inputPostalCode" class="form-label">CEP</label>
-                  <input type="text" id="inputPostalCode" class="form-input" placeholder="76270-000">
+                  <input type="text" id="inputPostalCode" class="form-input" placeholder="CEP">
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- ABA 2: Dados Técnicos (Perícia / Obra) -->
+          <!-- ABA 2: Dados Técnicos (Laudo / Obra) -->
           <div class="tab-panel" id="tab-technical">
             <div class="section-block">
               <div class="section-title">
-                <span>Identificação do Projeto / Laudo</span>
+                <span>Identificação Pericial & Técnica</span>
               </div>
 
               <div class="form-group">
-                <label for="inputProjectName" class="form-label">Nome da Obra / Local</label>
+                <label for="inputProjectName" class="form-label">Obra / Local / Empreendimento</label>
                 <input type="text" id="inputProjectName" class="form-input" placeholder="Ex: Residência Jussara">
               </div>
 
               <div class="form-group">
-                <label for="inputProcess" class="form-label">Número do Processo / Laudo</label>
+                <label for="inputProcess" class="form-label">Processo / Laudo / Notificação</label>
                 <input type="text" id="inputProcess" class="form-input" placeholder="Ex: 5557293-56.2020.8.09.0097">
               </div>
 
               <div class="form-group">
-                <label for="inputResponsible" class="form-label">Responsável Técnico / Perito</label>
+                <label for="inputResponsible" class="form-label">Responsável Técnico / CREA / CAU</label>
                 <input type="text" id="inputResponsible" class="form-input" placeholder="Ex: Eng. Perito">
               </div>
             </div>
@@ -538,32 +565,33 @@
           <div class="tab-panel" id="tab-export">
             <div class="section-block">
               <div class="section-title">
-                <span>Configurações do Arquivo</span>
+                <span>Configurações do Arquivo Final</span>
               </div>
 
               <div class="form-group">
                 <label for="selectExportFormat" class="form-label">Formato de Saída</label>
                 <select id="selectExportFormat" class="form-select">
-                  <option value="image/jpeg">JPG (Recomendado para fotografias)</option>
+                  <option value="image/jpeg">JPEG (Recomendado para fotografia pericial)</option>
                   <option value="image/png">PNG (Sem perda de qualidade)</option>
-                  <option value="image/webp">WebP (Alta compressão)</option>
+                  <option value="image/webp">WebP (Compressão moderna)</option>
                 </select>
               </div>
 
               <div class="form-group" id="qualityGroup">
                 <label for="rangeExportQuality" class="form-label">
-                  <span>Qualidade JPEG</span>
+                  <span>Qualidade da Compressão</span>
                   <span id="valExportQuality" class="range-val">95%</span>
                 </label>
                 <input type="range" id="rangeExportQuality" class="form-range" min="0.5" max="1.0" step="0.05" value="0.95">
               </div>
 
-              <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 16px; line-height: 1.4;">
-                🛡️ <strong>Preservação Integral:</strong> O arquivo original permanecerá intacto no seu computador. A imagem final será salva com sufixo <code>_stamp</code> na resolução nativa máxima.
+              <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 16px; line-height: 1.45;">
+                A fotografia original é preservada intacta no dispositivo. A imagem carimbada é exportada com resolução máxima 1:1.
               </p>
 
-              <button type="button" class="btn btn-primary" id="btnExportPanel" style="width: 100%; padding: 12px;" onclick="document.getElementById('btnExport').click()">
-                💾 Baixar Fotografia Carimbada
+              <button type="button" class="btn btn-primary" id="btnExportPanel" style="width: 100%; height: 36px;" onclick="document.getElementById('btnExport').click()">
+                <svg class="svg-icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                <span>Baixar Fotografia Carimbada</span>
               </button>
             </div>
           </div>
@@ -571,23 +599,25 @@
       </aside>
     </main>
 
-    <!-- Rodapé -->
+    <!-- Barra de Status Técnica (Status Bar) -->
     <footer class="app-footer">
       <div class="footer-left">
-        <span><strong>STAMP-CAMERA</strong> v1.0.0</span>
+        <span>STAMP-CAMERA v1.0.4</span>
         <span>•</span>
-        <span class="footer-privacy-text">100% Client-side • Compatível com GitHub Pages • Sem telemetria</span>
+        <span class="footer-privacy-text">100% Processamento Local (Cliente)</span>
+        <span>•</span>
+        <span>Sem telemetria externa</span>
       </div>
       <div>
-        <span>Engenharia, Perícia & Inspeções Técnicas</span>
+        <span>Engenharia, Perícia & Inspeção Técnica</span>
       </div>
     </footer>
   </div>
 
-  <!-- Indicador de Carregamento -->
+  <!-- Indicador de Carregamento Técnico -->
   <div class="loading-overlay" id="loadingIndicator" style="display: none;">
     <div class="spinner"></div>
-    <span style="color: #fff; font-size: 14px; font-weight: 600;">Processando fotografia...</span>
+    <span style="color: var(--text-main); font-size: 12px; font-weight: 500;">Processando fotografia...</span>
   </div>
 
   <!-- Script Autônomo (compatível com file:/// e http:// sem bloqueio CORS) -->

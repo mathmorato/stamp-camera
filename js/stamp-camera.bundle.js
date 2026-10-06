@@ -3253,7 +3253,7 @@
       const w = this.tool.photo.width;
       const h = this.tool.photo.height;
       const sizeMb = (this.tool.photo.fileSize / (1024 * 1024)).toFixed(2);
-      this.photoMetaText.textContent = `${this.tool.photo.filename} • ${w}x${h}px • ${sizeMb} MB`;
+      this.photoMetaText.textContent = `${this.tool.photo.filename} • ${w} × ${h} px • ${sizeMb} MB`;
   
       // Sincroniza TODOS os inputs do painel direito com os dados da localização
       this.inputLat.value = this.tool.location.latitude !== null ? this.tool.location.latitude.toFixed(8) : '';
@@ -3499,7 +3499,7 @@
         toggleLabelBtn.type = 'button';
         toggleLabelBtn.className = `btn-icon ${field.showLabel ? 'active' : ''}`;
         toggleLabelBtn.title = field.showLabel ? 'Rótulo visível no carimbo' : 'Rótulo oculto (apenas o valor)';
-        toggleLabelBtn.innerHTML = '🏷️';
+        toggleLabelBtn.innerHTML = '<svg class="svg-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>';
         toggleLabelBtn.addEventListener('click', () => {
           field.showLabel = !field.showLabel;
           toggleLabelBtn.classList.toggle('active', field.showLabel);
@@ -3509,7 +3509,7 @@
         const btnUp = document.createElement('button');
         btnUp.type = 'button';
         btnUp.className = 'btn-icon';
-        btnUp.innerHTML = '↑';
+        btnUp.innerHTML = '<svg class="svg-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>';
         btnUp.title = 'Mover campo para cima';
         btnUp.disabled = index === 0;
         btnUp.addEventListener('click', () => {
@@ -3521,7 +3521,7 @@
         const btnDown = document.createElement('button');
         btnDown.type = 'button';
         btnDown.className = 'btn-icon';
-        btnDown.innerHTML = '↓';
+        btnDown.innerHTML = '<svg class="svg-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>';
         btnDown.title = 'Mover campo para baixo';
         btnDown.disabled = index === this.tool.activeFields.length - 1;
         btnDown.addEventListener('click', () => {
@@ -3538,7 +3538,7 @@
           const btnDelete = document.createElement('button');
           btnDelete.type = 'button';
           btnDelete.className = 'btn-icon btn-delete';
-          btnDelete.innerHTML = '✕';
+          btnDelete.innerHTML = '<svg class="svg-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
           btnDelete.title = 'Remover campo personalizado';
           btnDelete.addEventListener('click', () => {
             this.tool.removeField(field.id);
@@ -3644,14 +3644,17 @@
   
       const themeToggleBtn = document.getElementById('themeToggleBtn');
       if (themeToggleBtn) {
-        themeToggleBtn.innerHTML = savedTheme === 'dark' ? '☀️' : '🌙';
+        const sunSvg = `<svg class="svg-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>`;
+        const moonSvg = `<svg class="svg-icon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`;
+  
+        themeToggleBtn.innerHTML = savedTheme === 'dark' ? sunSvg : moonSvg;
         themeToggleBtn.title = savedTheme === 'dark' ? 'Mudar para Tema Claro' : 'Mudar para Tema Escuro';
         themeToggleBtn.addEventListener('click', () => {
           const current = document.documentElement.getAttribute('data-theme');
           const next = current === 'dark' ? 'light' : 'dark';
           document.documentElement.setAttribute('data-theme', next);
           storage.setTheme(next);
-          themeToggleBtn.innerHTML = next === 'dark' ? '☀️' : '🌙';
+          themeToggleBtn.innerHTML = next === 'dark' ? sunSvg : moonSvg;
           themeToggleBtn.title = next === 'dark' ? 'Mudar para Tema Claro' : 'Mudar para Tema Escuro';
         });
       }
@@ -3848,7 +3851,7 @@
       try {
         const btnExport = document.getElementById('btnExport');
         const originalHtml = btnExport.innerHTML;
-        btnExport.innerHTML = '⏳';
+        btnExport.innerHTML = `<svg class="svg-icon" style="animation: spin 0.7s linear infinite;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-opacity="0.25"/><path d="M12 2a10 10 0 0 1 10 10"/></svg><span>Gerando...</span>`;
         btnExport.disabled = true;
   
         // Criar canvas de alta resolução 1:1 para exportação sem perda de qualidade
@@ -3884,7 +3887,7 @@
       } catch (err) {
         const btnExport = document.getElementById('btnExport');
         if (btnExport) {
-          btnExport.innerHTML = '💾';
+          btnExport.innerHTML = `<svg class="svg-icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span>Exportar Foto</span>`;
           btnExport.disabled = false;
         }
         alert(`Falha ao exportar imagem: ${err.message}`);

@@ -578,7 +578,7 @@ export class StampCameraUI {
     const w = this.tool.photo.width;
     const h = this.tool.photo.height;
     const sizeMb = (this.tool.photo.fileSize / (1024 * 1024)).toFixed(2);
-    this.photoMetaText.textContent = `${this.tool.photo.filename} • ${w}x${h}px • ${sizeMb} MB`;
+    this.photoMetaText.textContent = `${this.tool.photo.filename} • ${w} × ${h} px • ${sizeMb} MB`;
 
     // Sincroniza TODOS os inputs do painel direito com os dados da localização
     this.inputLat.value = this.tool.location.latitude !== null ? this.tool.location.latitude.toFixed(8) : '';
@@ -824,7 +824,7 @@ export class StampCameraUI {
       toggleLabelBtn.type = 'button';
       toggleLabelBtn.className = `btn-icon ${field.showLabel ? 'active' : ''}`;
       toggleLabelBtn.title = field.showLabel ? 'Rótulo visível no carimbo' : 'Rótulo oculto (apenas o valor)';
-      toggleLabelBtn.innerHTML = '🏷️';
+      toggleLabelBtn.innerHTML = '<svg class="svg-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>';
       toggleLabelBtn.addEventListener('click', () => {
         field.showLabel = !field.showLabel;
         toggleLabelBtn.classList.toggle('active', field.showLabel);
@@ -834,7 +834,7 @@ export class StampCameraUI {
       const btnUp = document.createElement('button');
       btnUp.type = 'button';
       btnUp.className = 'btn-icon';
-      btnUp.innerHTML = '↑';
+      btnUp.innerHTML = '<svg class="svg-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>';
       btnUp.title = 'Mover campo para cima';
       btnUp.disabled = index === 0;
       btnUp.addEventListener('click', () => {
@@ -846,7 +846,7 @@ export class StampCameraUI {
       const btnDown = document.createElement('button');
       btnDown.type = 'button';
       btnDown.className = 'btn-icon';
-      btnDown.innerHTML = '↓';
+      btnDown.innerHTML = '<svg class="svg-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>';
       btnDown.title = 'Mover campo para baixo';
       btnDown.disabled = index === this.tool.activeFields.length - 1;
       btnDown.addEventListener('click', () => {
@@ -863,7 +863,7 @@ export class StampCameraUI {
         const btnDelete = document.createElement('button');
         btnDelete.type = 'button';
         btnDelete.className = 'btn-icon btn-delete';
-        btnDelete.innerHTML = '✕';
+        btnDelete.innerHTML = '<svg class="svg-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
         btnDelete.title = 'Remover campo personalizado';
         btnDelete.addEventListener('click', () => {
           this.tool.removeField(field.id);
