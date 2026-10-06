@@ -977,44 +977,59 @@ export class StampCameraTool {
   }
 
   /**
-   * Rotaciona a fotografia atual em 90 graus (horário ou anti-horário).
+   * Rotaciona a fotografia atual em 90 graus (horário/anti-horário) ou 180 graus.
    * Atualiza dimensões e renderiza de forma 100% sem perdas.
-   * @param {'right'|'left'} direction
+   * @param {'right'|'left'|180|'180'} direction
    * @returns {Object|null} Objeto da foto atualizado
    */
   rotatePhoto(direction = 'right') {
     if (!this.photo || !this.photo.canvas) return null;
     const oldCanvas = this.photo.canvas;
     const newCanvas = document.createElement('canvas');
-    newCanvas.width = oldCanvas.height;
-    newCanvas.height = oldCanvas.width;
-    const ctx = newCanvas.getContext('2d');
 
-    if (direction === 'left') {
-      ctx.translate(0, newCanvas.height);
-      ctx.rotate(-Math.PI / 2);
+    if (direction === 180 || direction === '180') {
+      newCanvas.width = oldCanvas.width;
+      newCanvas.height = oldCanvas.height;
+      const ctx = newCanvas.getContext('2d');
+      ctx.translate(newCanvas.width, newCanvas.height);
+      ctx.rotate(Math.PI);
+      ctx.drawImage(oldCanvas, 0, 0);
+
+      if (this.settings.customPosX !== null && this.settings.customPosY !== null) {
+        this.settings.customPosX = 1 - this.settings.customPosX;
+        this.settings.customPosY = 1 - this.settings.customPosY;
+      }
     } else {
-      ctx.translate(newCanvas.width, 0);
-      ctx.rotate(Math.PI / 2);
+      newCanvas.width = oldCanvas.height;
+      newCanvas.height = oldCanvas.width;
+      const ctx = newCanvas.getContext('2d');
+
+      if (direction === 'left') {
+        ctx.translate(0, newCanvas.height);
+        ctx.rotate(-Math.PI / 2);
+      } else {
+        ctx.translate(newCanvas.width, 0);
+        ctx.rotate(Math.PI / 2);
+      }
+      ctx.drawImage(oldCanvas, 0, 0);
+
+      // Atualiza customPosX e customPosY se houver posição personalizada
+      if (this.settings.customPosX !== null && this.settings.customPosY !== null) {
+        const oldX = this.settings.customPosX;
+        const oldY = this.settings.customPosY;
+        if (direction === 'right') {
+          this.settings.customPosX = 1 - oldY;
+          this.settings.customPosY = oldX;
+        } else {
+          this.settings.customPosX = oldY;
+          this.settings.customPosY = 1 - oldX;
+        }
+      }
     }
-    ctx.drawImage(oldCanvas, 0, 0);
 
     this.photo.canvas = newCanvas;
     this.photo.width = newCanvas.width;
     this.photo.height = newCanvas.height;
-
-    // Atualiza customPosX e customPosY se houver posição personalizada
-    if (this.settings.customPosX !== null && this.settings.customPosY !== null) {
-      const oldX = this.settings.customPosX;
-      const oldY = this.settings.customPosY;
-      if (direction === 'right') {
-        this.settings.customPosX = 1 - oldY;
-        this.settings.customPosY = oldX;
-      } else {
-        this.settings.customPosX = oldY;
-        this.settings.customPosY = 1 - oldX;
-      }
-    }
 
     return this.photo;
   }

@@ -322,6 +322,10 @@ assert(tool.photo.width === 1080 && tool.photo.height === 1920, 'Dimensões inve
 assert(Math.abs(tool.settings.customPosX - 0.7) < 0.001 && Math.abs(tool.settings.customPosY - 0.2) < 0.001, 'Posição proporcional recalculada corretamente após rotação');
 tool.rotatePhoto('left');
 assert(tool.photo.width === 1920 && tool.photo.height === 1080, 'Dimensões restauradas após rotação de 90° à esquerda');
+tool.rotatePhoto(180);
+assert(tool.photo.width === 1920 && tool.photo.height === 1080, 'Dimensões mantidas após rotação de 180°');
+assert(Math.abs(tool.settings.customPosX - 0.8) < 0.001 && Math.abs(tool.settings.customPosY - 0.7) < 0.001, 'Posição proporcional invertida corretamente após rotação de 180°');
+tool.rotatePhoto(180);
 
 tool.resetNumbering();
 assert(tool.numbering.startNumber === 1, 'Contador redefinido para 1');
@@ -332,7 +336,7 @@ assert(tool.numbering.startNumber === 5, 'Contador avançado para 5 após lote d
 
 const backup = storage.getBackupData(tool);
 assert(backup.schema === 1, 'Backup gerado com Schema 1');
-assert(backup.version === 'v.1.1.5', 'Backup com versão atualizada v.1.1.5');
+assert(backup.version === 'v.1.1.6', 'Backup com versão atualizada v.1.1.6');
 assert(backup.config && backup.data && backup.counter, 'Estrutura completa de backup exportada sem fotos');
 
 const legacyData = {
@@ -387,6 +391,14 @@ const requiredElementIds = [
   'badgeTime',
   'btnRotateLeft',
   'btnRotateRight',
+  'btnRotate180',
+  'floatingRotateBar',
+  'btnFloatRotateLeft',
+  'btnFloatRotateRight',
+  'btnFloatRotate180',
+  'btnSidebarRotateLeft',
+  'btnSidebarRotateRight',
+  'btnSidebarRotate180',
   'saveStatusIndicator',
   'draftRestoreBanner',
   'btnRestoreDraft',

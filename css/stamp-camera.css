@@ -1277,3 +1277,104 @@
   border-color: #ef4444 !important;
 }
 
+/* -------------------------------------------------------------
+   CONTROLES DE ROTAÇÃO DE FOTOGRAFIA
+------------------------------------------------------------- */
+.rotate-toolbar-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xs);
+  padding: 2px 5px;
+  margin: 0 4px;
+}
+
+.rotate-group-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  margin-right: 2px;
+}
+
+.btn-rotate {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  font-size: 11px;
+  font-weight: 500;
+  height: 24px;
+  border-radius: var(--radius-xs);
+  transition: all var(--transition-fast);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.btn-rotate:hover {
+  background-color: var(--primary-subtle);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.btn-rotate svg {
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+}
+
+/* Barra Flutuante de Rotação sobre o Canvas */
+.canvas-floating-controls {
+  position: absolute;
+  top: 14px;
+  right: 18px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background-color: rgba(13, 17, 23, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-full);
+  padding: 3px 8px;
+  z-index: 10;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  transition: opacity var(--transition-fast), transform var(--transition-fast);
+}
+
+.canvas-floating-controls button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-main);
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.canvas-floating-controls button:hover {
+  background-color: rgba(59, 130, 246, 0.2);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.canvas-floating-controls button svg {
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+}
+
+.canvas-floating-controls button span {
+  font-size: 10.5px;
+}
+

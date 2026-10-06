@@ -11,7 +11,7 @@
    * Versão: 1.0.0
    * 100% Client-side - Nenhuma informação é enviada para servidores externos.
    */
-  const PNITE_VERSION = "v.1.1.5";
+  const PNITE_VERSION = "v.1.1.6";
   const APP_CONFIG = {
     name: 'STAMP-CAMERA',
     subtitle: 'Carimbo técnico e geográfico para fotografias',
@@ -6534,44 +6534,59 @@
     }
   
     /**
-     * Rotaciona a fotografia atual em 90 graus (horário ou anti-horário).
+     * Rotaciona a fotografia atual em 90 graus (horário/anti-horário) ou 180 graus.
      * Atualiza dimensões e renderiza de forma 100% sem perdas.
-     * @param {'right'|'left'} direction
+     * @param {'right'|'left'|180|'180'} direction
      * @returns {Object|null} Objeto da foto atualizado
      */
     rotatePhoto(direction = 'right') {
       if (!this.photo || !this.photo.canvas) return null;
       const oldCanvas = this.photo.canvas;
       const newCanvas = document.createElement('canvas');
-      newCanvas.width = oldCanvas.height;
-      newCanvas.height = oldCanvas.width;
-      const ctx = newCanvas.getContext('2d');
   
-      if (direction === 'left') {
-        ctx.translate(0, newCanvas.height);
-        ctx.rotate(-Math.PI / 2);
+      if (direction === 180 || direction === '180') {
+        newCanvas.width = oldCanvas.width;
+        newCanvas.height = oldCanvas.height;
+        const ctx = newCanvas.getContext('2d');
+        ctx.translate(newCanvas.width, newCanvas.height);
+        ctx.rotate(Math.PI);
+        ctx.drawImage(oldCanvas, 0, 0);
+  
+        if (this.settings.customPosX !== null && this.settings.customPosY !== null) {
+          this.settings.customPosX = 1 - this.settings.customPosX;
+          this.settings.customPosY = 1 - this.settings.customPosY;
+        }
       } else {
-        ctx.translate(newCanvas.width, 0);
-        ctx.rotate(Math.PI / 2);
+        newCanvas.width = oldCanvas.height;
+        newCanvas.height = oldCanvas.width;
+        const ctx = newCanvas.getContext('2d');
+  
+        if (direction === 'left') {
+          ctx.translate(0, newCanvas.height);
+          ctx.rotate(-Math.PI / 2);
+        } else {
+          ctx.translate(newCanvas.width, 0);
+          ctx.rotate(Math.PI / 2);
+        }
+        ctx.drawImage(oldCanvas, 0, 0);
+  
+        // Atualiza customPosX e customPosY se houver posição personalizada
+        if (this.settings.customPosX !== null && this.settings.customPosY !== null) {
+          const oldX = this.settings.customPosX;
+          const oldY = this.settings.customPosY;
+          if (direction === 'right') {
+            this.settings.customPosX = 1 - oldY;
+            this.settings.customPosY = oldX;
+          } else {
+            this.settings.customPosX = oldY;
+            this.settings.customPosY = 1 - oldX;
+          }
+        }
       }
-      ctx.drawImage(oldCanvas, 0, 0);
   
       this.photo.canvas = newCanvas;
       this.photo.width = newCanvas.width;
       this.photo.height = newCanvas.height;
-  
-      // Atualiza customPosX e customPosY se houver posição personalizada
-      if (this.settings.customPosX !== null && this.settings.customPosY !== null) {
-        const oldX = this.settings.customPosX;
-        const oldY = this.settings.customPosY;
-        if (direction === 'right') {
-          this.settings.customPosX = 1 - oldY;
-          this.settings.customPosY = oldX;
-        } else {
-          this.settings.customPosX = oldY;
-          this.settings.customPosY = 1 - oldX;
-        }
-      }
   
       return this.photo;
     }
@@ -6777,9 +6792,21 @@
       this.btnToggleSplitAddress = document.getElementById('btnToggleSplitAddress');
       this.btnToggleSplitLocality = document.getElementById('btnToggleSplitLocality');
   
-      // Botões de Rotação da Imagem
+      // Botões de Rotação da Imagem (Barra Superior)
       this.btnRotateLeft = document.getElementById('btnRotateLeft');
       this.btnRotateRight = document.getElementById('btnRotateRight');
+      this.btnRotate180 = document.getElementById('btnRotate180');
+  
+      // Barra Flutuante de Rotação sobre o Canvas
+      this.floatingRotateBar = document.getElementById('floatingRotateBar');
+      this.btnFloatRotateLeft = document.getElementById('btnFloatRotateLeft');
+      this.btnFloatRotateRight = document.getElementById('btnFloatRotateRight');
+      this.btnFloatRotate180 = document.getElementById('btnFloatRotate180');
+  
+      // Botões de Rotação na Aba de Modelos (Barra Lateral)
+      this.btnSidebarRotateLeft = document.getElementById('btnSidebarRotateLeft');
+      this.btnSidebarRotateRight = document.getElementById('btnSidebarRotateRight');
+      this.btnSidebarRotate180 = document.getElementById('btnSidebarRotate180');
   
       // Indicador Discreto de Salvamento no Topo
       this.saveStatusIndicator = document.getElementById('saveStatusIndicator');
@@ -7415,36 +7442,58 @@
         });
       }
   
-      // Rotação de Imagem (Horário e Anti-Horário)
+      // Rotação de Imagem (Horário, Anti-Horário e 180° Invertido)
+      // 1. Barra Superior (Info Bar)
       if (this.btnRotateLeft) {
-        this.btnRotateLeft.addEventListener('click', async () => {
-          if (!this.tool.photo) return;
-          this.tool.rotatePhoto('left');
-          this.syncPhotoState();
-          this.app.requestRender();
-          if (this.app && typeof this.app.saveCurrentDraft === 'function') {
-            await this.app.saveCurrentDraft();
-          }
-          if (this.app && typeof this.app.showToast === 'function') {
-            this.app.showToast('Fotografia girada 90° à esquerda.');
-          }
-        });
+        this.btnRotateLeft.addEventListener('click', () => this.handleRotatePhoto('left'));
+      }
+      if (this.btnRotateRight) {
+        this.btnRotateRight.addEventListener('click', () => this.handleRotatePhoto('right'));
+      }
+      if (this.btnRotate180) {
+        this.btnRotate180.addEventListener('click', () => this.handleRotatePhoto(180));
       }
   
-      if (this.btnRotateRight) {
-        this.btnRotateRight.addEventListener('click', async () => {
-          if (!this.tool.photo) return;
-          this.tool.rotatePhoto('right');
-          this.syncPhotoState();
-          this.app.requestRender();
-          if (this.app && typeof this.app.saveCurrentDraft === 'function') {
-            await this.app.saveCurrentDraft();
-          }
-          if (this.app && typeof this.app.showToast === 'function') {
-            this.app.showToast('Fotografia girada 90° à direita.');
-          }
-        });
+      // 2. Barra Flutuante sobre o Canvas
+      if (this.btnFloatRotateLeft) {
+        this.btnFloatRotateLeft.addEventListener('click', () => this.handleRotatePhoto('left'));
       }
+      if (this.btnFloatRotateRight) {
+        this.btnFloatRotateRight.addEventListener('click', () => this.handleRotatePhoto('right'));
+      }
+      if (this.btnFloatRotate180) {
+        this.btnFloatRotate180.addEventListener('click', () => this.handleRotatePhoto(180));
+      }
+  
+      // 3. Barra Lateral (Card de Rotação em Modelos)
+      if (this.btnSidebarRotateLeft) {
+        this.btnSidebarRotateLeft.addEventListener('click', () => this.handleRotatePhoto('left'));
+      }
+      if (this.btnSidebarRotateRight) {
+        this.btnSidebarRotateRight.addEventListener('click', () => this.handleRotatePhoto('right'));
+      }
+      if (this.btnSidebarRotate180) {
+        this.btnSidebarRotate180.addEventListener('click', () => this.handleRotatePhoto(180));
+      }
+  
+      // 4. Atalhos de Teclado Rápidos (R = 90° horário, Shift+R = 90° anti-horário, Alt+R = 180°)
+      window.addEventListener('keydown', (e) => {
+        const tag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
+        if (tag === 'input' || tag === 'textarea' || tag === 'select' || (document.activeElement && document.activeElement.isContentEditable)) {
+          return;
+        }
+        if (e.key === 'r' || e.key === 'R') {
+          if (!this.tool || !this.tool.photo) return;
+          e.preventDefault();
+          if (e.altKey) {
+            this.handleRotatePhoto(180);
+          } else if (e.shiftKey) {
+            this.handleRotatePhoto('left');
+          } else {
+            this.handleRotatePhoto('right');
+          }
+        }
+      });
   
       // Modal e Fila de Processamento em Lote
       if (this.btnBatchModal) {
@@ -7868,6 +7917,28 @@
     }
   
     /**
+     * Executa a rotação da fotografia atual e atualiza a UI, canvas e rascunho
+     * @param {'left'|'right'|180|'180'} direction
+     */
+    async handleRotatePhoto(direction) {
+      if (!this.tool || !this.tool.photo) return;
+      this.tool.rotatePhoto(direction);
+      this.syncPhotoState();
+      this.app.requestRender();
+      if (this.app && typeof this.app.saveCurrentDraft === 'function') {
+        await this.app.saveCurrentDraft();
+      }
+      if (this.app && typeof this.app.showToast === 'function') {
+        const msg = (direction === 180 || direction === '180')
+          ? 'Fotografia invertida 180°.'
+          : direction === 'left'
+            ? 'Fotografia girada 90° à esquerda.'
+            : 'Fotografia girada 90° à direita.';
+        this.app.showToast(msg);
+      }
+    }
+  
+    /**
      * Sincroniza todos os controles quando uma nova fotografia é carregada
      */
     syncPhotoState() {
@@ -7876,6 +7947,7 @@
         this.previewCanvas.style.display = 'none';
         this.imageInfoBar.style.display = 'none';
         if (this.dragHintPill) this.dragHintPill.style.display = 'none';
+        if (this.floatingRotateBar) this.floatingRotateBar.style.display = 'none';
         return;
       }
   
@@ -7883,6 +7955,7 @@
       this.previewCanvas.style.display = 'block';
       this.imageInfoBar.style.display = 'flex';
       if (this.dragHintPill) this.dragHintPill.style.display = 'block';
+      if (this.floatingRotateBar) this.floatingRotateBar.style.display = 'flex';
   
       const w = this.tool.photo.width;
       const h = this.tool.photo.height;
