@@ -6,6 +6,9 @@
   <title>STAMP-CAMERA • Carimbo Técnico e Geográfico para Fotografias</title>
   <meta name="description" content="Aplicação web 100% client-side para inserção de carimbos técnicos e georreferenciados em fotografias para perícias, obras, inspeções e laudos.">
   
+  <!-- Favicon SVG inline -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📷</text></svg>">
+  
   <!-- Estilos -->
   <link rel="stylesheet" href="css/theme.css">
   <link rel="stylesheet" href="css/main.css">
@@ -555,7 +558,7 @@
     <span style="color: #fff; font-size: 14px; font-weight: 600;">Processando fotografia...</span>
   </div>
 
-  <!-- Scripts Modulares -->
-  <script type="module" src="js/main.js"></script>
+  <!-- Script Autônomo (compatível com file:/// e http:// sem bloqueio CORS) -->
+  <script src="js/stamp-camera.bundle.js"></script>
 </body>
 </html>

@@ -269,7 +269,7 @@ assert(allIdsFound, `Todos os ${requiredElementIds.length} elementos de interfac
 assert(htmlContent.includes('css/theme.css'), 'theme.css incluído no index.html');
 assert(htmlContent.includes('css/main.css'), 'main.css incluído no index.html');
 assert(htmlContent.includes('css/stamp-camera.css'), 'stamp-camera.css incluído no index.html');
-assert(htmlContent.includes('js/main.js'), 'js/main.js incluído como type="module"');
+assert(htmlContent.includes('js/stamp-camera.bundle.js'), 'stamp-camera.bundle.js incluído no index.html');
 
 console.log(`\n========================================`);
 console.log(`RESUMO DOS TESTES: ${passed} passaram, ${failed} falharam.`);

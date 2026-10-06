@@ -1,13 +1,15 @@
 {
   "name": "stamp-camera",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Carimbo técnico e geográfico para fotografias - 100% Client-side",
   "type": "module",
   "main": "index.html",
   "scripts": {
-    "start": "npx serve .",
+    "build": "node scripts/build-bundle.js",
+    "start": "node scripts/build-bundle.js && npx serve .",
     "serve": "npx serve -l 3000 .",
-    "test": "node tests/test-suite.js"
+    "test": "node tests/test-suite.js",
+    "test:e2e": "node tests/cdp-full-test.js"
   },
   "keywords": [
     "stamp-camera",
