@@ -113,10 +113,13 @@ async function runBrowserTest(targetUrl) {
         filename: app?.tool?.photo?.filename,
         canvasVisible: canvas?.style.display === 'block',
         canvasDimensions: canvas ? canvas.width + 'x' + canvas.height : null,
-        activeFieldsCount: app?.tool?.activeFields?.length
+        activeFieldsCount: app?.tool?.activeFields?.length,
+        autoCity: app?.tool?.location?.city,
+        autoState: app?.tool?.location?.state,
+        autoCountry: app?.tool?.location?.country
       };
     }`);
-    console.log('✓ Carregamento da foto de teste:', demoClickResult);
+    console.log('✓ Carregamento da foto de teste e geocodificação automática:', demoClickResult);
 
     // 3. Testa alternância de abas e campos
     const tabClickResult = await evaluate(`() => {
@@ -192,7 +195,20 @@ async function runBrowserTest(targetUrl) {
       HTMLCanvasElement.prototype.toBlob = origToBlob;
       return { exportCalled };
     }`);
-    console.log('✓ Disparo do pipeline de exportação:', exportResult);
+    // 8. Testa botão Limpar Espaço de Trabalho
+    const clearResult = await evaluate(`() => {
+      const clearBtn = document.getElementById('btnClearWorkspace');
+      if (clearBtn) clearBtn.click();
+      const app = window.stampCameraApp;
+      const canvas = document.getElementById('previewCanvas');
+      const placeholder = document.getElementById('emptyPlaceholder');
+      return {
+        photoCleared: app.tool.photo === null,
+        canvasHidden: canvas.style.display === 'none',
+        placeholderVisible: placeholder.style.display === 'flex'
+      };
+    }`);
+    console.log('✓ Botão Limpar Espaço de Trabalho:', clearResult);
 
     ws.close();
   } catch (err) {

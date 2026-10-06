@@ -14,6 +14,7 @@ import {
 } from '../../config.js';
 import { formatCoordinates, toDms, toDdm, parseCoordinateString, isValidCoordinate } from '../../geolocation.js';
 import { BUILT_IN_MODELS, PRESET_CATEGORIES, STANDARD_FIELD_DEFS } from '../../templates.js';
+import { reverseGeocode } from '../../geocoder.js';
 
 export class StampCameraTool {
   constructor() {
@@ -239,6 +240,55 @@ export class StampCameraTool {
       this.location.sources.date = 'MANUAL';
       this.location.sources.time = 'MANUAL';
     }
+  }
+
+  /**
+   * Limpa o espaço de trabalho resetando a foto e os campos
+   */
+  clearWorkspace() {
+    this.photo = null;
+    this.exif = null;
+    this.location = this.createDefaultLocation();
+    this.settings.customPosX = null;
+    this.settings.customPosY = null;
+    this.initDefaultFields();
+  }
+
+  /**
+   * Tenta resolver automaticamente Cidade, Estado e País com base nas coordenadas
+   */
+  async autoResolveLocation() {
+    if (this.location.latitude !== null && this.location.longitude !== null) {
+      const geo = await reverseGeocode(this.location.latitude, this.location.longitude);
+      if (geo) {
+        if (geo.city && !this.location.city) {
+          this.location.city = geo.city;
+          this.location.sources.city = 'AUTO';
+        }
+        if (geo.state && !this.location.state) {
+          this.location.state = geo.state;
+          this.location.sources.state = 'AUTO';
+        }
+        if (geo.country && !this.location.country) {
+          this.location.country = geo.country;
+          this.location.sources.country = 'AUTO';
+        }
+        if (geo.neighborhood && !this.location.neighborhood) {
+          this.location.neighborhood = geo.neighborhood;
+          this.location.sources.neighborhood = 'AUTO';
+        }
+        if (geo.street && !this.location.street) {
+          this.location.street = geo.street;
+          this.location.sources.street = 'AUTO';
+        }
+        if (geo.postalCode && !this.location.postalCode) {
+          this.location.postalCode = geo.postalCode;
+          this.location.sources.postalCode = 'AUTO';
+        }
+        return geo;
+      }
+    }
+    return null;
   }
 
   /**

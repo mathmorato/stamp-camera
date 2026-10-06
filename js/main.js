@@ -107,6 +107,23 @@ class StampCameraApp {
       });
     }
 
+    // Botão Limpar / Resetar
+    const btnClearWorkspace = document.getElementById('btnClearWorkspace');
+    if (btnClearWorkspace) {
+      btnClearWorkspace.addEventListener('click', () => this.handleClear());
+    }
+
+    const btnClearPhoto = document.getElementById('btnClearPhoto');
+    if (btnClearPhoto) {
+      btnClearPhoto.addEventListener('click', () => this.handleClear());
+    }
+
+    // Botão de Busca Automática de Endereço pelas Coordenadas
+    const btnAutoGeocode = document.getElementById('btnAutoGeocode');
+    if (btnAutoGeocode) {
+      btnAutoGeocode.addEventListener('click', () => this.handleAutoGeocode());
+    }
+
     // Botão de Exportação
     const btnExport = document.getElementById('btnExport');
     if (btnExport) {
@@ -124,8 +141,17 @@ class StampCameraApp {
       this.showLoading(true);
       const photoData = await loadImageFromFile(file);
       this.tool.loadPhotoData(photoData);
+
+      // Busca automática de cidade, estado e país se houver GPS
+      await this.tool.autoResolveLocation();
+
       this.ui.syncPhotoState();
       this.requestRender();
+
+      if (this.tool.location.city || this.tool.location.state) {
+        const locStr = [this.tool.location.city, this.tool.location.state, this.tool.location.country].filter(Boolean).join(', ');
+        this.showToast(`Localização identificada: ${locStr}`);
+      }
     } catch (err) {
       alert(`Erro ao processar fotografia: ${err.message}`);
     } finally {
@@ -138,10 +164,52 @@ class StampCameraApp {
       this.showLoading(true);
       const demoData = await createDemoImage(type);
       this.tool.loadPhotoData(demoData);
+
+      // Busca automática de cidade, estado e país se houver GPS
+      await this.tool.autoResolveLocation();
+
       this.ui.syncPhotoState();
       this.requestRender();
+
+      if (this.tool.location.city || this.tool.location.state) {
+        const locStr = [this.tool.location.city, this.tool.location.state, this.tool.location.country].filter(Boolean).join(', ');
+        this.showToast(`Localização identificada: ${locStr}`);
+      }
     } catch (err) {
       console.error('Erro ao gerar foto de demonstração:', err);
+    } finally {
+      this.showLoading(false);
+    }
+  }
+
+  handleClear() {
+    const fileInput = document.getElementById('fileInput');
+    if (fileInput) fileInput.value = '';
+
+    this.tool.clearWorkspace();
+    this.ui.syncPhotoState();
+    this.requestRender();
+    this.showToast('Área de trabalho limpa.');
+  }
+
+  async handleAutoGeocode() {
+    if (this.tool.location.latitude === null || this.tool.location.longitude === null) {
+      this.showToast('Insira coordenadas de latitude e longitude primeiro.');
+      return;
+    }
+
+    this.showLoading(true);
+    try {
+      const geo = await this.tool.autoResolveLocation();
+      this.ui.syncPhotoState();
+      this.requestRender();
+
+      if (geo && (geo.city || geo.state)) {
+        const locStr = [geo.city, geo.state, geo.country].filter(Boolean).join(', ');
+        this.showToast(`Localização identificada: ${locStr}`);
+      } else {
+        this.showToast('Coordenadas válidas, mas localidade não mapeada.');
+      }
     } finally {
       this.showLoading(false);
     }

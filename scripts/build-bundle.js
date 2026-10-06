@@ -18,6 +18,7 @@ const files = [
   'js/stamp-engine.js',
   'js/export.js',
   'js/i18n.js',
+  'js/geocoder.js',
   'js/tools/stamp-camera/tool.js',
   'js/tools/stamp-camera/ui.js',
   'js/main.js'

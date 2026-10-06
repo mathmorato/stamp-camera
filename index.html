@@ -40,6 +40,10 @@
           📁 Abrir Fotografia
         </button>
 
+        <button type="button" class="btn btn-secondary btn-sm" id="btnClearWorkspace" title="Limpar fotografia e resetar campos">
+          🗑️ Limpar
+        </button>
+
         <select id="langSelect" class="form-select" style="width: auto; padding: 4px 8px; font-size: 12px;" title="Selecionar Idioma">
           <option value="pt-BR">🇧🇷 PT-BR</option>
           <option value="en">🇺🇸 EN</option>
@@ -270,6 +274,9 @@
           <div id="imageInfoBar" style="display: none; align-items: center; gap: 8px;">
             <span style="color: var(--primary);">📷</span>
             <span id="photoMetaText" style="font-weight: 500;">fotografia.jpg</span>
+            <button type="button" class="btn-icon btn-sm" id="btnClearPhoto" title="Remover fotografia e limpar tela" style="width: 22px; height: 22px; font-size: 11px;">
+              ✕
+            </button>
           </div>
           <div style="margin-left: auto; display: flex; align-items: center; gap: 8px;">
             <span style="font-size: 11px; color: var(--text-subtle);">Pré-visualização em tempo real</span>
@@ -385,6 +392,10 @@
                 </label>
                 <input type="number" step="any" id="inputAlt" class="form-input" placeholder="Ex: 312.5">
               </div>
+
+              <button type="button" class="btn btn-secondary btn-sm" id="btnAutoGeocode" style="width: 100%; margin-top: 4px;" title="Buscar Cidade, Estado e País com base nas coordenadas">
+                📍 Identificar Cidade, Estado e País
+              </button>
             </div>
 
             <!-- Data e Horário -->

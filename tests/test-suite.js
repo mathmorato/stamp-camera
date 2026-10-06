@@ -21,6 +21,7 @@ import {
 import { COORD_FORMATS, DATE_FORMATS, TIME_FORMATS } from '../js/config.js';
 import { BUILT_IN_MODELS, PRESET_CATEGORIES, STANDARD_FIELD_DEFS } from '../js/templates.js';
 import { StampCameraTool } from '../js/tools/stamp-camera/tool.js';
+import { getOfflineLocation } from '../js/geocoder.js';
 import fs from 'fs';
 import path from 'path';
 
@@ -182,6 +183,22 @@ assert(tool.activeFields[tool.activeFields.length - 2].id === customField.id, 'C
 tool.removeField(customField.id);
 assert(tool.activeFields.length === initialCount, 'Campo removido com sucesso');
 
+// Testes do Geocodificador Offline (Identificação Automática de Cidade/Estado/País)
+console.log('\n[4.5/5] Testes de Geocodificação Automática e Limpeza:');
+const geoJussara = getOfflineLocation(refLat, refLon);
+assert(geoJussara && geoJussara.city === 'Jussara', `Geocodificador identificou Cidade: ${geoJussara?.city}`);
+assert(geoJussara && geoJussara.state === 'Goiás', `Geocodificador identificou Estado: ${geoJussara?.state}`);
+assert(geoJussara && geoJussara.country === 'Brasil', `Geocodificador identificou País: ${geoJussara?.country}`);
+
+const geoBrasilia = getOfflineLocation(-15.7975, -47.8919);
+assert(geoBrasilia && geoBrasilia.city === 'Brasília', `Geocodificador identificou Brasília: ${geoBrasilia?.city}`);
+
+// Teste de Limpeza do Espaço de Trabalho (Opção Limpar)
+tool.clearWorkspace();
+assert(tool.photo === null, 'Foto limpa com sucesso');
+assert(tool.location.latitude === null && tool.location.longitude === null, 'Coordenadas resetadas com sucesso');
+assert(tool.location.city === '' && tool.location.state === '', 'Campos de localização resetados com sucesso');
+
 // 5. TESTES DE INTEGRIDADE DO DOM (index.html)
 console.log('\n[5/5] Testes de Integridade do DOM (index.html):');
 const indexPath = path.resolve('index.html');
@@ -190,6 +207,9 @@ const htmlContent = fs.readFileSync(indexPath, 'utf-8');
 const requiredElementIds = [
   'fileInput',
   'btnOpenPhoto',
+  'btnClearWorkspace',
+  'btnClearPhoto',
+  'btnAutoGeocode',
   'btnDemoWithGps',
   'btnDemoWithoutGps',
   'btnExport',
