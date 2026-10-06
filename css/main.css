@@ -38,29 +38,47 @@ html, body {
   background: var(--text-subtle);
 }
 
-/* SVGs Utilitários */
-.svg-icon {
+/* SVGs Utilitários e Line-Art (Garante traço linear e previne preenchimento preto sólido) */
+.svg-icon,
+.svg-icon-sm,
+.svg-icon-lg {
   display: inline-block;
-  width: 16px;
-  height: 16px;
   stroke-width: 1.75;
   stroke: currentColor;
-  fill: none;
+  fill: none !important;
   stroke-linecap: round;
   stroke-linejoin: round;
   flex-shrink: 0;
   vertical-align: middle;
 }
 
+.svg-icon {
+  width: 16px;
+  height: 16px;
+}
+
 .svg-icon-sm {
-  width: 13px;
-  height: 13px;
-  stroke-width: 1.75;
+  width: 14px;
+  height: 14px;
 }
 
 .svg-icon-lg {
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
+}
+
+/* Regra para garantir que todos os ícones line art na aplicação permaneçam vazados */
+.tab-btn svg,
+.btn svg,
+.btn-icon svg,
+.empty-icon svg,
+.alert-box svg,
+.field-icon-tag svg {
+  fill: none !important;
+  stroke: currentColor !important;
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 /* -------------------------------------------------------------

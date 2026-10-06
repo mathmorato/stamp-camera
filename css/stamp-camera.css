@@ -505,6 +505,14 @@
   margin-bottom: var(--space-1);
 }
 
+.empty-icon svg {
+  width: 22px;
+  height: 22px;
+  stroke: currentColor;
+  stroke-width: 1.75;
+  fill: none !important;
+}
+
 .empty-title {
   font-size: 14px;
   font-weight: 600;
