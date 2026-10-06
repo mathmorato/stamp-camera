@@ -11,7 +11,7 @@
    * Versão: 1.0.0
    * 100% Client-side - Nenhuma informação é enviada para servidores externos.
    */
-  const PNITE_VERSION = "v.1.0.8";
+  const PNITE_VERSION = "v.1.0.9";
   const APP_CONFIG = {
     name: 'STAMP-CAMERA',
     subtitle: 'Carimbo técnico e geográfico para fotografias',
@@ -1798,10 +1798,10 @@
    * @param {HTMLCanvasElement} canvas
    * @param {string} originalFilename
    * @param {'image/jpeg'|'image/png'|'image/webp'} mimeType
-   * @param {number} quality (0.1 a 1.0)
+   * @param {number} quality (0.1 a 1.0, padrao 1.0 sem perda)
    * @returns {Promise<string>} Nome do arquivo gerado
    */
-  async function exportStampedPhoto(canvas, originalFilename = 'fotografia.jpg', mimeType = 'image/jpeg', quality = 0.95) {
+  async function exportStampedPhoto(canvas, originalFilename = 'fotografia.jpg', mimeType = 'image/jpeg', quality = 1.0) {
     if (!canvas) {
       throw new Error('Canvas não fornecido para exportação');
     }
@@ -3137,16 +3137,20 @@
         this.app.requestRender();
       });
   
-      // Exportação
-      this.selectExportFormat.addEventListener('change', (e) => {
-        const isJpg = e.target.value === 'image/jpeg';
-        this.qualityGroup.style.display = isJpg ? 'block' : 'none';
-      });
+      // Exportação - qualidade fixada em 100% máxima sem exibir opção de compressão com perda
+      if (this.selectExportFormat) {
+        this.selectExportFormat.addEventListener('change', () => {
+          if (this.qualityGroup) this.qualityGroup.style.display = 'none';
+        });
+      }
   
-      this.rangeExportQuality.addEventListener('input', (e) => {
-        const val = Math.round(parseFloat(e.target.value) * 100);
-        this.valExportQuality.textContent = `${val}%`;
-      });
+      if (this.rangeExportQuality) {
+        this.rangeExportQuality.value = '1.0';
+        this.rangeExportQuality.addEventListener('input', (e) => {
+          const val = Math.round(parseFloat(e.target.value) * 100);
+          if (this.valExportQuality) this.valExportQuality.textContent = `${val}%`;
+        });
+      }
   
       // Sincronização dos campos do painel direito (Localização & Técnico)
       this.bindLocationInputs();
@@ -4034,12 +4038,10 @@
         // Renderiza resolução nativa
         this.engine.render(exportCanvas, this.tool.photo.canvas, lines, settings, true);
   
-        // Determina formato e qualidade
+        // Determina formato e qualidade (qualidade máxima 1.0 preservando 100% da imagem sem perda)
         const formatSelect = document.getElementById('selectExportFormat');
-        const qualityRange = document.getElementById('rangeExportQuality');
-  
         const mimeType = formatSelect ? formatSelect.value : 'image/jpeg';
-        const quality = qualityRange ? parseFloat(qualityRange.value) : 0.95;
+        const quality = 1.0;
   
         const filename = await exportStampedPhoto(
           exportCanvas,

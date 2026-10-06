@@ -4,7 +4,7 @@
  * 100% Client-side - Nenhuma informação é enviada para servidores externos.
  */
 
-export const PNITE_VERSION = "v.1.0.8";
+export const PNITE_VERSION = "v.1.0.9";
 
 export const APP_CONFIG = {
   name: 'STAMP-CAMERA',

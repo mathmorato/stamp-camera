@@ -9,10 +9,10 @@
  * @param {HTMLCanvasElement} canvas
  * @param {string} originalFilename
  * @param {'image/jpeg'|'image/png'|'image/webp'} mimeType
- * @param {number} quality (0.1 a 1.0)
+ * @param {number} quality (0.1 a 1.0, padrao 1.0 sem perda)
  * @returns {Promise<string>} Nome do arquivo gerado
  */
-export async function exportStampedPhoto(canvas, originalFilename = 'fotografia.jpg', mimeType = 'image/jpeg', quality = 0.95) {
+export async function exportStampedPhoto(canvas, originalFilename = 'fotografia.jpg', mimeType = 'image/jpeg', quality = 1.0) {
   if (!canvas) {
     throw new Error('Canvas não fornecido para exportação');
   }

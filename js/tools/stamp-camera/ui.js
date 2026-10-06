@@ -293,16 +293,20 @@ export class StampCameraUI {
       this.app.requestRender();
     });
 
-    // Exportação
-    this.selectExportFormat.addEventListener('change', (e) => {
-      const isJpg = e.target.value === 'image/jpeg';
-      this.qualityGroup.style.display = isJpg ? 'block' : 'none';
-    });
+    // Exportação - qualidade fixada em 100% máxima sem exibir opção de compressão com perda
+    if (this.selectExportFormat) {
+      this.selectExportFormat.addEventListener('change', () => {
+        if (this.qualityGroup) this.qualityGroup.style.display = 'none';
+      });
+    }
 
-    this.rangeExportQuality.addEventListener('input', (e) => {
-      const val = Math.round(parseFloat(e.target.value) * 100);
-      this.valExportQuality.textContent = `${val}%`;
-    });
+    if (this.rangeExportQuality) {
+      this.rangeExportQuality.value = '1.0';
+      this.rangeExportQuality.addEventListener('input', (e) => {
+        const val = Math.round(parseFloat(e.target.value) * 100);
+        if (this.valExportQuality) this.valExportQuality.textContent = `${val}%`;
+      });
+    }
 
     // Sincronização dos campos do painel direito (Localização & Técnico)
     this.bindLocationInputs();

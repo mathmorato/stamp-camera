@@ -571,16 +571,22 @@
                 </select>
               </div>
 
-              <div class="form-group" id="qualityGroup">
-                <label for="rangeExportQuality" class="form-label">
-                  <span>Qualidade da Compressão</span>
-                  <span id="valExportQuality" class="range-val">95%</span>
-                </label>
-                <input type="range" id="rangeExportQuality" class="form-range" min="0.5" max="1.0" step="0.05" value="0.95">
+              <div class="form-group" style="margin-bottom: 12px;">
+                <label class="form-label">Qualidade da Fotografia</label>
+                <div style="display: flex; align-items: center; gap: 8px; padding: 9px 12px; background-color: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: 12px; color: var(--text-main);">
+                  <svg class="svg-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-success); flex-shrink: 0;"><polyline points="20 6 9 17 4 12"/></svg>
+                  <span><strong>100% Qualidade Máxima</strong> (Sem compressão ou perda)</span>
+                </div>
+              </div>
+
+              <!-- Controle de qualidade mantido oculto no DOM fixado em 1.0 (sem compressão com perda) -->
+              <div id="qualityGroup" style="display: none !important;">
+                <input type="range" id="rangeExportQuality" class="form-range" min="1.0" max="1.0" step="0.01" value="1.0">
+                <span id="valExportQuality" class="range-val">100%</span>
               </div>
 
               <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 16px; line-height: 1.45;">
-                A fotografia original é preservada intacta no dispositivo. A imagem carimbada é exportada com resolução máxima 1:1.
+                A fotografia original e o carimbo são exportados em resolução 1:1 nativa, preservando a nitidez integral dos detalhes sem redução de qualidade.
               </p>
 
               <button type="button" class="btn btn-primary" id="btnExportPanel" style="width: 100%; height: 36px;" onclick="document.getElementById('btnExport').click()">
@@ -596,7 +602,7 @@
     <!-- Barra de Status Técnica (Status Bar) -->
     <footer class="app-footer">
       <div class="footer-left">
-        <span>STAMP-CAMERA v.1.0.8</span>
+        <span>STAMP-CAMERA v.1.0.9</span>
         <span>•</span>
         <span class="footer-privacy-text">100% Processamento Local (Cliente)</span>
         <span>•</span>

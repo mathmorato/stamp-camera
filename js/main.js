@@ -265,12 +265,10 @@ class StampCameraApp {
       // Renderiza resolução nativa
       this.engine.render(exportCanvas, this.tool.photo.canvas, lines, settings, true);
 
-      // Determina formato e qualidade
+      // Determina formato e qualidade (qualidade máxima 1.0 preservando 100% da imagem sem perda)
       const formatSelect = document.getElementById('selectExportFormat');
-      const qualityRange = document.getElementById('rangeExportQuality');
-
       const mimeType = formatSelect ? formatSelect.value : 'image/jpeg';
-      const quality = qualityRange ? parseFloat(qualityRange.value) : 0.95;
+      const quality = 1.0;
 
       const filename = await exportStampedPhoto(
         exportCanvas,

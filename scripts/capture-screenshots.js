@@ -98,6 +98,17 @@ async function capture() {
     fs.writeFileSync(path.join(ARTIFACT_DIR, 'redesign_active_light.png'), Buffer.from(ss3.data, 'base64'));
     console.log('Saved redesign_active_light.png');
 
+    // Switch to export tab
+    await send('Runtime.evaluate', {
+      expression: `document.querySelector('[data-tab="export"]').click();`
+    });
+    await new Promise(r => setTimeout(r, 500));
+
+    // Capture 4: Export tab
+    const ss4 = await send('Page.captureScreenshot', { format: 'png' });
+    fs.writeFileSync(path.join(ARTIFACT_DIR, 'redesign_active_export.png'), Buffer.from(ss4.data, 'base64'));
+    console.log('Saved redesign_active_export.png');
+
     ws.close();
   } finally {
     chromeProc.kill('SIGKILL');
