@@ -131,6 +131,38 @@ const coordLine = renderLinesWithGps.find(l => l.id === 'lat' || l.id === 'coord
 assert(coordLine !== undefined, 'Linha de coordenadas presente no Modelo 1');
 assert(coordLine.icon !== undefined && coordLine.icon.length > 0, 'Ícone inline presente na linha do carimbo');
 
+// Testes de Padrões: Data/Hora, Lat/Long e Localidade na mesma linha
+const dtLine = renderLinesWithGps.find(l => l.id === 'datetime');
+assert(dtLine !== undefined, 'Data e hora juntas na mesma linha por padrão no Modelo 1');
+assert(renderLinesWithGps.some(l => l.id === 'coordinates'), 'Latitude e longitude juntas na mesma linha por padrão no Modelo 1');
+
+// Teste de Local ativado por padrão com Cidade, Estado e País na mesma linha
+tool.location.city = 'Jussara';
+tool.location.state = 'Goiás';
+tool.location.country = 'Brasil';
+const linesWithCityStateCountry = tool.getStampRenderLines();
+const locLine = linesWithCityStateCountry.find(l => l.id === 'city_state_country');
+assert(locLine !== undefined, 'Local (Cidade, Estado e País) ativado por padrão no Modelo 1');
+assert(locLine.value.includes('Jussara') && locLine.value.includes('Goiás') && locLine.value.includes('Brasil'), 'Cidade, Estado e País renderizados juntos na mesma linha');
+
+// Teste de Separação e Unificação de Localidade
+tool.splitLocality();
+assert(tool.isLocalityUnified() === false, 'Localidade separada em Cidade, Estado e País individuais');
+assert(tool.activeFields.find(f => f.id === 'city').enabled === true, 'Campo Cidade ativado individualmente');
+tool.unifyLocality();
+assert(tool.isLocalityUnified() === true, 'Localidade reunificada com sucesso em Cidade, Estado e País');
+
+// Teste de Unificação e Separação de Endereço e Bairro
+tool.setFieldValue('street', 'Av. José Vicente');
+tool.setFieldValue('number', '100');
+tool.setFieldValue('neighborhood', 'Setor Central');
+const addrNeighVal = tool.getFieldValue('address_neighborhood');
+assert(addrNeighVal.includes('Av. José Vicente') && addrNeighVal.includes('Setor Central'), 'Endereço e Bairro unificados na mesma linha');
+tool.splitAddress();
+assert(tool.isAddressUnified() === false, 'Endereço e Bairro separados em linhas individuais');
+tool.unifyAddress();
+assert(tool.isAddressUnified() === true, 'Endereço e Bairro reunificados com sucesso');
+
 // Carrega dados de teste SEM GPS (Teste de Ausência de Dados)
 tool.loadPhotoData({
   canvas: { width: 1920, height: 1080 },
@@ -333,7 +365,12 @@ const requiredElementIds = [
   'btnDeviceGps',
   'checkPreserveExif',
   'checkOriginStampBadge',
-  'batchModal'
+  'batchModal',
+  'confirmActionModal',
+  'btnToggleSplitCoords',
+  'btnToggleSplitDateTime',
+  'btnToggleSplitAddress',
+  'btnToggleSplitLocality'
 ];
 
 let allIdsFound = true;

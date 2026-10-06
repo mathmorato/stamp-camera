@@ -711,7 +711,7 @@
     <!-- Barra de Status Técnica (Status Bar) -->
     <footer class="app-footer">
       <div class="footer-left">
-        <span>STAMP-CAMERA v.1.1.3</span>
+        <span>STAMP-CAMERA v.1.1.4</span>
         <span>•</span>
         <span class="footer-privacy-text" title="Processamento 100% no navegador. Nenhuma foto enviada para servidores.">Processamento de Fotos 100% Local (Navegador)</span>
         <span>•</span>
@@ -773,6 +773,30 @@
           <svg class="svg-icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           <span>Carimbar e Baixar Tudo em ZIP</span>
         </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Confirmação de Ações Técnicas (Separar/Unificar Campos) -->
+  <div class="batch-modal" id="confirmActionModal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="confirmModalTitle">
+    <div class="batch-modal-content" style="max-width: 440px;">
+      <div class="batch-modal-header">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <div class="confirm-icon-box" id="confirmModalIcon">
+            <svg class="svg-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </div>
+          <h3 class="batch-modal-title" id="confirmModalTitle" style="font-size: 14px; margin: 0;">Confirmar Ação</h3>
+        </div>
+        <button type="button" class="btn-close-modal" id="btnConfirmModalClose" aria-label="Fechar Modal">&times;</button>
+      </div>
+      <div class="batch-modal-body" style="padding: 16px 20px;">
+        <p id="confirmModalMessage" style="font-size: 13px; color: var(--text-secondary); line-height: 1.5; margin: 0;">
+          Deseja prosseguir com esta alteração?
+        </p>
+      </div>
+      <div class="batch-modal-footer" style="padding: 12px 18px; display: flex; justify-content: flex-end; gap: 10px;">
+        <button type="button" class="btn btn-secondary btn-sm" id="btnConfirmModalCancel">Cancelar</button>
+        <button type="button" class="btn btn-primary btn-sm" id="btnConfirmModalOk">Confirmar</button>
       </div>
     </div>
   </div>

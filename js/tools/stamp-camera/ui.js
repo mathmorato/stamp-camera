@@ -160,6 +160,21 @@ export class StampCameraUI {
     this.inputNumberPrefix = document.getElementById('inputNumberPrefix');
     this.inputNumberStart = document.getElementById('inputNumberStart');
     this.inputNumberDigits = document.getElementById('inputNumberDigits');
+
+    // Modal de Confirmação (Separar / Unificar)
+    this.confirmActionModal = document.getElementById('confirmActionModal');
+    this.confirmModalTitle = document.getElementById('confirmModalTitle');
+    this.confirmModalMessage = document.getElementById('confirmModalMessage');
+    this.btnConfirmModalClose = document.getElementById('btnConfirmModalClose');
+    this.btnConfirmModalCancel = document.getElementById('btnConfirmModalCancel');
+    this.btnConfirmModalOk = document.getElementById('btnConfirmModalOk');
+    this.pendingConfirmAction = null;
+
+    // Botões de Alternância Rápida (Separar / Unificar) no painel de Localização
+    this.btnToggleSplitCoords = document.getElementById('btnToggleSplitCoords');
+    this.btnToggleSplitDateTime = document.getElementById('btnToggleSplitDateTime');
+    this.btnToggleSplitAddress = document.getElementById('btnToggleSplitAddress');
+    this.btnToggleSplitLocality = document.getElementById('btnToggleSplitLocality');
   }
 
   bindEvents() {
@@ -509,6 +524,175 @@ export class StampCameraUI {
     if (this.btnExportBatchZip) {
       this.btnExportBatchZip.addEventListener('click', () => this.processAndExportBatchZip());
     }
+
+    // Modal de Confirmação (Separar / Unificar)
+    if (this.btnConfirmModalClose) {
+      this.btnConfirmModalClose.addEventListener('click', () => this.closeConfirmDialog());
+    }
+    if (this.btnConfirmModalCancel) {
+      this.btnConfirmModalCancel.addEventListener('click', () => this.closeConfirmDialog());
+    }
+    if (this.btnConfirmModalOk) {
+      this.btnConfirmModalOk.addEventListener('click', () => {
+        if (typeof this.pendingConfirmAction === 'function') {
+          const action = this.pendingConfirmAction;
+          this.closeConfirmDialog();
+          action();
+        } else {
+          this.closeConfirmDialog();
+        }
+      });
+    }
+    if (this.confirmActionModal) {
+      this.confirmActionModal.addEventListener('click', (e) => {
+        if (e.target === this.confirmActionModal || e.target.classList.contains('batch-modal-backdrop')) {
+          this.closeConfirmDialog();
+        }
+      });
+    }
+
+    // Botões de Alternância Rápida (Separar / Unificar) no painel de Localização
+    if (this.btnToggleSplitLocality) {
+      this.btnToggleSplitLocality.addEventListener('click', () => {
+        const isUnified = this.tool.isLocalityUnified();
+        if (isUnified) {
+          this.showConfirmDialog({
+            title: 'Separar Localidade',
+            message: 'Deseja separar a Localidade em três campos individuais no carimbo: Cidade, Estado e País?',
+            confirmText: 'Confirmar Separação',
+            onConfirm: () => {
+              this.tool.splitLocality();
+              this.renderFieldsList();
+              this.app.requestRender();
+              if (this.app && typeof this.app.showToast === 'function') {
+                this.app.showToast('Localidade separada em Cidade, Estado e País.');
+              }
+            }
+          });
+        } else {
+          this.showConfirmDialog({
+            title: 'Unificar Localidade',
+            message: 'Deseja unificar Cidade, Estado e País em uma única linha no carimbo?',
+            confirmText: 'Confirmar Unificação',
+            onConfirm: () => {
+              this.tool.unifyLocality();
+              this.renderFieldsList();
+              this.app.requestRender();
+              if (this.app && typeof this.app.showToast === 'function') {
+                this.app.showToast('Cidade, Estado e País unificados em Localidade.');
+              }
+            }
+          });
+        }
+      });
+    }
+
+    if (this.btnToggleSplitAddress) {
+      this.btnToggleSplitAddress.addEventListener('click', () => {
+        const isUnified = this.tool.isAddressUnified();
+        if (isUnified) {
+          this.showConfirmDialog({
+            title: 'Separar Endereço e Bairro',
+            message: 'Deseja separar o Endereço e o Bairro em campos individuais no carimbo?',
+            confirmText: 'Confirmar Separação',
+            onConfirm: () => {
+              this.tool.splitAddress();
+              this.renderFieldsList();
+              this.app.requestRender();
+              if (this.app && typeof this.app.showToast === 'function') {
+                this.app.showToast('Endereço e Bairro separados.');
+              }
+            }
+          });
+        } else {
+          this.showConfirmDialog({
+            title: 'Unificar Endereço e Bairro',
+            message: 'Deseja unificar Endereço e Bairro em uma única linha no carimbo?',
+            confirmText: 'Confirmar Unificação',
+            onConfirm: () => {
+              this.tool.unifyAddress();
+              this.renderFieldsList();
+              this.app.requestRender();
+              if (this.app && typeof this.app.showToast === 'function') {
+                this.app.showToast('Endereço e Bairro unificados.');
+              }
+            }
+          });
+        }
+      });
+    }
+
+    if (this.btnToggleSplitCoords) {
+      this.btnToggleSplitCoords.addEventListener('click', () => {
+        const isUnified = this.tool.isCoordinatesUnified();
+        if (isUnified) {
+          this.showConfirmDialog({
+            title: 'Separar Coordenadas',
+            message: 'Deseja separar as Coordenadas em Latitude e Longitude individuais?',
+            confirmText: 'Confirmar Separação',
+            onConfirm: () => {
+              this.tool.splitCoordinates();
+              this.renderFieldsList();
+              this.app.requestRender();
+              if (this.app && typeof this.app.showToast === 'function') {
+                this.app.showToast('Coordenadas separadas em Lat e Long.');
+              }
+            }
+          });
+        } else {
+          this.showConfirmDialog({
+            title: 'Unificar Coordenadas',
+            message: 'Deseja unificar Latitude e Longitude na mesma linha no carimbo?',
+            confirmText: 'Confirmar Unificação',
+            onConfirm: () => {
+              this.tool.unifyCoordinates();
+              this.renderFieldsList();
+              this.app.requestRender();
+              if (this.app && typeof this.app.showToast === 'function') {
+                this.app.showToast('Latitude e Longitude unificadas na mesma linha.');
+              }
+            }
+          });
+        }
+      });
+    }
+
+    if (this.btnToggleSplitDateTime) {
+      this.btnToggleSplitDateTime.addEventListener('click', () => {
+        const isUnified = this.tool.isDateTimeUnified();
+        if (isUnified) {
+          this.showConfirmDialog({
+            title: 'Separar Data e Hora',
+            message: 'Deseja separar Data e Hora em linhas individuais no carimbo?',
+            confirmText: 'Confirmar Separação',
+            onConfirm: () => {
+              this.tool.splitDateTime();
+              this.renderFieldsList();
+              this.app.requestRender();
+              if (this.app && typeof this.app.showToast === 'function') {
+                this.app.showToast('Data e Hora separadas em linhas individuais.');
+              }
+            }
+          });
+        } else {
+          this.showConfirmDialog({
+            title: 'Unificar Data e Hora',
+            message: 'Deseja unificar Data e Hora na mesma linha no carimbo?',
+            confirmText: 'Confirmar Unificação',
+            onConfirm: () => {
+              this.tool.unifyDateTime();
+              this.renderFieldsList();
+              this.app.requestRender();
+              if (this.app && typeof this.app.showToast === 'function') {
+                this.app.showToast('Data e Hora unificadas na mesma linha.');
+              }
+            }
+          });
+        }
+      });
+    }
+
+    this.updateSplitButtonsState();
   }
 
   /**
@@ -584,9 +768,9 @@ export class StampCameraUI {
       });
     };
 
-    bindText(this.inputStreet, 'street', 'street', ['address_street_num']);
-    bindText(this.inputNumber, 'number', 'number', ['address_street_num']);
-    bindText(this.inputNeighborhood, 'neighborhood', 'neighborhood');
+    bindText(this.inputStreet, 'street', 'street', ['address_street_num', 'address_neighborhood']);
+    bindText(this.inputNumber, 'number', 'number', ['address_street_num', 'address_neighborhood']);
+    bindText(this.inputNeighborhood, 'neighborhood', 'neighborhood', ['address_neighborhood']);
     bindText(this.inputCity, 'city', 'city', ['locality', 'city_state_country']);
     bindText(this.inputState, 'state', 'state', ['locality', 'city_state_country']);
     bindText(this.inputCountry, 'country', 'country', ['city_state_country']);
@@ -1029,6 +1213,70 @@ export class StampCameraUI {
   }
 
   /**
+   * Modal de confirmação interativa para ações do usuário
+   */
+  showConfirmDialog({ title, message, confirmText = 'Confirmar', onConfirm }) {
+    if (!this.confirmActionModal) {
+      if (window.confirm(message)) {
+        if (typeof onConfirm === 'function') onConfirm();
+      }
+      return;
+    }
+
+    if (this.confirmModalTitle) this.confirmModalTitle.textContent = title;
+    if (this.confirmModalMessage) this.confirmModalMessage.textContent = message;
+    if (this.btnConfirmModalOk) this.btnConfirmModalOk.textContent = confirmText;
+
+    this.pendingConfirmAction = onConfirm;
+    this.confirmActionModal.style.display = 'flex';
+  }
+
+  closeConfirmDialog() {
+    if (this.confirmActionModal) {
+      this.confirmActionModal.style.display = 'none';
+    }
+    this.pendingConfirmAction = null;
+  }
+
+  /**
+   * Atualiza os botões de alternância rápida na aba Localização
+   */
+  updateSplitButtonsState() {
+    if (this.btnToggleSplitLocality) {
+      const isUnified = this.tool.isLocalityUnified();
+      const icon = this.btnToggleSplitLocality.querySelector('.btn-split-icon');
+      const label = this.btnToggleSplitLocality.querySelector('.btn-split-label');
+      if (icon) icon.textContent = isUnified ? '⫽' : '⨁';
+      if (label) label.textContent = isUnified ? 'Separar Localidade' : 'Unificar Localidade';
+      this.btnToggleSplitLocality.title = isUnified ? 'Separar em Cidade, Estado e País' : 'Unificar em Cidade, Estado e País';
+    }
+    if (this.btnToggleSplitAddress) {
+      const isUnified = this.tool.isAddressUnified();
+      const icon = this.btnToggleSplitAddress.querySelector('.btn-split-icon');
+      const label = this.btnToggleSplitAddress.querySelector('.btn-split-label');
+      if (icon) icon.textContent = isUnified ? '⫽' : '⨁';
+      if (label) label.textContent = isUnified ? 'Separar Endereço/Bairro' : 'Unificar Endereço/Bairro';
+      this.btnToggleSplitAddress.title = isUnified ? 'Separar Endereço e Bairro em linhas individuais' : 'Unificar Endereço e Bairro na mesma linha';
+    }
+    if (this.btnToggleSplitCoords) {
+      const isUnified = this.tool.isCoordinatesUnified();
+      const icon = this.btnToggleSplitCoords.querySelector('.btn-split-icon');
+      const label = this.btnToggleSplitCoords.querySelector('.btn-split-label');
+      if (icon) icon.textContent = isUnified ? '⫽' : '⨁';
+      if (label) label.textContent = isUnified ? 'Separar Lat/Long' : 'Unificar Coordenadas';
+      this.btnToggleSplitCoords.title = isUnified ? 'Separar em Latitude e Longitude' : 'Unificar Latitude e Longitude na mesma linha';
+    }
+    if (this.btnToggleSplitDateTime) {
+      const isUnified = this.tool.isDateTimeUnified();
+      const icon = this.btnToggleSplitDateTime.querySelector('.btn-split-icon');
+      const label = this.btnToggleSplitDateTime.querySelector('.btn-split-label');
+      if (icon) icon.textContent = isUnified ? '⫽' : '⨁';
+      if (label) label.textContent = isUnified ? 'Separar Data/Hora' : 'Unificar Data/Hora';
+      this.btnToggleSplitDateTime.title = isUnified ? 'Separar Data e Hora em linhas individuais' : 'Unificar Data e Hora na mesma linha';
+    }
+  }
+
+  /**
    * Renderiza a lista de campos no painel esquerdo:
    * Cada campo possui:
    * - Checkbox de ativar/desativar
@@ -1036,6 +1284,7 @@ export class StampCameraUI {
    * - Valor editável diretamente na linha com sincronização bidirecional
    * - Botão de mostrar/ocultar rótulo (🏷️)
    * - Botões de reordenação (↑ e ↓)
+   * - Botão de separar / unificar se aplicável
    * - Botão de excluir se for campo customizado ou campo sob demanda
    */
   renderFieldsList() {
@@ -1100,7 +1349,7 @@ export class StampCameraUI {
         this.app.requestRender();
       });
 
-      // 4. Ações: Rótulo Visível, Mover Cima, Mover Baixo, Excluir
+      // 4. Ações: Rótulo Visível, Mover Cima, Mover Baixo, Separar/Unificar, Excluir
       const actionsDiv = document.createElement('div');
       actionsDiv.className = 'field-actions';
 
@@ -1143,6 +1392,185 @@ export class StampCameraUI {
       actionsDiv.appendChild(btnUp);
       actionsDiv.appendChild(btnDown);
 
+      // Botão de Separar ou Unificar conforme o tipo de campo
+      if (field.id === 'city_state_country') {
+        const btnSplit = document.createElement('button');
+        btnSplit.type = 'button';
+        btnSplit.className = 'btn-field-split-toggle';
+        btnSplit.title = 'Separar em Cidade, Estado e País';
+        btnSplit.innerHTML = '⫽';
+        btnSplit.addEventListener('click', () => {
+          this.showConfirmDialog({
+            title: 'Separar Localidade',
+            message: 'Deseja separar a Localidade em três campos individuais no carimbo: Cidade, Estado e País?',
+            confirmText: 'Confirmar Separação',
+            onConfirm: () => {
+              this.tool.splitLocality();
+              this.renderFieldsList();
+              this.app.requestRender();
+              if (this.app && typeof this.app.showToast === 'function') {
+                this.app.showToast('Localidade separada em Cidade, Estado e País.');
+              }
+            }
+          });
+        });
+        actionsDiv.appendChild(btnSplit);
+      } else if (field.id === 'city') {
+        const btnUnify = document.createElement('button');
+        btnUnify.type = 'button';
+        btnUnify.className = 'btn-field-split-toggle';
+        btnUnify.title = 'Unificar em Cidade, Estado e País';
+        btnUnify.innerHTML = '⨁';
+        btnUnify.addEventListener('click', () => {
+          this.showConfirmDialog({
+            title: 'Unificar Localidade',
+            message: 'Deseja unificar Cidade, Estado e País em uma única linha no carimbo?',
+            confirmText: 'Confirmar Unificação',
+            onConfirm: () => {
+              this.tool.unifyLocality();
+              this.renderFieldsList();
+              this.app.requestRender();
+              if (this.app && typeof this.app.showToast === 'function') {
+                this.app.showToast('Cidade, Estado e País unificados em Localidade.');
+              }
+            }
+          });
+        });
+        actionsDiv.appendChild(btnUnify);
+      } else if (field.id === 'address_neighborhood') {
+        const btnSplit = document.createElement('button');
+        btnSplit.type = 'button';
+        btnSplit.className = 'btn-field-split-toggle';
+        btnSplit.title = 'Separar em Endereço e Bairro';
+        btnSplit.innerHTML = '⫽';
+        btnSplit.addEventListener('click', () => {
+          this.showConfirmDialog({
+            title: 'Separar Endereço e Bairro',
+            message: 'Deseja separar Endereço e Bairro em campos individuais no carimbo?',
+            confirmText: 'Confirmar Separação',
+            onConfirm: () => {
+              this.tool.splitAddress();
+              this.renderFieldsList();
+              this.app.requestRender();
+              if (this.app && typeof this.app.showToast === 'function') {
+                this.app.showToast('Endereço e Bairro separados.');
+              }
+            }
+          });
+        });
+        actionsDiv.appendChild(btnSplit);
+      } else if (field.id === 'address_street_num') {
+        const btnUnify = document.createElement('button');
+        btnUnify.type = 'button';
+        btnUnify.className = 'btn-field-split-toggle';
+        btnUnify.title = 'Unificar em Endereço e Bairro';
+        btnUnify.innerHTML = '⨁';
+        btnUnify.addEventListener('click', () => {
+          this.showConfirmDialog({
+            title: 'Unificar Endereço e Bairro',
+            message: 'Deseja unificar Endereço e Bairro em uma única linha no carimbo?',
+            confirmText: 'Confirmar Unificação',
+            onConfirm: () => {
+              this.tool.unifyAddress();
+              this.renderFieldsList();
+              this.app.requestRender();
+              if (this.app && typeof this.app.showToast === 'function') {
+                this.app.showToast('Endereço e Bairro unificados.');
+              }
+            }
+          });
+        });
+        actionsDiv.appendChild(btnUnify);
+      } else if (field.id === 'datetime') {
+        const btnSplit = document.createElement('button');
+        btnSplit.type = 'button';
+        btnSplit.className = 'btn-field-split-toggle';
+        btnSplit.title = 'Separar em Data e Hora';
+        btnSplit.innerHTML = '⫽';
+        btnSplit.addEventListener('click', () => {
+          this.showConfirmDialog({
+            title: 'Separar Data e Hora',
+            message: 'Deseja separar Data e Hora em linhas individuais no carimbo?',
+            confirmText: 'Confirmar Separação',
+            onConfirm: () => {
+              this.tool.splitDateTime();
+              this.renderFieldsList();
+              this.app.requestRender();
+              if (this.app && typeof this.app.showToast === 'function') {
+                this.app.showToast('Data e Hora separadas em linhas individuais.');
+              }
+            }
+          });
+        });
+        actionsDiv.appendChild(btnSplit);
+      } else if (field.id === 'date') {
+        const btnUnify = document.createElement('button');
+        btnUnify.type = 'button';
+        btnUnify.className = 'btn-field-split-toggle';
+        btnUnify.title = 'Unificar em Data e Hora';
+        btnUnify.innerHTML = '⨁';
+        btnUnify.addEventListener('click', () => {
+          this.showConfirmDialog({
+            title: 'Unificar Data e Hora',
+            message: 'Deseja unificar Data e Hora na mesma linha no carimbo?',
+            confirmText: 'Confirmar Unificação',
+            onConfirm: () => {
+              this.tool.unifyDateTime();
+              this.renderFieldsList();
+              this.app.requestRender();
+              if (this.app && typeof this.app.showToast === 'function') {
+                this.app.showToast('Data e Hora unificadas na mesma linha.');
+              }
+            }
+          });
+        });
+        actionsDiv.appendChild(btnUnify);
+      } else if (field.id === 'coordinates') {
+        const btnSplit = document.createElement('button');
+        btnSplit.type = 'button';
+        btnSplit.className = 'btn-field-split-toggle';
+        btnSplit.title = 'Separar em Latitude e Longitude';
+        btnSplit.innerHTML = '⫽';
+        btnSplit.addEventListener('click', () => {
+          this.showConfirmDialog({
+            title: 'Separar Coordenadas',
+            message: 'Deseja separar as Coordenadas em Latitude e Longitude individuais?',
+            confirmText: 'Confirmar Separação',
+            onConfirm: () => {
+              this.tool.splitCoordinates();
+              this.renderFieldsList();
+              this.app.requestRender();
+              if (this.app && typeof this.app.showToast === 'function') {
+                this.app.showToast('Coordenadas separadas em Lat e Long.');
+              }
+            }
+          });
+        });
+        actionsDiv.appendChild(btnSplit);
+      } else if (field.id === 'lat') {
+        const btnUnify = document.createElement('button');
+        btnUnify.type = 'button';
+        btnUnify.className = 'btn-field-split-toggle';
+        btnUnify.title = 'Unificar em Coordenadas';
+        btnUnify.innerHTML = '⨁';
+        btnUnify.addEventListener('click', () => {
+          this.showConfirmDialog({
+            title: 'Unificar Coordenadas',
+            message: 'Deseja unificar Latitude e Longitude na mesma linha no carimbo?',
+            confirmText: 'Confirmar Unificação',
+            onConfirm: () => {
+              this.tool.unifyCoordinates();
+              this.renderFieldsList();
+              this.app.requestRender();
+              if (this.app && typeof this.app.showToast === 'function') {
+                this.app.showToast('Latitude e Longitude unificadas na mesma linha.');
+              }
+            }
+          });
+        });
+        actionsDiv.appendChild(btnUnify);
+      }
+
       if (field.isCustom || field.isOptionalOnDemand) {
         const btnDelete = document.createElement('button');
         btnDelete.type = 'button';
@@ -1171,6 +1599,8 @@ export class StampCameraUI {
 
       this.fieldsContainer.appendChild(row);
     });
+
+    this.updateSplitButtonsState();
   }
 
   /**
@@ -1198,6 +1628,23 @@ export class StampCameraUI {
     const targetInput = inputMap[fieldId];
     if (targetInput && targetInput !== document.activeElement) {
       targetInput.value = value;
+    }
+
+    if (fieldId === 'city_state_country') {
+      const parts = (value || '').split(',').map(s => s.trim());
+      if (parts[0] && this.inputCity !== document.activeElement) this.inputCity.value = parts[0];
+      if (parts[1] && this.inputState !== document.activeElement) this.inputState.value = parts[1];
+      if (parts[2] && this.inputCountry !== document.activeElement) this.inputCountry.value = parts[2];
+    } else if (fieldId === 'address_neighborhood') {
+      const parts = (value || '').split(',').map(s => s.trim());
+      if (parts.length >= 2) {
+        if (this.inputNeighborhood !== document.activeElement) this.inputNeighborhood.value = parts[parts.length - 1];
+        if (this.inputStreet !== document.activeElement) this.inputStreet.value = parts.slice(0, -1).join(', ');
+      }
+    } else if (fieldId === 'datetime') {
+      const parts = (value || '').trim().split(/\s+/);
+      if (parts[0] && this.inputDate !== document.activeElement) this.inputDate.value = parts[0];
+      if (parts[1] && this.inputTime !== document.activeElement) this.inputTime.value = parts.slice(1).join(' ');
     }
 
     this.updateSourceBadges();

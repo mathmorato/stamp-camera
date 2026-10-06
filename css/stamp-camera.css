@@ -1023,3 +1023,72 @@
   font-weight: 700;
   margin-left: 4px;
 }
+
+/* Botões de Ação para Separar e Unificar Campos */
+.btn-split-unify {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border-radius: var(--radius-xs);
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.btn-split-unify:hover {
+  background-color: rgba(59, 130, 246, 0.12);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.btn-split-icon {
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.btn-split-label {
+  font-size: 11px;
+}
+
+/* Botão inline dentro da lista de campos */
+.btn-field-split-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--border-color);
+  background: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.btn-field-split-toggle:hover {
+  background-color: rgba(59, 130, 246, 0.15);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.confirm-icon-box {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background-color: rgba(59, 130, 246, 0.15);
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
