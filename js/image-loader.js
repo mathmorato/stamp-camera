@@ -220,11 +220,27 @@ export async function createDemoImage(type = 'with_gps') {
     };
   }
 
+  const locationData = type === 'with_gps' ? {
+    city: 'Jussara',
+    state: 'Goiás',
+    country: 'Brasil',
+    neighborhood: 'Setor Central',
+    street: 'Av. José Vicente',
+    number: '100',
+    postalCode: '76270-000',
+    projectName: 'Residência Jussara',
+    process: '5557293-56.2020.8.09.0097',
+    responsible: 'Eng. Perito Especialista',
+    reportNum: 'RT-2022/88',
+    customText: 'Vistoria técnica in loco'
+  } : null;
+
   return {
     canvas,
     width: 1920,
     height: 1080,
     exif,
+    locationData,
     filename: `demo_${type}.jpg`,
     fileSize: 1024 * 768
   };

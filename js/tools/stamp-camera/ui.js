@@ -1,7 +1,7 @@
 /**
  * STAMP-CAMERA - Camada de Interface do Usuário (UI Controller)
- * Gerencia formulários, listas de campos, drag-and-drop no canvas, alertas de EXIF,
- * badges de origem (AUTO/MANUAL) e sincronização em tempo real.
+ * Gerencia formulários, listas de campos editáveis, sincronização bidirecional,
+ * drag-and-drop no canvas, alertas de EXIF, badges de origem (AUTO/MANUAL) e sincronização em tempo real.
  */
 
 import { BUILT_IN_MODELS, PRESET_CATEGORIES, STANDARD_FIELD_DEFS } from '../../templates.js';
@@ -33,6 +33,7 @@ export class StampCameraUI {
     this.emptyPlaceholder = document.getElementById('emptyPlaceholder');
     this.imageInfoBar = document.getElementById('imageInfoBar');
     this.photoMetaText = document.getElementById('photoMetaText');
+    this.dragHintPill = document.getElementById('dragHintPill');
 
     // Botões principais
     this.fileInput = document.getElementById('fileInput');
@@ -50,7 +51,7 @@ export class StampCameraUI {
     this.alertNoDate = document.getElementById('alertNoDate');
     this.alertMetaSuccess = document.getElementById('alertMetaSuccess');
 
-    // Campos de Localização
+    // Campos de Localização (Painel Direito)
     this.inputLat = document.getElementById('inputLat');
     this.inputLon = document.getElementById('inputLon');
     this.inputAlt = document.getElementById('inputAlt');
@@ -74,7 +75,7 @@ export class StampCameraUI {
     this.badgeDate = document.getElementById('badgeDate');
     this.badgeTime = document.getElementById('badgeTime');
 
-    // Lista de campos do carimbo
+    // Lista de campos do carimbo (Painel Esquerdo)
     this.fieldsContainer = document.getElementById('fieldsContainer');
     this.btnAddField = document.getElementById('btnAddField');
 
@@ -120,19 +121,22 @@ export class StampCameraUI {
   }
 
   bindEvents() {
-    // Alternância de Abas
+    // Alternância de Abas nos painéis
     this.tabButtons.forEach(btn => {
       btn.addEventListener('click', () => {
         const tab = btn.dataset.tab;
-        this.tabButtons.forEach(b => b.classList.remove('active'));
-        this.tabPanels.forEach(p => p.classList.remove('active'));
-        btn.classList.add('active');
-        const target = document.getElementById(`tab-${tab}`);
-        if (target) target.classList.add('active');
+        const panel = btn.closest('.panel');
+        if (panel) {
+          panel.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+          panel.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+          btn.classList.add('active');
+          const target = panel.querySelector(`#tab-${tab}`);
+          if (target) target.classList.add('active');
+        }
       });
     });
 
-    // Posições em Grade
+    // Posições em Grade (9 Pontos)
     this.posButtons.forEach(btn => {
       btn.addEventListener('click', () => {
         const pos = btn.dataset.pos;
@@ -148,20 +152,31 @@ export class StampCameraUI {
     // Mudança de formatos
     this.selectCoordFormat.addEventListener('change', (e) => {
       this.tool.settings.coordFormat = e.target.value;
+      this.updateFieldInputValue('coordinates', this.tool.getFieldValue('coordinates'));
+      this.updateFieldInputValue('lat', this.tool.getFieldValue('lat'));
+      this.updateFieldInputValue('lon', this.tool.getFieldValue('lon'));
       this.app.requestRender();
     });
 
     this.selectDateFormat.addEventListener('change', (e) => {
       this.tool.settings.dateFormat = e.target.value;
-      this.tool.location.date = this.tool.formatDateString(this.tool.location.dateObj, e.target.value);
-      this.inputDate.value = this.tool.location.date;
+      if (this.tool.location.dateObj) {
+        this.tool.location.date = this.tool.formatDateString(this.tool.location.dateObj, e.target.value);
+        this.inputDate.value = this.tool.location.date;
+        this.updateFieldInputValue('date', this.tool.location.date);
+        this.updateFieldInputValue('datetime', this.tool.getFieldValue('datetime'));
+      }
       this.app.requestRender();
     });
 
     this.selectTimeFormat.addEventListener('change', (e) => {
       this.tool.settings.timeFormat = e.target.value;
-      this.tool.location.time = this.tool.formatTimeString(this.tool.location.dateObj, e.target.value);
-      this.inputTime.value = this.tool.location.time;
+      if (this.tool.location.dateObj) {
+        this.tool.location.time = this.tool.formatTimeString(this.tool.location.dateObj, e.target.value);
+        this.inputTime.value = this.tool.location.time;
+        this.updateFieldInputValue('time', this.tool.location.time);
+        this.updateFieldInputValue('datetime', this.tool.getFieldValue('datetime'));
+      }
       this.app.requestRender();
     });
 
@@ -240,25 +255,29 @@ export class StampCameraUI {
     // Numeração Automática
     this.checkAutoNumber.addEventListener('change', (e) => {
       this.tool.numbering.enabled = e.target.checked;
+      this.updateFieldInputValue('photo_id', this.tool.getFieldValue('photo_id'));
       this.app.requestRender();
     });
 
     this.inputNumberPrefix.addEventListener('input', (e) => {
       this.tool.numbering.prefix = e.target.value;
+      this.updateFieldInputValue('photo_id', this.tool.getFieldValue('photo_id'));
       this.app.requestRender();
     });
 
     this.inputNumberStart.addEventListener('input', (e) => {
       this.tool.numbering.startNumber = parseInt(e.target.value, 10) || 1;
+      this.updateFieldInputValue('photo_id', this.tool.getFieldValue('photo_id'));
       this.app.requestRender();
     });
 
     this.inputNumberDigits.addEventListener('input', (e) => {
       this.tool.numbering.digits = parseInt(e.target.value, 10) || 2;
+      this.updateFieldInputValue('photo_id', this.tool.getFieldValue('photo_id'));
       this.app.requestRender();
     });
 
-    // Formato de exportação e qualidade
+    // Exportação
     this.selectExportFormat.addEventListener('change', (e) => {
       const isJpg = e.target.value === 'image/jpeg';
       this.qualityGroup.style.display = isJpg ? 'block' : 'none';
@@ -269,23 +288,23 @@ export class StampCameraUI {
       this.valExportQuality.textContent = `${val}%`;
     });
 
-    // Edição manual de localização e metadados
+    // Sincronização dos campos do painel direito (Localização & Técnico)
     this.bindLocationInputs();
 
-    // Drag-and-drop de arquivos no canvas e container
+    // Eventos de drag-and-drop de arquivo
     this.bindFileDropEvents();
 
-    // Drag-and-drop livre do carimbo no Canvas
+    // Eventos de movimentação do carimbo no Canvas
     this.bindCanvasStampDrag();
 
-    // Adição de novo campo
+    // Botão Adicionar Campo Personalizado
     this.btnAddField.addEventListener('click', () => {
-      const field = this.tool.addCustomField('Novo Campo', 'Valor');
+      const field = this.tool.addCustomField('Campo Personalizado', 'Valor');
       this.renderFieldsList();
       this.app.requestRender();
     });
 
-    // Seleção de preset
+    // Seleção de Preset / Modelo
     this.presetsSelect.addEventListener('change', (e) => {
       this.loadSelectedPreset(e.target.value);
     });
@@ -304,7 +323,7 @@ export class StampCameraUI {
             label: f.label,
             enabled: f.enabled,
             showLabel: f.showLabel,
-            defaultValue: f.customValue
+            defaultValue: f.customValue || this.tool.getFieldValue(f.id, f)
           }))
         };
         storage.saveCustomPreset(customPreset);
@@ -315,6 +334,9 @@ export class StampCameraUI {
     });
   }
 
+  /**
+   * Vincula os inputs do painel direito com sincronização bidirecional
+   */
   bindLocationInputs() {
     // Latitude manual
     this.inputLat.addEventListener('input', (e) => {
@@ -323,6 +345,8 @@ export class StampCameraUI {
         this.tool.location.latitude = val;
         this.tool.location.sources.latitude = 'MANUAL';
         this.updateSourceBadges();
+        this.updateFieldInputValue('lat', this.tool.getFieldValue('lat'));
+        this.updateFieldInputValue('coordinates', this.tool.getFieldValue('coordinates'));
         this.app.requestRender();
       }
     });
@@ -334,6 +358,8 @@ export class StampCameraUI {
         this.tool.location.longitude = val;
         this.tool.location.sources.longitude = 'MANUAL';
         this.updateSourceBadges();
+        this.updateFieldInputValue('lon', this.tool.getFieldValue('lon'));
+        this.updateFieldInputValue('coordinates', this.tool.getFieldValue('coordinates'));
         this.app.requestRender();
       }
     });
@@ -344,6 +370,7 @@ export class StampCameraUI {
       this.tool.location.altitude = isNaN(val) ? null : val;
       this.tool.location.sources.altitude = 'MANUAL';
       this.updateSourceBadges();
+      this.updateFieldInputValue('altitude', this.tool.getFieldValue('altitude'));
       this.app.requestRender();
     });
 
@@ -352,6 +379,8 @@ export class StampCameraUI {
       this.tool.location.date = e.target.value;
       this.tool.location.sources.date = 'MANUAL';
       this.updateSourceBadges();
+      this.updateFieldInputValue('date', e.target.value);
+      this.updateFieldInputValue('datetime', this.tool.getFieldValue('datetime'));
       this.app.requestRender();
     });
 
@@ -360,45 +389,47 @@ export class StampCameraUI {
       this.tool.location.time = e.target.value;
       this.tool.location.sources.time = 'MANUAL';
       this.updateSourceBadges();
+      this.updateFieldInputValue('time', e.target.value);
+      this.updateFieldInputValue('datetime', this.tool.getFieldValue('datetime'));
       this.app.requestRender();
     });
 
-    // Endereço e dados civis
-    const bindSimpleText = (inputElem, key) => {
+    // Campos de Endereço e Dados Técnicos
+    const bindText = (inputElem, key, fieldId, relatedFieldIds = []) => {
       inputElem.addEventListener('input', (e) => {
         this.tool.location[key] = e.target.value;
         this.tool.location.sources[key] = 'MANUAL';
+        this.updateFieldInputValue(fieldId, e.target.value);
+        for (const relId of relatedFieldIds) {
+          this.updateFieldInputValue(relId, this.tool.getFieldValue(relId));
+        }
         this.app.requestRender();
       });
     };
 
-    bindSimpleText(this.inputStreet, 'street');
-    bindSimpleText(this.inputNumber, 'number');
-    bindSimpleText(this.inputNeighborhood, 'neighborhood');
-    bindSimpleText(this.inputCity, 'city');
-    bindSimpleText(this.inputState, 'state');
-    bindSimpleText(this.inputCountry, 'country');
-    bindSimpleText(this.inputPostalCode, 'postalCode');
-
-    // Dados técnicos
-    this.inputProjectName.addEventListener('input', (e) => {
-      this.updateCustomFieldDef('project_name', e.target.value);
-    });
-
-    this.inputProcess.addEventListener('input', (e) => {
-      this.updateCustomFieldDef('process', e.target.value);
-    });
-
-    this.inputResponsible.addEventListener('input', (e) => {
-      this.updateCustomFieldDef('responsible', e.target.value);
-    });
+    bindText(this.inputStreet, 'street', 'street', ['address_street_num']);
+    bindText(this.inputNumber, 'number', 'number', ['address_street_num']);
+    bindText(this.inputNeighborhood, 'neighborhood', 'neighborhood');
+    bindText(this.inputCity, 'city', 'city', ['locality', 'city_state_country']);
+    bindText(this.inputState, 'state', 'state', ['locality', 'city_state_country']);
+    bindText(this.inputCountry, 'country', 'country', ['city_state_country']);
+    bindText(this.inputPostalCode, 'postalCode', 'postal_code');
+    bindText(this.inputProjectName, 'projectName', 'project_name');
+    bindText(this.inputProcess, 'process', 'process');
+    bindText(this.inputResponsible, 'responsible', 'responsible');
   }
 
-  updateCustomFieldDef(id, value) {
-    const f = this.tool.activeFields.find(field => field.id === id);
-    if (f) {
-      f.customValue = value;
-      this.app.requestRender();
+  /**
+   * Atualiza o valor exibido no input de um campo na aba "Campos"
+   */
+  updateFieldInputValue(fieldId, value) {
+    if (!this.fieldsContainer) return;
+    const row = this.fieldsContainer.querySelector(`[data-id="${fieldId}"]`);
+    if (row) {
+      const valInput = row.querySelector('.field-value-input');
+      if (valInput && valInput !== document.activeElement) {
+        valInput.value = value || '';
+      }
     }
   }
 
@@ -453,7 +484,6 @@ export class StampCameraUI {
       };
     };
 
-    // Mousedown / Touchstart
     const onStart = (e) => {
       if (!this.tool.photo) return;
       const { x, y } = getCanvasCoords(e);
@@ -470,7 +500,6 @@ export class StampCameraUI {
       }
     };
 
-    // Mousemove / Touchmove
     const onMove = (e) => {
       if (!this.tool.photo) return;
       const { x, y } = getCanvasCoords(e);
@@ -482,17 +511,13 @@ export class StampCameraUI {
         const newX = this.stampStartPos.x + deltaX;
         const newY = this.stampStartPos.y + deltaY;
 
-        // Atualiza posição personalizada em proporção (0 a 1)
         this.tool.settings.position = STAMP_POSITIONS.CUSTOM;
         this.tool.settings.customPosX = Math.max(0, Math.min(1, newX / canvas.width));
         this.tool.settings.customPosY = Math.max(0, Math.min(1, newY / canvas.height));
 
-        // Desmarca botões de grade
         this.posButtons.forEach(b => b.classList.remove('active'));
-
         this.app.requestRender();
       } else {
-        // Altera cursor quando passar o mouse em cima do carimbo
         if (this.engine.isPointInsideStamp(x, y)) {
           canvas.style.cursor = 'grab';
         } else {
@@ -501,7 +526,6 @@ export class StampCameraUI {
       }
     };
 
-    // Mouseup / Touchend
     const onEnd = () => {
       if (this.isDraggingStamp) {
         this.isDraggingStamp = false;
@@ -519,32 +543,43 @@ export class StampCameraUI {
   }
 
   /**
-   * Atualiza a interface quando uma nova foto é carregada
+   * Sincroniza todos os controles quando uma nova fotografia é carregada
    */
   syncPhotoState() {
     if (!this.tool.photo) {
       this.emptyPlaceholder.style.display = 'flex';
       this.previewCanvas.style.display = 'none';
       this.imageInfoBar.style.display = 'none';
+      if (this.dragHintPill) this.dragHintPill.style.display = 'none';
       return;
     }
 
     this.emptyPlaceholder.style.display = 'none';
     this.previewCanvas.style.display = 'block';
     this.imageInfoBar.style.display = 'flex';
+    if (this.dragHintPill) this.dragHintPill.style.display = 'block';
 
-    // Barra de informações da imagem
     const w = this.tool.photo.width;
     const h = this.tool.photo.height;
     const sizeMb = (this.tool.photo.fileSize / (1024 * 1024)).toFixed(2);
     this.photoMetaText.textContent = `${this.tool.photo.filename} • ${w}x${h}px • ${sizeMb} MB`;
 
-    // Sincroniza campos de localização
+    // Sincroniza TODOS os inputs do painel direito com os dados da localização
     this.inputLat.value = this.tool.location.latitude !== null ? this.tool.location.latitude.toFixed(8) : '';
     this.inputLon.value = this.tool.location.longitude !== null ? this.tool.location.longitude.toFixed(8) : '';
     this.inputAlt.value = this.tool.location.altitude !== null ? this.tool.location.altitude.toFixed(1) : '';
     this.inputDate.value = this.tool.location.date || '';
     this.inputTime.value = this.tool.location.time || '';
+    this.inputStreet.value = this.tool.location.street || '';
+    this.inputNumber.value = this.tool.location.number || '';
+    this.inputNeighborhood.value = this.tool.location.neighborhood || '';
+    this.inputCity.value = this.tool.location.city || '';
+    this.inputState.value = this.tool.location.state || '';
+    this.inputCountry.value = this.tool.location.country || '';
+    this.inputPostalCode.value = this.tool.location.postalCode || '';
+    this.inputProjectName.value = this.tool.location.projectName || '';
+    this.inputProcess.value = this.tool.location.process || '';
+    this.inputResponsible.value = this.tool.location.responsible || '';
 
     // Alertas de Metadados
     const exif = this.tool.exif;
@@ -587,7 +622,7 @@ export class StampCameraUI {
   renderPresetsList() {
     this.presetsSelect.innerHTML = '';
 
-    // Grupo Modelos Básicos
+    // Modelos Padrão
     const groupModels = document.createElement('optgroup');
     groupModels.label = 'Modelos Padrão (Diretriz)';
     BUILT_IN_MODELS.forEach(m => {
@@ -598,7 +633,7 @@ export class StampCameraUI {
     });
     this.presetsSelect.appendChild(groupModels);
 
-    // Grupo Presets Especializados
+    // Presets Especializados
     const groupPresets = document.createElement('optgroup');
     groupPresets.label = 'Presets por Atividade';
     PRESET_CATEGORIES.forEach(p => {
@@ -609,7 +644,7 @@ export class StampCameraUI {
     });
     this.presetsSelect.appendChild(groupPresets);
 
-    // Presets Customizados do Usuário
+    // Presets do Usuário
     const userPresets = storage.getCustomPresets();
     if (userPresets.length > 0) {
       const groupUser = document.createElement('optgroup');
@@ -627,7 +662,6 @@ export class StampCameraUI {
   }
 
   loadSelectedPreset(presetId) {
-    // 1. Verifica nos modelos padrão
     const model = BUILT_IN_MODELS.find(m => m.id === presetId);
     if (model) {
       this.tool.applyModel(model);
@@ -637,32 +671,22 @@ export class StampCameraUI {
       return;
     }
 
-    // 2. Verifica nos presets especializados
     const cat = PRESET_CATEGORIES.find(c => c.id === presetId);
     if (cat) {
       const baseModel = BUILT_IN_MODELS.find(m => m.id === cat.baseModelId) || BUILT_IN_MODELS[0];
       this.tool.applyModel(baseModel);
       this.tool.selectedModelId = cat.id;
 
-      if (cat.customFields) {
-        cat.customFields.forEach(cf => {
-          const exists = this.tool.activeFields.find(f => f.id === cf.id);
-          if (exists) {
-            exists.enabled = true;
-            exists.customValue = cf.defaultValue;
-          } else {
-            this.tool.activeFields.push({
-              id: cf.id,
-              name: cf.label,
-              label: cf.label,
-              enabled: true,
-              showLabel: cf.showLabel,
-              isCustom: true,
-              customValue: cf.defaultValue,
-              order: this.tool.activeFields.length
-            });
-          }
-        });
+      if (cat.enabledFields) {
+        for (const f of this.tool.activeFields) {
+          f.enabled = cat.enabledFields.includes(f.id);
+        }
+      }
+
+      if (cat.fieldDefaults) {
+        for (const [k, v] of Object.entries(cat.fieldDefaults)) {
+          this.tool.setFieldValue(k, v);
+        }
       }
 
       this.syncControlsWithSettings();
@@ -671,7 +695,6 @@ export class StampCameraUI {
       return;
     }
 
-    // 3. Verifica nos presets do usuário
     const userPresets = storage.getCustomPresets();
     const userPreset = userPresets.find(u => u.id === presetId);
     if (userPreset) {
@@ -685,7 +708,6 @@ export class StampCameraUI {
   syncControlsWithSettings() {
     const s = this.tool.settings;
 
-    // Sincroniza botões de posição
     this.posButtons.forEach(b => {
       b.classList.toggle('active', b.dataset.pos === s.position);
     });
@@ -711,6 +733,16 @@ export class StampCameraUI {
     this.selectTextAlign.value = s.textAlign || 'left';
   }
 
+  /**
+   * Renderiza a lista de campos no painel esquerdo:
+   * Cada campo possui:
+   * - Checkbox de ativar/desativar
+   * - Rótulo editável
+   * - Valor editável diretamente na linha com sincronização bidirecional
+   * - Botão de mostrar/ocultar rótulo (🏷️)
+   * - Botões de reordenação (↑ e ↓)
+   * - Botão de excluir se for campo customizado
+   */
   renderFieldsList() {
     this.fieldsContainer.innerHTML = '';
 
@@ -719,12 +751,12 @@ export class StampCameraUI {
       row.className = `field-item ${field.enabled ? 'enabled' : 'disabled'}`;
       row.dataset.id = field.id;
 
-      // Checkbox de ativação
+      // 1. Checkbox de ativação/desativação
       const check = document.createElement('input');
       check.type = 'checkbox';
       check.className = 'field-checkbox';
       check.checked = field.enabled;
-      check.title = 'Ativar/desativar campo';
+      check.title = 'Ativar/desativar campo no carimbo';
       check.addEventListener('change', (e) => {
         field.enabled = e.target.checked;
         row.classList.toggle('enabled', field.enabled);
@@ -732,42 +764,48 @@ export class StampCameraUI {
         this.app.requestRender();
       });
 
-      // Rótulo / Label editável
+      // 2. Rótulo / Nome do campo (editável)
       const labelInput = document.createElement('input');
       labelInput.type = 'text';
       labelInput.className = 'field-label-input';
       labelInput.value = field.label;
-      labelInput.title = 'Rótulo exibido no carimbo';
+      labelInput.title = 'Rótulo exibido no carimbo (ex: DATA, LOCAL, OBRA)';
       labelInput.addEventListener('input', (e) => {
         field.label = e.target.value;
         this.app.requestRender();
       });
 
-      // Valor prévio ou editável se for custom
-      const valSpan = document.createElement('div');
-      valSpan.className = 'field-value-preview';
+      // 3. Valor do campo (EDITÁVEL para todos os campos!)
+      const currentVal = this.tool.getFieldValue(field.id, field);
+      const def = STANDARD_FIELD_DEFS.find(d => d.id === field.id);
+      const placeholderText = def ? def.placeholder : 'Valor...';
 
-      if (field.isCustom) {
-        const valInput = document.createElement('input');
-        valInput.type = 'text';
-        valInput.className = 'field-custom-input';
-        valInput.value = field.customValue;
-        valInput.placeholder = 'Valor do campo...';
-        valInput.addEventListener('input', (e) => {
-          field.customValue = e.target.value;
-          this.app.requestRender();
-        });
-        valSpan.appendChild(valInput);
-      } else {
-        const currentVal = this.tool.getFieldValue(field.id, field) || '(vazio)';
-        valSpan.textContent = currentVal;
-      }
+      const valInput = document.createElement('input');
+      valInput.type = 'text';
+      valInput.className = 'field-value-input';
+      valInput.value = currentVal || '';
+      valInput.placeholder = placeholderText;
+      valInput.title = 'Editar valor do campo diretamente';
 
-      // Checkbox para exibir ou ocultar o rótulo
+      valInput.addEventListener('input', (e) => {
+        const newVal = e.target.value;
+        this.tool.setFieldValue(field.id, newVal);
+
+        // Sincroniza com os inputs correspondentes no painel direito se existirem
+        this.syncRightPanelInput(field.id, newVal);
+
+        // Se o campo estiver desmarcado mas o usuário digitou, pode continuar ou manter o estado
+        this.app.requestRender();
+      });
+
+      // 4. Ações: Rótulo Visível, Mover Cima, Mover Baixo, Excluir
+      const actionsDiv = document.createElement('div');
+      actionsDiv.className = 'field-actions';
+
       const toggleLabelBtn = document.createElement('button');
       toggleLabelBtn.type = 'button';
       toggleLabelBtn.className = `btn-icon ${field.showLabel ? 'active' : ''}`;
-      toggleLabelBtn.title = field.showLabel ? 'Rótulo visível' : 'Rótulo oculto (apenas valor)';
+      toggleLabelBtn.title = field.showLabel ? 'Rótulo visível no carimbo' : 'Rótulo oculto (apenas o valor)';
       toggleLabelBtn.innerHTML = '🏷️';
       toggleLabelBtn.addEventListener('click', () => {
         field.showLabel = !field.showLabel;
@@ -775,12 +813,11 @@ export class StampCameraUI {
         this.app.requestRender();
       });
 
-      // Botões de reordenação (Cima / Baixo)
       const btnUp = document.createElement('button');
       btnUp.type = 'button';
       btnUp.className = 'btn-icon';
       btnUp.innerHTML = '↑';
-      btnUp.title = 'Mover para cima';
+      btnUp.title = 'Mover campo para cima';
       btnUp.disabled = index === 0;
       btnUp.addEventListener('click', () => {
         this.tool.moveField(field.id, 'up');
@@ -792,7 +829,7 @@ export class StampCameraUI {
       btnDown.type = 'button';
       btnDown.className = 'btn-icon';
       btnDown.innerHTML = '↓';
-      btnDown.title = 'Mover para baixo';
+      btnDown.title = 'Mover campo para baixo';
       btnDown.disabled = index === this.tool.activeFields.length - 1;
       btnDown.addEventListener('click', () => {
         this.tool.moveField(field.id, 'down');
@@ -800,31 +837,60 @@ export class StampCameraUI {
         this.app.requestRender();
       });
 
-      // Botão excluir se for custom
-      const btnDelete = document.createElement('button');
-      btnDelete.type = 'button';
-      btnDelete.className = 'btn-icon btn-delete';
-      btnDelete.innerHTML = '✕';
-      btnDelete.title = 'Remover campo';
-      btnDelete.addEventListener('click', () => {
-        this.tool.removeField(field.id);
-        this.renderFieldsList();
-        this.app.requestRender();
-      });
-
-      const actionsDiv = document.createElement('div');
-      actionsDiv.className = 'field-actions';
       actionsDiv.appendChild(toggleLabelBtn);
       actionsDiv.appendChild(btnUp);
       actionsDiv.appendChild(btnDown);
-      if (field.isCustom) actionsDiv.appendChild(btnDelete);
+
+      if (field.isCustom) {
+        const btnDelete = document.createElement('button');
+        btnDelete.type = 'button';
+        btnDelete.className = 'btn-icon btn-delete';
+        btnDelete.innerHTML = '✕';
+        btnDelete.title = 'Remover campo personalizado';
+        btnDelete.addEventListener('click', () => {
+          this.tool.removeField(field.id);
+          this.renderFieldsList();
+          this.app.requestRender();
+        });
+        actionsDiv.appendChild(btnDelete);
+      }
 
       row.appendChild(check);
       row.appendChild(labelInput);
-      row.appendChild(valSpan);
+      row.appendChild(valInput);
       row.appendChild(actionsDiv);
 
       this.fieldsContainer.appendChild(row);
     });
+  }
+
+  /**
+   * Sincroniza do painel esquerdo para o painel direito
+   */
+  syncRightPanelInput(fieldId, value) {
+    const inputMap = {
+      'date': this.inputDate,
+      'time': this.inputTime,
+      'lat': this.inputLat,
+      'lon': this.inputLon,
+      'altitude': this.inputAlt,
+      'street': this.inputStreet,
+      'number': this.inputNumber,
+      'neighborhood': this.inputNeighborhood,
+      'city': this.inputCity,
+      'state': this.inputState,
+      'country': this.inputCountry,
+      'postal_code': this.inputPostalCode,
+      'project_name': this.inputProjectName,
+      'process': this.inputProcess,
+      'responsible': this.inputResponsible
+    };
+
+    const targetInput = inputMap[fieldId];
+    if (targetInput && targetInput !== document.activeElement) {
+      targetInput.value = value;
+    }
+
+    this.updateSourceBadges();
   }
 }

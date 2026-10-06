@@ -1,6 +1,7 @@
 /**
  * STAMP-CAMERA - Modelos e Presets Pré-configurados
  * Implementa Modelos 1 a 5 e Presets de Perícia, Obra, Fiscalização, etc.
+ * Contém a lista completa dos campos padrão conforme as regras da diretriz.
  */
 
 import { COORD_FORMATS, DATE_FORMATS, TIME_FORMATS, STAMP_POSITIONS } from './config.js';
@@ -56,7 +57,7 @@ export const BUILT_IN_MODELS = [
       { id: 'datetime', label: 'Data e Hora', enabled: true, showLabel: false },
       { id: 'address_street_num', label: 'Endereço', enabled: true, showLabel: false },
       { id: 'neighborhood', label: 'Bairro', enabled: true, showLabel: false },
-      { id: 'city_state_country', label: 'Cidade/Estado/País', enabled: true, showLabel: false },
+      { id: 'city_state_country', label: 'Localidade', enabled: true, showLabel: false },
       { id: 'coordinates', label: 'Coordenadas', enabled: true, showLabel: false }
     ]
   },
@@ -141,7 +142,7 @@ export const BUILT_IN_MODELS = [
       { id: 'coordinates', label: 'Coordenadas', enabled: true, showLabel: true },
       { id: 'locality', label: 'Local', enabled: true, showLabel: true },
       { id: 'altitude', label: 'Altitude', enabled: false, showLabel: true },
-      { id: 'project_name', label: 'Obra / Projeto', enabled: false, showLabel: true, defaultValue: 'Residência Jussara' },
+      { id: 'project_name', label: 'Obra', enabled: false, showLabel: true, defaultValue: 'Residência Jussara' },
       { id: 'custom_text', label: 'Observação', enabled: false, showLabel: false, defaultValue: 'Inspeção de rotina' }
     ]
   }
@@ -157,69 +158,75 @@ export const PRESET_CATEGORIES = [
     id: 'preset_obra',
     name: 'Obra & Construção Civil',
     baseModelId: 'model_3_technical',
-    customFields: [
-      { id: 'project_name', label: 'OBRA', enabled: true, showLabel: true, defaultValue: 'Residência Jussara' },
-      { id: 'responsible', label: 'RESP. TÉCNICO', enabled: true, showLabel: true, defaultValue: 'Engenheiro Civil' }
-    ]
+    enabledFields: ['project_name', 'responsible', 'date', 'time', 'locality', 'coordinates'],
+    fieldDefaults: {
+      project_name: 'Residência Jussara',
+      responsible: 'Engenheiro Civil'
+    }
   },
   {
     id: 'preset_inspecao',
     name: 'Inspeção Predial',
     baseModelId: 'model_2_location',
-    customFields: [
-      { id: 'inspection_type', label: 'TIPO DE INSPEÇÃO', enabled: true, showLabel: true, defaultValue: 'Vistoria Estrutural' }
-    ]
+    enabledFields: ['custom_text', 'datetime', 'address_street_num', 'neighborhood', 'city_state_country', 'coordinates'],
+    fieldDefaults: {
+      custom_text: 'Vistoria Estrutural'
+    }
   },
   {
     id: 'preset_fiscalizacao',
     name: 'Fiscalização Ambiental / Urbana',
     baseModelId: 'model_3_technical',
-    customFields: [
-      { id: 'report_num', label: 'RELATÓRIO / AUTO', enabled: true, showLabel: true, defaultValue: 'AI-2026/049' }
-    ]
+    enabledFields: ['report_num', 'date', 'time', 'locality', 'coordinates'],
+    fieldDefaults: {
+      report_num: 'AI-2026/049'
+    }
   },
   {
     id: 'preset_registro',
     name: 'Registro Fotográfico',
-    baseModelId: 'model_1_simple'
+    baseModelId: 'model_1_simple',
+    enabledFields: ['photo_id', 'date', 'time', 'coordinates']
   },
   {
     id: 'preset_vistoria',
     name: 'Vistoria Imobiliária',
-    baseModelId: 'model_2_location'
+    baseModelId: 'model_2_location',
+    enabledFields: ['datetime', 'address_street_num', 'neighborhood', 'city_state_country', 'coordinates']
   },
   {
     id: 'preset_pessoal',
     name: 'Uso Pessoal / Viagem',
-    baseModelId: 'model_1_simple'
+    baseModelId: 'model_1_simple',
+    enabledFields: ['date', 'time', 'locality', 'coordinates']
   }
 ];
 
 /**
- * Lista dos campos padrão que a aplicação suporta
+ * Lista completa de todos os campos padrão suportados pela diretriz (Seção 10)
  */
 export const STANDARD_FIELD_DEFS = [
-  { id: 'photo_id', name: 'Identificação da Fotografia', category: 'general', defaultLabel: 'FOTO' },
-  { id: 'date', name: 'Data', category: 'datetime', defaultLabel: 'Data' },
-  { id: 'time', name: 'Hora', category: 'datetime', defaultLabel: 'Hora' },
-  { id: 'datetime', name: 'Data e Hora combinadas', category: 'datetime', defaultLabel: 'Data/Hora' },
-  { id: 'coordinates', name: 'Coordenadas (Lat/Long)', category: 'location', defaultLabel: 'Coordenadas' },
-  { id: 'lat', name: 'Latitude isolada', category: 'location', defaultLabel: 'Lat' },
-  { id: 'lon', name: 'Longitude isolada', category: 'location', defaultLabel: 'Long' },
-  { id: 'altitude', name: 'Altitude', category: 'location', defaultLabel: 'Altitude' },
-  { id: 'street', name: 'Rua / Logradouro', category: 'location', defaultLabel: 'Rua' },
-  { id: 'number', name: 'Número', category: 'location', defaultLabel: 'Nº' },
-  { id: 'address_street_num', name: 'Rua e Número combinados', category: 'location', defaultLabel: 'Endereço' },
-  { id: 'neighborhood', name: 'Bairro', category: 'location', defaultLabel: 'Bairro' },
-  { id: 'locality', name: 'Local / Cidade, UF', category: 'location', defaultLabel: 'Local' },
-  { id: 'city', name: 'Cidade / Município', category: 'location', defaultLabel: 'Cidade' },
-  { id: 'state', name: 'Estado / UF', category: 'location', defaultLabel: 'Estado' },
-  { id: 'country', name: 'País', category: 'location', defaultLabel: 'País' },
-  { id: 'city_state_country', name: 'Cidade, Estado, País', category: 'location', defaultLabel: 'Localidade' },
-  { id: 'postal_code', name: 'CEP', category: 'location', defaultLabel: 'CEP' },
-  { id: 'project_name', name: 'Nome da Obra / Projeto', category: 'technical', defaultLabel: 'Obra' },
-  { id: 'process', name: 'Processo Judicial / Administrativo', category: 'technical', defaultLabel: 'Processo' },
-  { id: 'report_num', name: 'Relatório / Laudo nº', category: 'technical', defaultLabel: 'Relatório' },
-  { id: 'responsible', name: 'Responsável Técnico / Perito', category: 'technical', defaultLabel: 'Responsável' },
-  { id: 'custom_text', name: 'Texto Personalizado', category: 'custom', defaultLabel: 'Observações' }
+  { id: 'photo_id', name: 'Identificação da Fotografia', category: 'general', defaultLabel: 'FOTO', placeholder: 'Ex: FOTOGRAFIA 01' },
+  { id: 'date', name: 'Data', category: 'datetime', defaultLabel: 'Data', placeholder: 'Ex: 22/11/2022' },
+  { id: 'time', name: 'Hora', category: 'datetime', defaultLabel: 'Hora', placeholder: 'Ex: 18:05:43' },
+  { id: 'datetime', name: 'Data e Hora combinadas', category: 'datetime', defaultLabel: 'Data/Hora', placeholder: 'Ex: 22/11/2022 18:05:43' },
+  { id: 'coordinates', name: 'Coordenadas (Lat/Long)', category: 'location', defaultLabel: 'Coordenadas', placeholder: 'Ex: 15.869969° S, 50.852275° W' },
+  { id: 'lat', name: 'Latitude', category: 'location', defaultLabel: 'Lat', placeholder: 'Ex: 15.869969° S' },
+  { id: 'lon', name: 'Longitude', category: 'location', defaultLabel: 'Long', placeholder: 'Ex: 50.852275° W' },
+  { id: 'altitude', name: 'Altitude', category: 'location', defaultLabel: 'Altitude', placeholder: 'Ex: 312.5 m' },
+  { id: 'street', name: 'Rua / Logradouro', category: 'location', defaultLabel: 'Rua', placeholder: 'Ex: Av. José Vicente' },
+  { id: 'number', name: 'Número', category: 'location', defaultLabel: 'Nº', placeholder: 'Ex: 100' },
+  { id: 'address_street_num', name: 'Rua e Número combinados', category: 'location', defaultLabel: 'Endereço', placeholder: 'Ex: Av. José Vicente, nº 100' },
+  { id: 'neighborhood', name: 'Bairro', category: 'location', defaultLabel: 'Bairro', placeholder: 'Ex: Setor Central' },
+  { id: 'locality', name: 'Local / Referência', category: 'location', defaultLabel: 'Local', placeholder: 'Ex: Jussara, GO' },
+  { id: 'city', name: 'Cidade / Município', category: 'location', defaultLabel: 'Cidade', placeholder: 'Ex: Jussara' },
+  { id: 'state', name: 'Estado / UF', category: 'location', defaultLabel: 'Estado', placeholder: 'Ex: Goiás' },
+  { id: 'country', name: 'País', category: 'location', defaultLabel: 'País', placeholder: 'Ex: Brasil' },
+  { id: 'city_state_country', name: 'Cidade, Estado, País', category: 'location', defaultLabel: 'Localidade', placeholder: 'Ex: Jussara, Goiás, Brasil' },
+  { id: 'postal_code', name: 'CEP', category: 'location', defaultLabel: 'CEP', placeholder: 'Ex: 76270-000' },
+  { id: 'project_name', name: 'Nome da Obra / Projeto', category: 'technical', defaultLabel: 'Obra', placeholder: 'Ex: Residência Jussara' },
+  { id: 'process', name: 'Processo Judicial / Administrativo', category: 'technical', defaultLabel: 'Processo', placeholder: 'Ex: 5557293-56.2020.8.09.0097' },
+  { id: 'report_num', name: 'Relatório / Laudo nº', category: 'technical', defaultLabel: 'Relatório', placeholder: 'Ex: Laudo 04/2022' },
+  { id: 'responsible', name: 'Responsável Técnico / Perito', category: 'technical', defaultLabel: 'Responsável', placeholder: 'Ex: Eng. Perito Especialista' },
+  { id: 'custom_text', name: 'Texto Personalizado', category: 'custom', defaultLabel: 'Observações', placeholder: 'Ex: Vistoria técnica' }
 ];

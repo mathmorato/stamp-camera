@@ -12,8 +12,8 @@ import {
   TIME_FORMATS,
   STAMP_POSITIONS
 } from '../../config.js';
-import { formatCoordinates, toDms, toDdm } from '../../geolocation.js';
-import { BUILT_IN_MODELS, STANDARD_FIELD_DEFS } from '../../templates.js';
+import { formatCoordinates, toDms, toDdm, parseCoordinateString, isValidCoordinate } from '../../geolocation.js';
+import { BUILT_IN_MODELS, PRESET_CATEGORIES, STANDARD_FIELD_DEFS } from '../../templates.js';
 
 export class StampCameraTool {
   constructor() {
@@ -22,7 +22,7 @@ export class StampCameraTool {
     this.location = this.createDefaultLocation();
     this.settings = { ...DEFAULT_STAMP_SETTINGS };
     this.numbering = { ...DEFAULT_NUMBERING };
-    this.activeFields = [];  // Lista ordenada de campos no carimbo
+    this.activeFields = [];  // Lista ordenada de TODOS os campos disponíveis
     this.selectedModelId = 'model_1_simple';
 
     this.initDefaultFields();
@@ -33,8 +33,8 @@ export class StampCameraTool {
       latitude: null,
       longitude: null,
       altitude: null,
-      date: null,
-      time: null,
+      date: '',
+      time: '',
       dateObj: null,
       street: '',
       number: '',
@@ -49,6 +49,12 @@ export class StampCameraTool {
       country: '',
       postalCode: '',
       referencePoint: '',
+      projectName: '',
+      process: '',
+      reportNum: '',
+      responsible: '',
+      customText: '',
+      photoId: '01',
       // Rastreamento explícito da origem de cada dado (AUTO vs MANUAL)
       sources: {
         latitude: 'MANUAL',
@@ -64,19 +70,25 @@ export class StampCameraTool {
         state: 'MANUAL',
         country: 'MANUAL',
         postalCode: 'MANUAL',
-        referencePoint: 'MANUAL'
+        referencePoint: 'MANUAL',
+        projectName: 'MANUAL',
+        process: 'MANUAL',
+        reportNum: 'MANUAL',
+        responsible: 'MANUAL',
+        customText: 'MANUAL'
       }
     };
   }
 
   initDefaultFields() {
-    // Carrega os campos do Modelo 1 por padrão
+    // Inicializa todos os campos padrão com base no Modelo 1
     const defaultModel = BUILT_IN_MODELS[0];
     this.applyModel(defaultModel);
   }
 
   /**
-   * Aplica um modelo ou preset predefinido
+   * Aplica um modelo ou preset predefinido, garantindo que TODOS os campos
+   * padrão continuem acessíveis na lista para o usuário ativar/desativar livremente.
    */
   applyModel(model) {
     if (!model) return;
@@ -103,20 +115,55 @@ export class StampCameraTool {
     this.settings.customPosX = null;
     this.settings.customPosY = null;
 
-    // Constrói lista de campos ativos
-    this.activeFields = model.fields.map((f, index) => {
-      const def = STANDARD_FIELD_DEFS.find(d => d.id === f.id);
-      return {
-        id: f.id,
-        name: def ? def.name : f.label,
-        label: f.label || (def ? def.defaultLabel : f.id),
-        enabled: f.enabled !== false,
-        showLabel: f.showLabel !== false,
-        isCustom: !def,
-        customValue: f.defaultValue || '',
-        order: index
-      };
-    });
+    // Preserva campos personalizados já criados pelo usuário
+    const existingCustomFields = this.activeFields.filter(f => f.isCustom);
+
+    // Constrói lista completa: campos ativados pelo modelo primeiro, seguidos pelos outros campos padrão desativados
+    const modelFieldMap = new Map();
+    if (model.fields) {
+      model.fields.forEach((f, idx) => {
+        modelFieldMap.set(f.id, { ...f, order: idx });
+      });
+    }
+
+    const orderedList = [];
+    const remainingStandard = [];
+
+    // 1. Campos que o modelo declarou explicitamente (ficam no topo)
+    if (model.fields) {
+      for (const mf of model.fields) {
+        const def = STANDARD_FIELD_DEFS.find(d => d.id === mf.id);
+        orderedList.push({
+          id: mf.id,
+          name: def ? def.name : mf.label,
+          label: mf.label || (def ? def.defaultLabel : mf.id),
+          enabled: mf.enabled !== false,
+          showLabel: mf.showLabel !== false,
+          isCustom: false,
+          customValue: mf.defaultValue || '',
+          order: orderedList.length
+        });
+      }
+    }
+
+    // 2. Todos os outros campos padrão disponíveis (adicionados após os do modelo, inicialmente desmarcados)
+    for (const def of STANDARD_FIELD_DEFS) {
+      if (!modelFieldMap.has(def.id)) {
+        remainingStandard.push({
+          id: def.id,
+          name: def.name,
+          label: def.defaultLabel,
+          enabled: false,
+          showLabel: true,
+          isCustom: false,
+          customValue: '',
+          order: orderedList.length + remainingStandard.length
+        });
+      }
+    }
+
+    // Monta a lista completa mantendo todos os campos acessíveis
+    this.activeFields = [...orderedList, ...remainingStandard, ...existingCustomFields];
   }
 
   /**
@@ -133,6 +180,23 @@ export class StampCameraTool {
 
     this.exif = photoData.exif || {};
     this.updateLocationFromExif();
+
+    // Se fornecidos dados geográficos complementares (ex: demo de teste)
+    if (photoData.locationData) {
+      const ld = photoData.locationData;
+      if (ld.city) this.location.city = ld.city;
+      if (ld.state) this.location.state = ld.state;
+      if (ld.country) this.location.country = ld.country;
+      if (ld.neighborhood) this.location.neighborhood = ld.neighborhood;
+      if (ld.street) this.location.street = ld.street;
+      if (ld.number) this.location.number = ld.number;
+      if (ld.postalCode) this.location.postalCode = ld.postalCode;
+      if (ld.projectName) this.location.projectName = ld.projectName;
+      if (ld.process) this.location.process = ld.process;
+      if (ld.responsible) this.location.responsible = ld.responsible;
+      if (ld.reportNum) this.location.reportNum = ld.reportNum;
+      if (ld.customText) this.location.customText = ld.customText;
+    }
   }
 
   /**
@@ -174,6 +238,139 @@ export class StampCameraTool {
       this.location.time = '';
       this.location.sources.date = 'MANUAL';
       this.location.sources.time = 'MANUAL';
+    }
+  }
+
+  /**
+   * Atualiza o valor de qualquer campo (tanto padrão quanto customizado),
+   * sincronizando com o estado interno e marcando a origem como MANUAL.
+   */
+  setFieldValue(fieldId, value) {
+    const trimmed = typeof value === 'string' ? value.trim() : value;
+
+    switch (fieldId) {
+      case 'date':
+        this.location.date = value;
+        this.location.sources.date = 'MANUAL';
+        break;
+
+      case 'time':
+        this.location.time = value;
+        this.location.sources.time = 'MANUAL';
+        break;
+
+      case 'coordinates': {
+        const parsed = parseCoordinateString(value);
+        if (parsed) {
+          this.location.latitude = parsed.lat;
+          this.location.longitude = parsed.lon;
+          this.location.sources.latitude = 'MANUAL';
+          this.location.sources.longitude = 'MANUAL';
+        }
+        break;
+      }
+
+      case 'lat': {
+        const lat = parseFloat(value);
+        if (!isNaN(lat) && lat >= -90 && lat <= 90) {
+          this.location.latitude = lat;
+          this.location.sources.latitude = 'MANUAL';
+        }
+        break;
+      }
+
+      case 'lon': {
+        const lon = parseFloat(value);
+        if (!isNaN(lon) && lon >= -180 && lon <= 180) {
+          this.location.longitude = lon;
+          this.location.sources.longitude = 'MANUAL';
+        }
+        break;
+      }
+
+      case 'altitude': {
+        const alt = parseFloat(value);
+        this.location.altitude = isNaN(alt) ? null : alt;
+        this.location.sources.altitude = 'MANUAL';
+        break;
+      }
+
+      case 'street':
+        this.location.street = value;
+        this.location.sources.street = 'MANUAL';
+        break;
+
+      case 'number':
+        this.location.number = value;
+        this.location.sources.number = 'MANUAL';
+        break;
+
+      case 'neighborhood':
+        this.location.neighborhood = value;
+        this.location.sources.neighborhood = 'MANUAL';
+        break;
+
+      case 'locality':
+        this.location.locality = value;
+        this.location.sources.locality = 'MANUAL';
+        break;
+
+      case 'city':
+        this.location.city = value;
+        this.location.sources.city = 'MANUAL';
+        break;
+
+      case 'state':
+        this.location.state = value;
+        this.location.sources.state = 'MANUAL';
+        break;
+
+      case 'country':
+        this.location.country = value;
+        this.location.sources.country = 'MANUAL';
+        break;
+
+      case 'postal_code':
+        this.location.postalCode = value;
+        this.location.sources.postalCode = 'MANUAL';
+        break;
+
+      case 'project_name':
+        this.location.projectName = value;
+        this.location.sources.projectName = 'MANUAL';
+        break;
+
+      case 'process':
+        this.location.process = value;
+        this.location.sources.process = 'MANUAL';
+        break;
+
+      case 'report_num':
+        this.location.reportNum = value;
+        this.location.sources.reportNum = 'MANUAL';
+        break;
+
+      case 'responsible':
+        this.location.responsible = value;
+        this.location.sources.responsible = 'MANUAL';
+        break;
+
+      case 'custom_text':
+        this.location.customText = value;
+        this.location.sources.customText = 'MANUAL';
+        break;
+
+      case 'photo_id':
+        this.location.photoId = value;
+        break;
+
+      default: {
+        const f = this.activeFields.find(field => field.id === fieldId);
+        if (f) {
+          f.customValue = value;
+        }
+        break;
+      }
     }
   }
 
@@ -288,11 +485,12 @@ export class StampCameraTool {
         return this.location.street || '';
 
       case 'number':
-        return this.location.number ? `nº ${this.location.number}` : '';
+        return this.location.number ? (this.location.number.startsWith('nº') ? this.location.number : `nº ${this.location.number}`) : '';
 
       case 'address_street_num': {
         if (this.location.street && this.location.number) {
-          return `${this.location.street}, nº ${this.location.number}`;
+          const numStr = this.location.number.startsWith('nº') ? this.location.number : `nº ${this.location.number}`;
+          return `${this.location.street}, ${numStr}`;
         }
         return this.location.street || (this.location.number ? `nº ${this.location.number}` : '');
       }
@@ -325,18 +523,33 @@ export class StampCameraTool {
       }
 
       case 'postal_code':
-        return this.location.postalCode ? `CEP: ${this.location.postalCode}` : '';
+        return this.location.postalCode ? (this.location.postalCode.startsWith('CEP') ? this.location.postalCode : `CEP: ${this.location.postalCode}`) : '';
+
+      case 'project_name':
+        return this.location.projectName || fieldConfig.customValue || '';
+
+      case 'process':
+        return this.location.process || fieldConfig.customValue || '';
+
+      case 'report_num':
+        return this.location.reportNum || fieldConfig.customValue || '';
+
+      case 'responsible':
+        return this.location.responsible || fieldConfig.customValue || '';
+
+      case 'custom_text':
+        return this.location.customText || fieldConfig.customValue || '';
 
       case 'photo_id': {
         if (this.numbering.enabled) {
           const num = String(this.numbering.startNumber).padStart(this.numbering.digits, '0');
           return `${this.numbering.prefix}${num}${this.numbering.suffix}`;
         }
-        return fieldConfig.customValue || '01';
+        return this.location.photoId || fieldConfig.customValue || '01';
       }
 
       default:
-        // Campos personalizados
+        // Campos personalizados adicionados pelo usuário
         return fieldConfig.customValue || '';
     }
   }

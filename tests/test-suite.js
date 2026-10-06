@@ -150,6 +150,26 @@ assert(tool.location.longitude === null, 'Longitude não foi inventada quando au
 assert(tool.location.sources.latitude === 'MANUAL', 'Origem da latitude definida para MANUAL quando ausente no EXIF');
 assert(tool.location.date === '', 'Data não foi inventada quando ausente no EXIF');
 
+// Teste de Disponibilidade de Todos os Campos Padrão
+assert(tool.activeFields.length >= 20, `Todos os campos padrão disponíveis na lista (total: ${tool.activeFields.length})`);
+const bairroField = tool.activeFields.find(f => f.id === 'neighborhood');
+assert(bairroField !== undefined, 'Campo Bairro disponível na lista');
+
+// Teste de Ativação e Edição de Valor de Campo Padrão
+tool.setFieldValue('neighborhood', 'Setor Central');
+assert(tool.location.neighborhood === 'Setor Central', 'Valor de Bairro gravado na localização');
+bairroField.enabled = true;
+const linesWithBairro = tool.getStampRenderLines();
+assert(linesWithBairro.some(l => l.value === 'Setor Central'), 'Bairro ativado e renderizado nas linhas do carimbo');
+
+// Teste de Campos Técnicos (Obra, Processo, Responsável)
+tool.setFieldValue('project_name', 'Residência Jussara');
+assert(tool.location.projectName === 'Residência Jussara', 'Nome da Obra atualizado com sucesso');
+tool.setFieldValue('process', '5557293-56.2020.8.09.0097');
+assert(tool.location.process === '5557293-56.2020.8.09.0097', 'Número do Processo atualizado com sucesso');
+tool.setFieldValue('responsible', 'Eng. Perito Especialista');
+assert(tool.location.responsible === 'Eng. Perito Especialista', 'Responsável Técnico atualizado com sucesso');
+
 // Teste de Adição e Reordenação de Campo Personalizado
 const initialCount = tool.activeFields.length;
 const customField = tool.addCustomField('Vistoriador', 'Eng. Silva');
