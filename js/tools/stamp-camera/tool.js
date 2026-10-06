@@ -19,6 +19,15 @@ import { formatCoordinates, toDms, toDdm, parseCoordinateString, isValidCoordina
 import { BUILT_IN_MODELS, PRESET_CATEGORIES, STANDARD_FIELD_DEFS } from '../../templates.js';
 import { reverseGeocode } from '../../geocoder.js';
 
+export const OPTIONAL_ON_DEMAND_FIELDS = [
+  'photo_id',
+  'project_name',
+  'process',
+  'report_num',
+  'responsible',
+  'custom_text'
+];
+
 export class StampCameraTool {
   constructor() {
     this.photo = null;       // { canvas, width, height, filename, fileSize }
@@ -139,6 +148,7 @@ export class StampCameraTool {
     if (model.fields) {
       for (const mf of model.fields) {
         const def = STANDARD_FIELD_DEFS.find(d => d.id === mf.id);
+        const isOpt = OPTIONAL_ON_DEMAND_FIELDS.includes(mf.id);
         orderedList.push({
           id: mf.id,
           name: def ? def.name : mf.label,
@@ -146,6 +156,8 @@ export class StampCameraTool {
           enabled: mf.enabled !== false,
           showLabel: mf.showLabel !== false,
           isCustom: false,
+          isOptionalOnDemand: isOpt,
+          added: mf.enabled !== false,
           customValue: mf.defaultValue || '',
           order: orderedList.length
         });
@@ -155,6 +167,7 @@ export class StampCameraTool {
     // 2. Todos os outros campos padrão disponíveis (adicionados após os do modelo, inicialmente desmarcados)
     for (const def of STANDARD_FIELD_DEFS) {
       if (!modelFieldMap.has(def.id)) {
+        const isOpt = OPTIONAL_ON_DEMAND_FIELDS.includes(def.id);
         remainingStandard.push({
           id: def.id,
           name: def.name,
@@ -162,6 +175,8 @@ export class StampCameraTool {
           enabled: false,
           showLabel: true,
           isCustom: false,
+          isOptionalOnDemand: isOpt,
+          added: false,
           customValue: '',
           order: orderedList.length + remainingStandard.length
         });
@@ -610,16 +625,40 @@ export class StampCameraTool {
   }
 
   /**
+   * Retorna o selo de origem (EXIF ou MANUAL) para um campo específico
+   */
+  getFieldOriginBadge(fieldId) {
+    if (['lat', 'lon', 'coordinates', 'latitude', 'longitude'].includes(fieldId)) {
+      return this.location.sources.latitude === 'AUTO' ? 'EXIF' : 'MANUAL';
+    }
+    if (['date', 'time', 'datetime'].includes(fieldId)) {
+      return this.location.sources.date === 'AUTO' ? 'EXIF' : 'MANUAL';
+    }
+    if (fieldId === 'altitude') {
+      return this.location.sources.altitude === 'AUTO' ? 'EXIF' : 'MANUAL';
+    }
+    return null;
+  }
+
+  /**
    * Constrói a lista de linhas prontas para desenho no carimbo
    */
   getStampRenderLines() {
     const lines = [];
+    const showOrigin = !!this.settings.showOriginStampBadge;
 
     for (const field of this.activeFields) {
       if (!field.enabled) continue;
 
-      const val = this.getFieldValue(field.id, field);
+      let val = this.getFieldValue(field.id, field);
       if (val) {
+        if (showOrigin) {
+          const badge = this.getFieldOriginBadge(field.id);
+          if (badge) {
+            val = `${val} [${badge}]`;
+          }
+        }
+
         lines.push({
           id: field.id,
           label: field.label,
@@ -635,6 +674,19 @@ export class StampCameraTool {
   }
 
   /**
+   * Adiciona/ativa um campo padrão que estava oculto sob demanda
+   */
+  addStandardField(fieldId) {
+    const field = this.activeFields.find(f => f.id === fieldId);
+    if (field) {
+      field.added = true;
+      field.enabled = true;
+      return field;
+    }
+    return null;
+  }
+
+  /**
    * Adiciona um campo customizado à lista
    */
   addCustomField(label = 'Novo Campo', defaultValue = '') {
@@ -646,6 +698,8 @@ export class StampCameraTool {
       enabled: true,
       showLabel: true,
       isCustom: true,
+      isOptionalOnDemand: false,
+      added: true,
       customValue: defaultValue,
       order: this.activeFields.length
     };
@@ -654,10 +708,18 @@ export class StampCameraTool {
   }
 
   /**
-   * Remove um campo da lista
+   * Remove um campo da lista (se customizado exclui, se padrão opcional oculta)
    */
   removeField(fieldId) {
-    this.activeFields = this.activeFields.filter(f => f.id !== fieldId);
+    const field = this.activeFields.find(f => f.id === fieldId);
+    if (!field) return;
+    if (field.isCustom) {
+      this.activeFields = this.activeFields.filter(f => f.id !== fieldId);
+      delete this.location.sources[fieldId];
+    } else {
+      field.added = false;
+      field.enabled = false;
+    }
   }
 
   /**

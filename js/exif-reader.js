@@ -70,6 +70,8 @@ export async function readExifData(fileOrBuffer) {
           const tiffStart = segmentStart + 6;
           parseTiff(view, tiffStart, result);
           result.hasExif = true;
+          // Preservar bytes originais do APP1 (marcador FFE1 + 2 bytes tamanho + payload)
+          result.rawApp1Bytes = new Uint8Array(buffer.slice(offset - 2, offset + segmentLength));
           break;
         }
 
@@ -367,4 +369,68 @@ function parseExifGpsDate(dateStr, timeVals) {
 
   const date = new Date(Date.UTC(y, m, d, hh, mm, ss));
   return isNaN(date.getTime()) ? null : date;
+}
+
+/**
+ * Injeta o segmento APP1 EXIF diretamente em um buffer JPEG gerado pelo Canvas
+ * Garante que os metadados fotográficos (GPS, data, câmera, modelo) sejam 100% preservados.
+ * @param {ArrayBuffer|Uint8Array} jpegBuffer
+ * @param {Uint8Array} rawApp1Bytes
+ * @returns {Uint8Array}
+ */
+export function injectApp1BytesIntoJpeg(jpegBuffer, rawApp1Bytes) {
+  if (!rawApp1Bytes || rawApp1Bytes.length < 4) {
+    return jpegBuffer instanceof Uint8Array ? jpegBuffer : new Uint8Array(jpegBuffer);
+  }
+
+  const u8 = jpegBuffer instanceof Uint8Array ? jpegBuffer : new Uint8Array(jpegBuffer);
+  if (u8.length < 4 || u8[0] !== 0xFF || u8[1] !== 0xD8) {
+    return u8;
+  }
+
+  // Verifica se o JPEG gerado pelo canvas já contém APP0 (0xFFE0) logo após SOI
+  let insertPos = 2; // logo após SOI (0xFFD8)
+  if (u8[2] === 0xFF && u8[3] === 0xE0) {
+    const app0Len = (u8[4] << 8) | u8[5];
+    insertPos = 4 + app0Len; // insere imediatamente após APP0
+  }
+
+  // Se o buffer do canvas já possuir algum APP1, verifica se precisa ser substituído
+  let existingApp1Start = -1;
+  let existingApp1End = -1;
+  let offset = 2;
+  while (offset < u8.length - 4) {
+    if (u8[offset] === 0xFF && u8[offset + 1] === 0xE1) {
+      const segLen = (u8[offset + 2] << 8) | u8[offset + 3];
+      existingApp1Start = offset;
+      existingApp1End = offset + 2 + segLen;
+      break;
+    }
+    if (u8[offset] === 0xFF && (u8[offset + 1] === 0xDA || u8[offset + 1] === 0xD9)) {
+      break;
+    }
+    if (u8[offset] === 0xFF && (u8[offset + 1] & 0xF0) === 0xE0) {
+      const segLen = (u8[offset + 2] << 8) | u8[offset + 3];
+      offset += 2 + segLen;
+    } else {
+      break;
+    }
+  }
+
+  if (existingApp1Start !== -1 && existingApp1End !== -1) {
+    // Substitui APP1 existente
+    const newLength = u8.length - (existingApp1End - existingApp1Start) + rawApp1Bytes.length;
+    const result = new Uint8Array(newLength);
+    result.set(u8.subarray(0, existingApp1Start), 0);
+    result.set(rawApp1Bytes, existingApp1Start);
+    result.set(u8.subarray(existingApp1End), existingApp1Start + rawApp1Bytes.length);
+    return result;
+  }
+
+  // Insere novo APP1 na posição apropriada (após APP0 ou SOI)
+  const result = new Uint8Array(u8.length + rawApp1Bytes.length);
+  result.set(u8.subarray(0, insertPos), 0);
+  result.set(rawApp1Bytes, insertPos);
+  result.set(u8.subarray(insertPos), insertPos + rawApp1Bytes.length);
+  return result;
 }

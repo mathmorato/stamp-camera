@@ -10,6 +10,8 @@ import path from 'path';
 
 const files = [
   'js/config.js',
+  'js/vendor/piexif.js',
+  'js/zip-writer.js',
   'js/geolocation.js',
   'assets/images/demo-image-data.js',
   'js/exif-reader.js',

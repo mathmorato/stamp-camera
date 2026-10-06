@@ -87,6 +87,21 @@ async function capture() {
     fs.writeFileSync(path.join(ARTIFACT_DIR, 'redesign_active_dark.png'), Buffer.from(ss2.data, 'base64'));
     console.log('Saved redesign_active_dark.png');
 
+    // Open add field menu to showcase on-demand options
+    await send('Runtime.evaluate', {
+      expression: `document.getElementById('btnAddField').click();`
+    });
+    await new Promise(r => setTimeout(r, 400));
+    const ssMenu = await send('Page.captureScreenshot', { format: 'png' });
+    fs.writeFileSync(path.join(ARTIFACT_DIR, 'redesign_active_menu.png'), Buffer.from(ssMenu.data, 'base64'));
+    console.log('Saved redesign_active_menu.png');
+
+    // Close menu by clicking body
+    await send('Runtime.evaluate', {
+      expression: `document.body.click();`
+    });
+    await new Promise(r => setTimeout(r, 300));
+
     // Switch to light theme
     await send('Runtime.evaluate', {
       expression: `document.getElementById('themeToggleBtn').click();`

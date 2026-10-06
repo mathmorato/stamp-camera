@@ -11,7 +11,7 @@
    * Versão: 1.0.0
    * 100% Client-side - Nenhuma informação é enviada para servidores externos.
    */
-  const PNITE_VERSION = "v.1.1.0";
+  const PNITE_VERSION = "v.1.1.1";
   const APP_CONFIG = {
     name: 'STAMP-CAMERA',
     subtitle: 'Carimbo técnico e geográfico para fotografias',
@@ -183,6 +183,2693 @@
   };
   
   // --- Fim de js/config.js ---
+
+  // --- Início de js/vendor/piexif.js ---
+  /* piexifjs
+  
+  The MIT License (MIT)
+  
+  Copyright (c) 2014, 2015 hMatoba(https://github.com/hMatoba)
+  
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+  
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
+  
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+  */
+  
+  (function () {
+      "use strict";
+      var that = {};
+      that.version = "1.0.4";
+  
+      that.remove = function (jpeg) {
+          var b64 = false;
+          if (jpeg.slice(0, 2) == "\xff\xd8") {
+          } else if (jpeg.slice(0, 23) == "data:image/jpeg;base64," || jpeg.slice(0, 22) == "data:image/jpg;base64,") {
+              jpeg = atob(jpeg.split(",")[1]);
+              b64 = true;
+          } else {
+              throw new Error("Given data is not jpeg.");
+          }
+          
+          var segments = splitIntoSegments(jpeg);
+          var newSegments = segments.filter(function(seg){
+            return  !(seg.slice(0, 2) == "\xff\xe1" &&
+                     seg.slice(4, 10) == "Exif\x00\x00"); 
+          });
+          
+          var new_data = newSegments.join("");
+          if (b64) {
+              new_data = "data:image/jpeg;base64," + btoa(new_data);
+          }
+  
+          return new_data;
+      };
+  
+  
+      that.insert = function (exif, jpeg) {
+          var b64 = false;
+          if (exif.slice(0, 6) != "\x45\x78\x69\x66\x00\x00") {
+              throw new Error("Given data is not exif.");
+          }
+          if (jpeg.slice(0, 2) == "\xff\xd8") {
+          } else if (jpeg.slice(0, 23) == "data:image/jpeg;base64," || jpeg.slice(0, 22) == "data:image/jpg;base64,") {
+              jpeg = atob(jpeg.split(",")[1]);
+              b64 = true;
+          } else {
+              throw new Error("Given data is not jpeg.");
+          }
+  
+          var exifStr = "\xff\xe1" + pack(">H", [exif.length + 2]) + exif;
+          var segments = splitIntoSegments(jpeg);
+          var new_data = mergeSegments(segments, exifStr);
+          if (b64) {
+              new_data = "data:image/jpeg;base64," + btoa(new_data);
+          }
+  
+          return new_data;
+      };
+  
+  
+      that.load = function (data) {
+          var input_data;
+          if (typeof (data) == "string") {
+              if (data.slice(0, 2) == "\xff\xd8") {
+                  input_data = data;
+              } else if (data.slice(0, 23) == "data:image/jpeg;base64," || data.slice(0, 22) == "data:image/jpg;base64,") {
+                  input_data = atob(data.split(",")[1]);
+              } else if (data.slice(0, 4) == "Exif") {
+                  input_data = data.slice(6);
+              } else {
+                  throw new Error("'load' gots invalid file data.");
+              }
+          } else {
+              throw new Error("'load' gots invalid type argument.");
+          }
+  
+          var exifDict = {};
+          var exif_dict = {
+              "0th": {},
+              "Exif": {},
+              "GPS": {},
+              "Interop": {},
+              "1st": {},
+              "thumbnail": null
+          };
+          var exifReader = new ExifReader(input_data);
+          if (exifReader.tiftag === null) {
+              return exif_dict;
+          }
+  
+          if (exifReader.tiftag.slice(0, 2) == "\x49\x49") {
+              exifReader.endian_mark = "<";
+          } else {
+              exifReader.endian_mark = ">";
+          }
+  
+          var pointer = unpack(exifReader.endian_mark + "L",
+              exifReader.tiftag.slice(4, 8))[0];
+          exif_dict["0th"] = exifReader.get_ifd(pointer, "0th");
+  
+          var first_ifd_pointer = exif_dict["0th"]["first_ifd_pointer"];
+          delete exif_dict["0th"]["first_ifd_pointer"];
+  
+          if (34665 in exif_dict["0th"]) {
+              pointer = exif_dict["0th"][34665];
+              exif_dict["Exif"] = exifReader.get_ifd(pointer, "Exif");
+          }
+          if (34853 in exif_dict["0th"]) {
+              pointer = exif_dict["0th"][34853];
+              exif_dict["GPS"] = exifReader.get_ifd(pointer, "GPS");
+          }
+          if (40965 in exif_dict["Exif"]) {
+              pointer = exif_dict["Exif"][40965];
+              exif_dict["Interop"] = exifReader.get_ifd(pointer, "Interop");
+          }
+          if (first_ifd_pointer != "\x00\x00\x00\x00") {
+              pointer = unpack(exifReader.endian_mark + "L",
+                  first_ifd_pointer)[0];
+              exif_dict["1st"] = exifReader.get_ifd(pointer, "1st");
+              if ((513 in exif_dict["1st"]) && (514 in exif_dict["1st"])) {
+                  var end = exif_dict["1st"][513] + exif_dict["1st"][514];
+                  var thumb = exifReader.tiftag.slice(exif_dict["1st"][513], end);
+                  exif_dict["thumbnail"] = thumb;
+              }
+          }
+  
+          return exif_dict;
+      };
+  
+  
+      that.dump = function (exif_dict_original) {
+          var TIFF_HEADER_LENGTH = 8;
+  
+          var exif_dict = copy(exif_dict_original);
+          var header = "Exif\x00\x00\x4d\x4d\x00\x2a\x00\x00\x00\x08";
+          var exif_is = false;
+          var gps_is = false;
+          var interop_is = false;
+          var first_is = false;
+  
+          var zeroth_ifd,
+              exif_ifd,
+              interop_ifd,
+              gps_ifd,
+              first_ifd;
+          
+          if ("0th" in exif_dict) {
+              zeroth_ifd = exif_dict["0th"];
+          } else {
+              zeroth_ifd = {};
+          }
+          
+          if ((("Exif" in exif_dict) && (Object.keys(exif_dict["Exif"]).length)) ||
+              (("Interop" in exif_dict) && (Object.keys(exif_dict["Interop"]).length))) {
+              zeroth_ifd[34665] = 1;
+              exif_is = true;
+              exif_ifd = exif_dict["Exif"];
+              if (("Interop" in exif_dict) && Object.keys(exif_dict["Interop"]).length) {
+                  exif_ifd[40965] = 1;
+                  interop_is = true;
+                  interop_ifd = exif_dict["Interop"];
+              } else if (Object.keys(exif_ifd).indexOf(that.ExifIFD.InteroperabilityTag.toString()) > -1) {
+                  delete exif_ifd[40965];
+              }
+          } else if (Object.keys(zeroth_ifd).indexOf(that.ImageIFD.ExifTag.toString()) > -1) {
+              delete zeroth_ifd[34665];
+          }
+  
+          if (("GPS" in exif_dict) && (Object.keys(exif_dict["GPS"]).length)) {
+              zeroth_ifd[that.ImageIFD.GPSTag] = 1;
+              gps_is = true;
+              gps_ifd = exif_dict["GPS"];
+          } else if (Object.keys(zeroth_ifd).indexOf(that.ImageIFD.GPSTag.toString()) > -1) {
+              delete zeroth_ifd[that.ImageIFD.GPSTag];
+          }
+          
+          if (("1st" in exif_dict) &&
+              ("thumbnail" in exif_dict) &&
+              (exif_dict["thumbnail"] != null)) {
+              first_is = true;
+              exif_dict["1st"][513] = 1;
+              exif_dict["1st"][514] = 1;
+              first_ifd = exif_dict["1st"];
+          }
+          
+          var zeroth_set = _dict_to_bytes(zeroth_ifd, "0th", 0);
+          var zeroth_length = (zeroth_set[0].length + exif_is * 12 + gps_is * 12 + 4 +
+              zeroth_set[1].length);
+  
+          var exif_set,
+              exif_bytes = "",
+              exif_length = 0,
+              gps_set,
+              gps_bytes = "",
+              gps_length = 0,
+              interop_set,
+              interop_bytes = "",
+              interop_length = 0,
+              first_set,
+              first_bytes = "",
+              thumbnail;
+          if (exif_is) {
+              exif_set = _dict_to_bytes(exif_ifd, "Exif", zeroth_length);
+              exif_length = exif_set[0].length + interop_is * 12 + exif_set[1].length;
+          }
+          if (gps_is) {
+              gps_set = _dict_to_bytes(gps_ifd, "GPS", zeroth_length + exif_length);
+              gps_bytes = gps_set.join("");
+              gps_length = gps_bytes.length;
+          }
+          if (interop_is) {
+              var offset = zeroth_length + exif_length + gps_length;
+              interop_set = _dict_to_bytes(interop_ifd, "Interop", offset);
+              interop_bytes = interop_set.join("");
+              interop_length = interop_bytes.length;
+          }
+          if (first_is) {
+              var offset = zeroth_length + exif_length + gps_length + interop_length;
+              first_set = _dict_to_bytes(first_ifd, "1st", offset);
+              thumbnail = _get_thumbnail(exif_dict["thumbnail"]);
+              if (thumbnail.length > 64000) {
+                  throw new Error("Given thumbnail is too large. max 64kB");
+              }
+          }
+  
+          var exif_pointer = "",
+              gps_pointer = "",
+              interop_pointer = "",
+              first_ifd_pointer = "\x00\x00\x00\x00";
+          if (exif_is) {
+              var pointer_value = TIFF_HEADER_LENGTH + zeroth_length;
+              var pointer_str = pack(">L", [pointer_value]);
+              var key = 34665;
+              var key_str = pack(">H", [key]);
+              var type_str = pack(">H", [TYPES["Long"]]);
+              var length_str = pack(">L", [1]);
+              exif_pointer = key_str + type_str + length_str + pointer_str;
+          }
+          if (gps_is) {
+              var pointer_value = TIFF_HEADER_LENGTH + zeroth_length + exif_length;
+              var pointer_str = pack(">L", [pointer_value]);
+              var key = 34853;
+              var key_str = pack(">H", [key]);
+              var type_str = pack(">H", [TYPES["Long"]]);
+              var length_str = pack(">L", [1]);
+              gps_pointer = key_str + type_str + length_str + pointer_str;
+          }
+          if (interop_is) {
+              var pointer_value = (TIFF_HEADER_LENGTH +
+                  zeroth_length + exif_length + gps_length);
+              var pointer_str = pack(">L", [pointer_value]);
+              var key = 40965;
+              var key_str = pack(">H", [key]);
+              var type_str = pack(">H", [TYPES["Long"]]);
+              var length_str = pack(">L", [1]);
+              interop_pointer = key_str + type_str + length_str + pointer_str;
+          }
+          if (first_is) {
+              var pointer_value = (TIFF_HEADER_LENGTH + zeroth_length +
+                  exif_length + gps_length + interop_length);
+              first_ifd_pointer = pack(">L", [pointer_value]);
+              var thumbnail_pointer = (pointer_value + first_set[0].length + 24 +
+                  4 + first_set[1].length);
+              var thumbnail_p_bytes = ("\x02\x01\x00\x04\x00\x00\x00\x01" +
+                  pack(">L", [thumbnail_pointer]));
+              var thumbnail_length_bytes = ("\x02\x02\x00\x04\x00\x00\x00\x01" +
+                  pack(">L", [thumbnail.length]));
+              first_bytes = (first_set[0] + thumbnail_p_bytes +
+                  thumbnail_length_bytes + "\x00\x00\x00\x00" +
+                  first_set[1] + thumbnail);
+          }
+  
+          var zeroth_bytes = (zeroth_set[0] + exif_pointer + gps_pointer +
+              first_ifd_pointer + zeroth_set[1]);
+          if (exif_is) {
+              exif_bytes = exif_set[0] + interop_pointer + exif_set[1];
+          }
+  
+          return (header + zeroth_bytes + exif_bytes + gps_bytes +
+              interop_bytes + first_bytes);
+      };
+  
+  
+      function copy(obj) {
+          return JSON.parse(JSON.stringify(obj));
+      }
+  
+  
+      function _get_thumbnail(jpeg) {
+          var segments = splitIntoSegments(jpeg);
+          while (("\xff\xe0" <= segments[1].slice(0, 2)) && (segments[1].slice(0, 2) <= "\xff\xef")) {
+              segments = [segments[0]].concat(segments.slice(2));
+          }
+          return segments.join("");
+      }
+  
+  
+      function _pack_byte(array) {
+          return pack(">" + nStr("B", array.length), array);
+      }
+  
+  
+      function _pack_short(array) {
+          return pack(">" + nStr("H", array.length), array);
+      }
+  
+  
+      function _pack_long(array) {
+          return pack(">" + nStr("L", array.length), array);
+      }
+  
+  
+      function _value_to_bytes(raw_value, value_type, offset) {
+          var four_bytes_over = "";
+          var value_str = "";
+          var length,
+              new_value,
+              num,
+              den;
+  
+          if (value_type == "Byte") {
+              length = raw_value.length;
+              if (length <= 4) {
+                  value_str = (_pack_byte(raw_value) +
+                      nStr("\x00", 4 - length));
+              } else {
+                  value_str = pack(">L", [offset]);
+                  four_bytes_over = _pack_byte(raw_value);
+              }
+          } else if (value_type == "Short") {
+              length = raw_value.length;
+              if (length <= 2) {
+                  value_str = (_pack_short(raw_value) +
+                      nStr("\x00\x00", 2 - length));
+              } else {
+                  value_str = pack(">L", [offset]);
+                  four_bytes_over = _pack_short(raw_value);
+              }
+          } else if (value_type == "Long") {
+              length = raw_value.length;
+              if (length <= 1) {
+                  value_str = _pack_long(raw_value);
+              } else {
+                  value_str = pack(">L", [offset]);
+                  four_bytes_over = _pack_long(raw_value);
+              }
+          } else if (value_type == "Ascii") {
+              new_value = raw_value + "\x00";
+              length = new_value.length;
+              if (length > 4) {
+                  value_str = pack(">L", [offset]);
+                  four_bytes_over = new_value;
+              } else {
+                  value_str = new_value + nStr("\x00", 4 - length);
+              }
+          } else if (value_type == "Rational") {
+              if (typeof (raw_value[0]) == "number") {
+                  length = 1;
+                  num = raw_value[0];
+                  den = raw_value[1];
+                  new_value = pack(">L", [num]) + pack(">L", [den]);
+              } else {
+                  length = raw_value.length;
+                  new_value = "";
+                  for (var n = 0; n < length; n++) {
+                      num = raw_value[n][0];
+                      den = raw_value[n][1];
+                      new_value += (pack(">L", [num]) +
+                          pack(">L", [den]));
+                  }
+              }
+              value_str = pack(">L", [offset]);
+              four_bytes_over = new_value;
+          } else if (value_type == "SRational") {
+              if (typeof (raw_value[0]) == "number") {
+                  length = 1;
+                  num = raw_value[0];
+                  den = raw_value[1];
+                  new_value = pack(">l", [num]) + pack(">l", [den]);
+              } else {
+                  length = raw_value.length;
+                  new_value = "";
+                  for (var n = 0; n < length; n++) {
+                      num = raw_value[n][0];
+                      den = raw_value[n][1];
+                      new_value += (pack(">l", [num]) +
+                          pack(">l", [den]));
+                  }
+              }
+              value_str = pack(">L", [offset]);
+              four_bytes_over = new_value;
+          } else if (value_type == "Undefined") {
+              length = raw_value.length;
+              if (length > 4) {
+                  value_str = pack(">L", [offset]);
+                  four_bytes_over = raw_value;
+              } else {
+                  value_str = raw_value + nStr("\x00", 4 - length);
+              }
+          }
+  
+          var length_str = pack(">L", [length]);
+  
+          return [length_str, value_str, four_bytes_over];
+      }
+  
+      function _dict_to_bytes(ifd_dict, ifd, ifd_offset) {
+          var TIFF_HEADER_LENGTH = 8;
+          var tag_count = Object.keys(ifd_dict).length;
+          var entry_header = pack(">H", [tag_count]);
+          var entries_length;
+          if (["0th", "1st"].indexOf(ifd) > -1) {
+              entries_length = 2 + tag_count * 12 + 4;
+          } else {
+              entries_length = 2 + tag_count * 12;
+          }
+          var entries = "";
+          var values = "";
+          var key;
+  
+          for (var key in ifd_dict) {
+              if (typeof (key) == "string") {
+                  key = parseInt(key);
+              }
+              if ((ifd == "0th") && ([34665, 34853].indexOf(key) > -1)) {
+                  continue;
+              } else if ((ifd == "Exif") && (key == 40965)) {
+                  continue;
+              } else if ((ifd == "1st") && ([513, 514].indexOf(key) > -1)) {
+                  continue;
+              }
+  
+              var raw_value = ifd_dict[key];
+              var key_str = pack(">H", [key]);
+              var value_type = TAGS[ifd][key]["type"];
+              var type_str = pack(">H", [TYPES[value_type]]);
+  
+              if (typeof (raw_value) == "number") {
+                  raw_value = [raw_value];
+              }
+              var offset = TIFF_HEADER_LENGTH + entries_length + ifd_offset + values.length;
+              var b = _value_to_bytes(raw_value, value_type, offset);
+              var length_str = b[0];
+              var value_str = b[1];
+              var four_bytes_over = b[2];
+  
+              entries += key_str + type_str + length_str + value_str;
+              values += four_bytes_over;
+          }
+  
+          return [entry_header + entries, values];
+      }
+  
+  
+  
+      function ExifReader(data) {
+          var segments,
+              app1;
+          if (data.slice(0, 2) == "\xff\xd8") { // JPEG
+              segments = splitIntoSegments(data);
+              app1 = getExifSeg(segments);
+              if (app1) {
+                  this.tiftag = app1.slice(10);
+              } else {
+                  this.tiftag = null;
+              }
+          } else if (["\x49\x49", "\x4d\x4d"].indexOf(data.slice(0, 2)) > -1) { // TIFF
+              this.tiftag = data;
+          } else if (data.slice(0, 4) == "Exif") { // Exif
+              this.tiftag = data.slice(6);
+          } else {
+              throw new Error("Given file is neither JPEG nor TIFF.");
+          }
+      }
+  
+      ExifReader.prototype = {
+          get_ifd: function (pointer, ifd_name) {
+              var ifd_dict = {};
+              var tag_count = unpack(this.endian_mark + "H",
+                  this.tiftag.slice(pointer, pointer + 2))[0];
+              var offset = pointer + 2;
+              var t;
+              if (["0th", "1st"].indexOf(ifd_name) > -1) {
+                  t = "Image";
+              } else {
+                  t = ifd_name;
+              }
+  
+              for (var x = 0; x < tag_count; x++) {
+                  pointer = offset + 12 * x;
+                  var tag = unpack(this.endian_mark + "H",
+                      this.tiftag.slice(pointer, pointer + 2))[0];
+                  var value_type = unpack(this.endian_mark + "H",
+                      this.tiftag.slice(pointer + 2, pointer + 4))[0];
+                  var value_num = unpack(this.endian_mark + "L",
+                      this.tiftag.slice(pointer + 4, pointer + 8))[0];
+                  var value = this.tiftag.slice(pointer + 8, pointer + 12);
+  
+                  var v_set = [value_type, value_num, value];
+                  if (tag in TAGS[t]) {
+                      ifd_dict[tag] = this.convert_value(v_set);
+                  }
+              }
+  
+              if (ifd_name == "0th") {
+                  pointer = offset + 12 * tag_count;
+                  ifd_dict["first_ifd_pointer"] = this.tiftag.slice(pointer, pointer + 4);
+              }
+  
+              return ifd_dict;
+          },
+  
+          convert_value: function (val) {
+              var data = null;
+              var t = val[0];
+              var length = val[1];
+              var value = val[2];
+              var pointer;
+  
+              if (t == 1) { // BYTE
+                  if (length > 4) {
+                      pointer = unpack(this.endian_mark + "L", value)[0];
+                      data = unpack(this.endian_mark + nStr("B", length),
+                          this.tiftag.slice(pointer, pointer + length));
+                  } else {
+                      data = unpack(this.endian_mark + nStr("B", length), value.slice(0, length));
+                  }
+              } else if (t == 2) { // ASCII
+                  if (length > 4) {
+                      pointer = unpack(this.endian_mark + "L", value)[0];
+                      data = this.tiftag.slice(pointer, pointer + length - 1);
+                  } else {
+                      data = value.slice(0, length - 1);
+                  }
+              } else if (t == 3) { // SHORT
+                  if (length > 2) {
+                      pointer = unpack(this.endian_mark + "L", value)[0];
+                      data = unpack(this.endian_mark + nStr("H", length),
+                          this.tiftag.slice(pointer, pointer + length * 2));
+                  } else {
+                      data = unpack(this.endian_mark + nStr("H", length),
+                          value.slice(0, length * 2));
+                  }
+              } else if (t == 4) { // LONG
+                  if (length > 1) {
+                      pointer = unpack(this.endian_mark + "L", value)[0];
+                      data = unpack(this.endian_mark + nStr("L", length),
+                          this.tiftag.slice(pointer, pointer + length * 4));
+                  } else {
+                      data = unpack(this.endian_mark + nStr("L", length),
+                          value);
+                  }
+              } else if (t == 5) { // RATIONAL
+                  pointer = unpack(this.endian_mark + "L", value)[0];
+                  if (length > 1) {
+                      data = [];
+                      for (var x = 0; x < length; x++) {
+                          data.push([unpack(this.endian_mark + "L",
+                                  this.tiftag.slice(pointer + x * 8, pointer + 4 + x * 8))[0],
+                                     unpack(this.endian_mark + "L",
+                                  this.tiftag.slice(pointer + 4 + x * 8, pointer + 8 + x * 8))[0]
+                                     ]);
+                      }
+                  } else {
+                      data = [unpack(this.endian_mark + "L",
+                              this.tiftag.slice(pointer, pointer + 4))[0],
+                              unpack(this.endian_mark + "L",
+                              this.tiftag.slice(pointer + 4, pointer + 8))[0]
+                              ];
+                  }
+              } else if (t == 7) { // UNDEFINED BYTES
+                  if (length > 4) {
+                      pointer = unpack(this.endian_mark + "L", value)[0];
+                      data = this.tiftag.slice(pointer, pointer + length);
+                  } else {
+                      data = value.slice(0, length);
+                  }
+              } else if (t == 9) { // SLONG
+                  if (length > 1) {
+                      pointer = unpack(this.endian_mark + "L", value)[0];
+                      data = unpack(this.endian_mark + nStr("l", length),
+                          this.tiftag.slice(pointer, pointer + length * 4));
+                  } else {
+                      data = unpack(this.endian_mark + nStr("l", length),
+                          value);
+                  }
+              } else if (t == 10) { // SRATIONAL
+                  pointer = unpack(this.endian_mark + "L", value)[0];
+                  if (length > 1) {
+                      data = [];
+                      for (var x = 0; x < length; x++) {
+                          data.push([unpack(this.endian_mark + "l",
+                                  this.tiftag.slice(pointer + x * 8, pointer + 4 + x * 8))[0],
+                                     unpack(this.endian_mark + "l",
+                                  this.tiftag.slice(pointer + 4 + x * 8, pointer + 8 + x * 8))[0]
+                                    ]);
+                      }
+                  } else {
+                      data = [unpack(this.endian_mark + "l",
+                              this.tiftag.slice(pointer, pointer + 4))[0],
+                              unpack(this.endian_mark + "l",
+                              this.tiftag.slice(pointer + 4, pointer + 8))[0]
+                             ];
+                  }
+              } else {
+                  throw new Error("Exif might be wrong. Got incorrect value " +
+                      "type to decode. type:" + t);
+              }
+  
+              if ((data instanceof Array) && (data.length == 1)) {
+                  return data[0];
+              } else {
+                  return data;
+              }
+          },
+      };
+  
+  
+      if (typeof window !== "undefined" && typeof window.btoa === "function") {
+          var btoa = window.btoa;
+      }
+      if (typeof btoa === "undefined") {
+          var btoa = function (input) {        var output = "";
+              var chr1, chr2, chr3, enc1, enc2, enc3, enc4;
+              var i = 0;
+              var keyStr = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
+  
+              while (i < input.length) {
+  
+                  chr1 = input.charCodeAt(i++);
+                  chr2 = input.charCodeAt(i++);
+                  chr3 = input.charCodeAt(i++);
+  
+                  enc1 = chr1 >> 2;
+                  enc2 = ((chr1 & 3) << 4) | (chr2 >> 4);
+                  enc3 = ((chr2 & 15) << 2) | (chr3 >> 6);
+                  enc4 = chr3 & 63;
+  
+                  if (isNaN(chr2)) {
+                      enc3 = enc4 = 64;
+                  } else if (isNaN(chr3)) {
+                      enc4 = 64;
+                  }
+  
+                  output = output +
+                  keyStr.charAt(enc1) + keyStr.charAt(enc2) +
+                  keyStr.charAt(enc3) + keyStr.charAt(enc4);
+  
+              }
+  
+              return output;
+          };
+      }
+      
+      
+      if (typeof window !== "undefined" && typeof window.atob === "function") {
+          var atob = window.atob;
+      }
+      if (typeof atob === "undefined") {
+          var atob = function (input) {
+              var output = "";
+              var chr1, chr2, chr3;
+              var enc1, enc2, enc3, enc4;
+              var i = 0;
+              var keyStr = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
+  
+              input = input.replace(/[^A-Za-z0-9\+\/\=]/g, "");
+  
+              while (i < input.length) {
+  
+                  enc1 = keyStr.indexOf(input.charAt(i++));
+                  enc2 = keyStr.indexOf(input.charAt(i++));
+                  enc3 = keyStr.indexOf(input.charAt(i++));
+                  enc4 = keyStr.indexOf(input.charAt(i++));
+  
+                  chr1 = (enc1 << 2) | (enc2 >> 4);
+                  chr2 = ((enc2 & 15) << 4) | (enc3 >> 2);
+                  chr3 = ((enc3 & 3) << 6) | enc4;
+  
+                  output = output + String.fromCharCode(chr1);
+  
+                  if (enc3 != 64) {
+                      output = output + String.fromCharCode(chr2);
+                  }
+                  if (enc4 != 64) {
+                      output = output + String.fromCharCode(chr3);
+                  }
+  
+              }
+  
+              return output;
+          };
+      }
+  
+  
+      function getImageSize(imageArray) {
+          var segments = slice2Segments(imageArray);
+          var seg,
+              width,
+              height,
+              SOF = [192, 193, 194, 195, 197, 198, 199, 201, 202, 203, 205, 206, 207];
+  
+          for (var x = 0; x < segments.length; x++) {
+              seg = segments[x];
+              if (SOF.indexOf(seg[1]) >= 0) {
+                  height = seg[5] * 256 + seg[6];
+                  width = seg[7] * 256 + seg[8];
+                  break;
+              }
+          }
+          return [width, height];
+      }
+  
+  
+      function pack(mark, array) {
+          if (!(array instanceof Array)) {
+              throw new Error("'pack' error. Got invalid type argument.");
+          }
+          if ((mark.length - 1) != array.length) {
+              throw new Error("'pack' error. " + (mark.length - 1) + " marks, " + array.length + " elements.");
+          }
+  
+          var littleEndian;
+          if (mark[0] == "<") {
+              littleEndian = true;
+          } else if (mark[0] == ">") {
+              littleEndian = false;
+          } else {
+              throw new Error("");
+          }
+          var packed = "";
+          var p = 1;
+          var val = null;
+          var c = null;
+          var valStr = null;
+  
+          while (c = mark[p]) {
+              if (c.toLowerCase() == "b") {
+                  val = array[p - 1];
+                  if ((c == "b") && (val < 0)) {
+                      val += 0x100;
+                  }
+                  if ((val > 0xff) || (val < 0)) {
+                      throw new Error("'pack' error.");
+                  } else {
+                      valStr = String.fromCharCode(val);
+                  }
+              } else if (c == "H") {
+                  val = array[p - 1];
+                  if ((val > 0xffff) || (val < 0)) {
+                      throw new Error("'pack' error.");
+                  } else {
+                      valStr = String.fromCharCode(Math.floor((val % 0x10000) / 0x100)) +
+                          String.fromCharCode(val % 0x100);
+                      if (littleEndian) {
+                          valStr = valStr.split("").reverse().join("");
+                      }
+                  }
+              } else if (c.toLowerCase() == "l") {
+                  val = array[p - 1];
+                  if ((c == "l") && (val < 0)) {
+                      val += 0x100000000;
+                  }
+                  if ((val > 0xffffffff) || (val < 0)) {
+                      throw new Error("'pack' error.");
+                  } else {
+                      valStr = String.fromCharCode(Math.floor(val / 0x1000000)) +
+                          String.fromCharCode(Math.floor((val % 0x1000000) / 0x10000)) +
+                          String.fromCharCode(Math.floor((val % 0x10000) / 0x100)) +
+                          String.fromCharCode(val % 0x100);
+                      if (littleEndian) {
+                          valStr = valStr.split("").reverse().join("");
+                      }
+                  }
+              } else {
+                  throw new Error("'pack' error.");
+              }
+  
+              packed += valStr;
+              p += 1;
+          }
+  
+          return packed;
+      }
+  
+      function unpack(mark, str) {
+          if (typeof (str) != "string") {
+              throw new Error("'unpack' error. Got invalid type argument.");
+          }
+          var l = 0;
+          for (var markPointer = 1; markPointer < mark.length; markPointer++) {
+              if (mark[markPointer].toLowerCase() == "b") {
+                  l += 1;
+              } else if (mark[markPointer].toLowerCase() == "h") {
+                  l += 2;
+              } else if (mark[markPointer].toLowerCase() == "l") {
+                  l += 4;
+              } else {
+                  throw new Error("'unpack' error. Got invalid mark.");
+              }
+          }
+  
+          if (l != str.length) {
+              throw new Error("'unpack' error. Mismatch between symbol and string length. " + l + ":" + str.length);
+          }
+  
+          var littleEndian;
+          if (mark[0] == "<") {
+              littleEndian = true;
+          } else if (mark[0] == ">") {
+              littleEndian = false;
+          } else {
+              throw new Error("'unpack' error.");
+          }
+          var unpacked = [];
+          var strPointer = 0;
+          var p = 1;
+          var val = null;
+          var c = null;
+          var length = null;
+          var sliced = "";
+  
+          while (c = mark[p]) {
+              if (c.toLowerCase() == "b") {
+                  length = 1;
+                  sliced = str.slice(strPointer, strPointer + length);
+                  val = sliced.charCodeAt(0);
+                  if ((c == "b") && (val >= 0x80)) {
+                      val -= 0x100;
+                  }
+              } else if (c == "H") {
+                  length = 2;
+                  sliced = str.slice(strPointer, strPointer + length);
+                  if (littleEndian) {
+                      sliced = sliced.split("").reverse().join("");
+                  }
+                  val = sliced.charCodeAt(0) * 0x100 +
+                      sliced.charCodeAt(1);
+              } else if (c.toLowerCase() == "l") {
+                  length = 4;
+                  sliced = str.slice(strPointer, strPointer + length);
+                  if (littleEndian) {
+                      sliced = sliced.split("").reverse().join("");
+                  }
+                  val = sliced.charCodeAt(0) * 0x1000000 +
+                      sliced.charCodeAt(1) * 0x10000 +
+                      sliced.charCodeAt(2) * 0x100 +
+                      sliced.charCodeAt(3);
+                  if ((c == "l") && (val >= 0x80000000)) {
+                      val -= 0x100000000;
+                  }
+              } else {
+                  throw new Error("'unpack' error. " + c);
+              }
+  
+              unpacked.push(val);
+              strPointer += length;
+              p += 1;
+          }
+  
+          return unpacked;
+      }
+  
+      function nStr(ch, num) {
+          var str = "";
+          for (var i = 0; i < num; i++) {
+              str += ch;
+          }
+          return str;
+      }
+  
+      function splitIntoSegments(data) {
+          if (data.slice(0, 2) != "\xff\xd8") {
+              throw new Error("Given data isn't JPEG.");
+          }
+  
+          var head = 2;
+          var segments = ["\xff\xd8"];
+          while (true) {
+              if (data.slice(head, head + 2) == "\xff\xda") {
+                  segments.push(data.slice(head));
+                  break;
+              } else {
+                  var length = unpack(">H", data.slice(head + 2, head + 4))[0];
+                  var endPoint = head + length + 2;
+                  segments.push(data.slice(head, endPoint));
+                  head = endPoint;
+              }
+  
+              if (head >= data.length) {
+                  throw new Error("Wrong JPEG data.");
+              }
+          }
+          return segments;
+      }
+  
+  
+      function getExifSeg(segments) {
+          var seg;
+          for (var i = 0; i < segments.length; i++) {
+              seg = segments[i];
+              if (seg.slice(0, 2) == "\xff\xe1" &&
+                     seg.slice(4, 10) == "Exif\x00\x00") {
+                  return seg;
+              }
+          }
+          return null;
+      }
+  
+  
+      function mergeSegments(segments, exif) {
+          var hasExifSegment = false;
+          var additionalAPP1ExifSegments = [];
+  
+          segments.forEach(function(segment, i) {
+              // Replace first occurence of APP1:Exif segment
+              if (segment.slice(0, 2) == "\xff\xe1" &&
+                  segment.slice(4, 10) == "Exif\x00\x00"
+              ) {
+                  if (!hasExifSegment) {
+                      segments[i] = exif;
+                      hasExifSegment = true;
+                  } else {
+                      additionalAPP1ExifSegments.unshift(i);
+                  }
+              }
+          });
+  
+          // Remove additional occurences of APP1:Exif segment
+          additionalAPP1ExifSegments.forEach(function(segmentIndex) {
+              segments.splice(segmentIndex, 1);
+          });
+  
+          if (!hasExifSegment && exif) {
+              segments = [segments[0], exif].concat(segments.slice(1));
+          }
+  
+          return segments.join("");
+      }
+  
+  
+      function toHex(str) {
+          var hexStr = "";
+          for (var i = 0; i < str.length; i++) {
+              var h = str.charCodeAt(i);
+              var hex = ((h < 10) ? "0" : "") + h.toString(16);
+              hexStr += hex + " ";
+          }
+          return hexStr;
+      }
+  
+  
+      var TYPES = {
+          "Byte": 1,
+          "Ascii": 2,
+          "Short": 3,
+          "Long": 4,
+          "Rational": 5,
+          "Undefined": 7,
+          "SLong": 9,
+          "SRational": 10
+      };
+  
+  
+      var TAGS = {
+          'Image': {
+              11: {
+                  'name': 'ProcessingSoftware',
+                  'type': 'Ascii'
+              },
+              254: {
+                  'name': 'NewSubfileType',
+                  'type': 'Long'
+              },
+              255: {
+                  'name': 'SubfileType',
+                  'type': 'Short'
+              },
+              256: {
+                  'name': 'ImageWidth',
+                  'type': 'Long'
+              },
+              257: {
+                  'name': 'ImageLength',
+                  'type': 'Long'
+              },
+              258: {
+                  'name': 'BitsPerSample',
+                  'type': 'Short'
+              },
+              259: {
+                  'name': 'Compression',
+                  'type': 'Short'
+              },
+              262: {
+                  'name': 'PhotometricInterpretation',
+                  'type': 'Short'
+              },
+              263: {
+                  'name': 'Threshholding',
+                  'type': 'Short'
+              },
+              264: {
+                  'name': 'CellWidth',
+                  'type': 'Short'
+              },
+              265: {
+                  'name': 'CellLength',
+                  'type': 'Short'
+              },
+              266: {
+                  'name': 'FillOrder',
+                  'type': 'Short'
+              },
+              269: {
+                  'name': 'DocumentName',
+                  'type': 'Ascii'
+              },
+              270: {
+                  'name': 'ImageDescription',
+                  'type': 'Ascii'
+              },
+              271: {
+                  'name': 'Make',
+                  'type': 'Ascii'
+              },
+              272: {
+                  'name': 'Model',
+                  'type': 'Ascii'
+              },
+              273: {
+                  'name': 'StripOffsets',
+                  'type': 'Long'
+              },
+              274: {
+                  'name': 'Orientation',
+                  'type': 'Short'
+              },
+              277: {
+                  'name': 'SamplesPerPixel',
+                  'type': 'Short'
+              },
+              278: {
+                  'name': 'RowsPerStrip',
+                  'type': 'Long'
+              },
+              279: {
+                  'name': 'StripByteCounts',
+                  'type': 'Long'
+              },
+              282: {
+                  'name': 'XResolution',
+                  'type': 'Rational'
+              },
+              283: {
+                  'name': 'YResolution',
+                  'type': 'Rational'
+              },
+              284: {
+                  'name': 'PlanarConfiguration',
+                  'type': 'Short'
+              },
+              290: {
+                  'name': 'GrayResponseUnit',
+                  'type': 'Short'
+              },
+              291: {
+                  'name': 'GrayResponseCurve',
+                  'type': 'Short'
+              },
+              292: {
+                  'name': 'T4Options',
+                  'type': 'Long'
+              },
+              293: {
+                  'name': 'T6Options',
+                  'type': 'Long'
+              },
+              296: {
+                  'name': 'ResolutionUnit',
+                  'type': 'Short'
+              },
+              301: {
+                  'name': 'TransferFunction',
+                  'type': 'Short'
+              },
+              305: {
+                  'name': 'Software',
+                  'type': 'Ascii'
+              },
+              306: {
+                  'name': 'DateTime',
+                  'type': 'Ascii'
+              },
+              315: {
+                  'name': 'Artist',
+                  'type': 'Ascii'
+              },
+              316: {
+                  'name': 'HostComputer',
+                  'type': 'Ascii'
+              },
+              317: {
+                  'name': 'Predictor',
+                  'type': 'Short'
+              },
+              318: {
+                  'name': 'WhitePoint',
+                  'type': 'Rational'
+              },
+              319: {
+                  'name': 'PrimaryChromaticities',
+                  'type': 'Rational'
+              },
+              320: {
+                  'name': 'ColorMap',
+                  'type': 'Short'
+              },
+              321: {
+                  'name': 'HalftoneHints',
+                  'type': 'Short'
+              },
+              322: {
+                  'name': 'TileWidth',
+                  'type': 'Short'
+              },
+              323: {
+                  'name': 'TileLength',
+                  'type': 'Short'
+              },
+              324: {
+                  'name': 'TileOffsets',
+                  'type': 'Short'
+              },
+              325: {
+                  'name': 'TileByteCounts',
+                  'type': 'Short'
+              },
+              330: {
+                  'name': 'SubIFDs',
+                  'type': 'Long'
+              },
+              332: {
+                  'name': 'InkSet',
+                  'type': 'Short'
+              },
+              333: {
+                  'name': 'InkNames',
+                  'type': 'Ascii'
+              },
+              334: {
+                  'name': 'NumberOfInks',
+                  'type': 'Short'
+              },
+              336: {
+                  'name': 'DotRange',
+                  'type': 'Byte'
+              },
+              337: {
+                  'name': 'TargetPrinter',
+                  'type': 'Ascii'
+              },
+              338: {
+                  'name': 'ExtraSamples',
+                  'type': 'Short'
+              },
+              339: {
+                  'name': 'SampleFormat',
+                  'type': 'Short'
+              },
+              340: {
+                  'name': 'SMinSampleValue',
+                  'type': 'Short'
+              },
+              341: {
+                  'name': 'SMaxSampleValue',
+                  'type': 'Short'
+              },
+              342: {
+                  'name': 'TransferRange',
+                  'type': 'Short'
+              },
+              343: {
+                  'name': 'ClipPath',
+                  'type': 'Byte'
+              },
+              344: {
+                  'name': 'XClipPathUnits',
+                  'type': 'Long'
+              },
+              345: {
+                  'name': 'YClipPathUnits',
+                  'type': 'Long'
+              },
+              346: {
+                  'name': 'Indexed',
+                  'type': 'Short'
+              },
+              347: {
+                  'name': 'JPEGTables',
+                  'type': 'Undefined'
+              },
+              351: {
+                  'name': 'OPIProxy',
+                  'type': 'Short'
+              },
+              512: {
+                  'name': 'JPEGProc',
+                  'type': 'Long'
+              },
+              513: {
+                  'name': 'JPEGInterchangeFormat',
+                  'type': 'Long'
+              },
+              514: {
+                  'name': 'JPEGInterchangeFormatLength',
+                  'type': 'Long'
+              },
+              515: {
+                  'name': 'JPEGRestartInterval',
+                  'type': 'Short'
+              },
+              517: {
+                  'name': 'JPEGLosslessPredictors',
+                  'type': 'Short'
+              },
+              518: {
+                  'name': 'JPEGPointTransforms',
+                  'type': 'Short'
+              },
+              519: {
+                  'name': 'JPEGQTables',
+                  'type': 'Long'
+              },
+              520: {
+                  'name': 'JPEGDCTables',
+                  'type': 'Long'
+              },
+              521: {
+                  'name': 'JPEGACTables',
+                  'type': 'Long'
+              },
+              529: {
+                  'name': 'YCbCrCoefficients',
+                  'type': 'Rational'
+              },
+              530: {
+                  'name': 'YCbCrSubSampling',
+                  'type': 'Short'
+              },
+              531: {
+                  'name': 'YCbCrPositioning',
+                  'type': 'Short'
+              },
+              532: {
+                  'name': 'ReferenceBlackWhite',
+                  'type': 'Rational'
+              },
+              700: {
+                  'name': 'XMLPacket',
+                  'type': 'Byte'
+              },
+              18246: {
+                  'name': 'Rating',
+                  'type': 'Short'
+              },
+              18249: {
+                  'name': 'RatingPercent',
+                  'type': 'Short'
+              },
+              32781: {
+                  'name': 'ImageID',
+                  'type': 'Ascii'
+              },
+              33421: {
+                  'name': 'CFARepeatPatternDim',
+                  'type': 'Short'
+              },
+              33422: {
+                  'name': 'CFAPattern',
+                  'type': 'Byte'
+              },
+              33423: {
+                  'name': 'BatteryLevel',
+                  'type': 'Rational'
+              },
+              33432: {
+                  'name': 'Copyright',
+                  'type': 'Ascii'
+              },
+              33434: {
+                  'name': 'ExposureTime',
+                  'type': 'Rational'
+              },
+              34377: {
+                  'name': 'ImageResources',
+                  'type': 'Byte'
+              },
+              34665: {
+                  'name': 'ExifTag',
+                  'type': 'Long'
+              },
+              34675: {
+                  'name': 'InterColorProfile',
+                  'type': 'Undefined'
+              },
+              34853: {
+                  'name': 'GPSTag',
+                  'type': 'Long'
+              },
+              34857: {
+                  'name': 'Interlace',
+                  'type': 'Short'
+              },
+              34858: {
+                  'name': 'TimeZoneOffset',
+                  'type': 'Long'
+              },
+              34859: {
+                  'name': 'SelfTimerMode',
+                  'type': 'Short'
+              },
+              37387: {
+                  'name': 'FlashEnergy',
+                  'type': 'Rational'
+              },
+              37388: {
+                  'name': 'SpatialFrequencyResponse',
+                  'type': 'Undefined'
+              },
+              37389: {
+                  'name': 'Noise',
+                  'type': 'Undefined'
+              },
+              37390: {
+                  'name': 'FocalPlaneXResolution',
+                  'type': 'Rational'
+              },
+              37391: {
+                  'name': 'FocalPlaneYResolution',
+                  'type': 'Rational'
+              },
+              37392: {
+                  'name': 'FocalPlaneResolutionUnit',
+                  'type': 'Short'
+              },
+              37393: {
+                  'name': 'ImageNumber',
+                  'type': 'Long'
+              },
+              37394: {
+                  'name': 'SecurityClassification',
+                  'type': 'Ascii'
+              },
+              37395: {
+                  'name': 'ImageHistory',
+                  'type': 'Ascii'
+              },
+              37397: {
+                  'name': 'ExposureIndex',
+                  'type': 'Rational'
+              },
+              37398: {
+                  'name': 'TIFFEPStandardID',
+                  'type': 'Byte'
+              },
+              37399: {
+                  'name': 'SensingMethod',
+                  'type': 'Short'
+              },
+              40091: {
+                  'name': 'XPTitle',
+                  'type': 'Byte'
+              },
+              40092: {
+                  'name': 'XPComment',
+                  'type': 'Byte'
+              },
+              40093: {
+                  'name': 'XPAuthor',
+                  'type': 'Byte'
+              },
+              40094: {
+                  'name': 'XPKeywords',
+                  'type': 'Byte'
+              },
+              40095: {
+                  'name': 'XPSubject',
+                  'type': 'Byte'
+              },
+              50341: {
+                  'name': 'PrintImageMatching',
+                  'type': 'Undefined'
+              },
+              50706: {
+                  'name': 'DNGVersion',
+                  'type': 'Byte'
+              },
+              50707: {
+                  'name': 'DNGBackwardVersion',
+                  'type': 'Byte'
+              },
+              50708: {
+                  'name': 'UniqueCameraModel',
+                  'type': 'Ascii'
+              },
+              50709: {
+                  'name': 'LocalizedCameraModel',
+                  'type': 'Byte'
+              },
+              50710: {
+                  'name': 'CFAPlaneColor',
+                  'type': 'Byte'
+              },
+              50711: {
+                  'name': 'CFALayout',
+                  'type': 'Short'
+              },
+              50712: {
+                  'name': 'LinearizationTable',
+                  'type': 'Short'
+              },
+              50713: {
+                  'name': 'BlackLevelRepeatDim',
+                  'type': 'Short'
+              },
+              50714: {
+                  'name': 'BlackLevel',
+                  'type': 'Rational'
+              },
+              50715: {
+                  'name': 'BlackLevelDeltaH',
+                  'type': 'SRational'
+              },
+              50716: {
+                  'name': 'BlackLevelDeltaV',
+                  'type': 'SRational'
+              },
+              50717: {
+                  'name': 'WhiteLevel',
+                  'type': 'Short'
+              },
+              50718: {
+                  'name': 'DefaultScale',
+                  'type': 'Rational'
+              },
+              50719: {
+                  'name': 'DefaultCropOrigin',
+                  'type': 'Short'
+              },
+              50720: {
+                  'name': 'DefaultCropSize',
+                  'type': 'Short'
+              },
+              50721: {
+                  'name': 'ColorMatrix1',
+                  'type': 'SRational'
+              },
+              50722: {
+                  'name': 'ColorMatrix2',
+                  'type': 'SRational'
+              },
+              50723: {
+                  'name': 'CameraCalibration1',
+                  'type': 'SRational'
+              },
+              50724: {
+                  'name': 'CameraCalibration2',
+                  'type': 'SRational'
+              },
+              50725: {
+                  'name': 'ReductionMatrix1',
+                  'type': 'SRational'
+              },
+              50726: {
+                  'name': 'ReductionMatrix2',
+                  'type': 'SRational'
+              },
+              50727: {
+                  'name': 'AnalogBalance',
+                  'type': 'Rational'
+              },
+              50728: {
+                  'name': 'AsShotNeutral',
+                  'type': 'Short'
+              },
+              50729: {
+                  'name': 'AsShotWhiteXY',
+                  'type': 'Rational'
+              },
+              50730: {
+                  'name': 'BaselineExposure',
+                  'type': 'SRational'
+              },
+              50731: {
+                  'name': 'BaselineNoise',
+                  'type': 'Rational'
+              },
+              50732: {
+                  'name': 'BaselineSharpness',
+                  'type': 'Rational'
+              },
+              50733: {
+                  'name': 'BayerGreenSplit',
+                  'type': 'Long'
+              },
+              50734: {
+                  'name': 'LinearResponseLimit',
+                  'type': 'Rational'
+              },
+              50735: {
+                  'name': 'CameraSerialNumber',
+                  'type': 'Ascii'
+              },
+              50736: {
+                  'name': 'LensInfo',
+                  'type': 'Rational'
+              },
+              50737: {
+                  'name': 'ChromaBlurRadius',
+                  'type': 'Rational'
+              },
+              50738: {
+                  'name': 'AntiAliasStrength',
+                  'type': 'Rational'
+              },
+              50739: {
+                  'name': 'ShadowScale',
+                  'type': 'SRational'
+              },
+              50740: {
+                  'name': 'DNGPrivateData',
+                  'type': 'Byte'
+              },
+              50741: {
+                  'name': 'MakerNoteSafety',
+                  'type': 'Short'
+              },
+              50778: {
+                  'name': 'CalibrationIlluminant1',
+                  'type': 'Short'
+              },
+              50779: {
+                  'name': 'CalibrationIlluminant2',
+                  'type': 'Short'
+              },
+              50780: {
+                  'name': 'BestQualityScale',
+                  'type': 'Rational'
+              },
+              50781: {
+                  'name': 'RawDataUniqueID',
+                  'type': 'Byte'
+              },
+              50827: {
+                  'name': 'OriginalRawFileName',
+                  'type': 'Byte'
+              },
+              50828: {
+                  'name': 'OriginalRawFileData',
+                  'type': 'Undefined'
+              },
+              50829: {
+                  'name': 'ActiveArea',
+                  'type': 'Short'
+              },
+              50830: {
+                  'name': 'MaskedAreas',
+                  'type': 'Short'
+              },
+              50831: {
+                  'name': 'AsShotICCProfile',
+                  'type': 'Undefined'
+              },
+              50832: {
+                  'name': 'AsShotPreProfileMatrix',
+                  'type': 'SRational'
+              },
+              50833: {
+                  'name': 'CurrentICCProfile',
+                  'type': 'Undefined'
+              },
+              50834: {
+                  'name': 'CurrentPreProfileMatrix',
+                  'type': 'SRational'
+              },
+              50879: {
+                  'name': 'ColorimetricReference',
+                  'type': 'Short'
+              },
+              50931: {
+                  'name': 'CameraCalibrationSignature',
+                  'type': 'Byte'
+              },
+              50932: {
+                  'name': 'ProfileCalibrationSignature',
+                  'type': 'Byte'
+              },
+              50934: {
+                  'name': 'AsShotProfileName',
+                  'type': 'Byte'
+              },
+              50935: {
+                  'name': 'NoiseReductionApplied',
+                  'type': 'Rational'
+              },
+              50936: {
+                  'name': 'ProfileName',
+                  'type': 'Byte'
+              },
+              50937: {
+                  'name': 'ProfileHueSatMapDims',
+                  'type': 'Long'
+              },
+              50938: {
+                  'name': 'ProfileHueSatMapData1',
+                  'type': 'Float'
+              },
+              50939: {
+                  'name': 'ProfileHueSatMapData2',
+                  'type': 'Float'
+              },
+              50940: {
+                  'name': 'ProfileToneCurve',
+                  'type': 'Float'
+              },
+              50941: {
+                  'name': 'ProfileEmbedPolicy',
+                  'type': 'Long'
+              },
+              50942: {
+                  'name': 'ProfileCopyright',
+                  'type': 'Byte'
+              },
+              50964: {
+                  'name': 'ForwardMatrix1',
+                  'type': 'SRational'
+              },
+              50965: {
+                  'name': 'ForwardMatrix2',
+                  'type': 'SRational'
+              },
+              50966: {
+                  'name': 'PreviewApplicationName',
+                  'type': 'Byte'
+              },
+              50967: {
+                  'name': 'PreviewApplicationVersion',
+                  'type': 'Byte'
+              },
+              50968: {
+                  'name': 'PreviewSettingsName',
+                  'type': 'Byte'
+              },
+              50969: {
+                  'name': 'PreviewSettingsDigest',
+                  'type': 'Byte'
+              },
+              50970: {
+                  'name': 'PreviewColorSpace',
+                  'type': 'Long'
+              },
+              50971: {
+                  'name': 'PreviewDateTime',
+                  'type': 'Ascii'
+              },
+              50972: {
+                  'name': 'RawImageDigest',
+                  'type': 'Undefined'
+              },
+              50973: {
+                  'name': 'OriginalRawFileDigest',
+                  'type': 'Undefined'
+              },
+              50974: {
+                  'name': 'SubTileBlockSize',
+                  'type': 'Long'
+              },
+              50975: {
+                  'name': 'RowInterleaveFactor',
+                  'type': 'Long'
+              },
+              50981: {
+                  'name': 'ProfileLookTableDims',
+                  'type': 'Long'
+              },
+              50982: {
+                  'name': 'ProfileLookTableData',
+                  'type': 'Float'
+              },
+              51008: {
+                  'name': 'OpcodeList1',
+                  'type': 'Undefined'
+              },
+              51009: {
+                  'name': 'OpcodeList2',
+                  'type': 'Undefined'
+              },
+              51022: {
+                  'name': 'OpcodeList3',
+                  'type': 'Undefined'
+              }
+          },
+          'Exif': {
+              33434: {
+                  'name': 'ExposureTime',
+                  'type': 'Rational'
+              },
+              33437: {
+                  'name': 'FNumber',
+                  'type': 'Rational'
+              },
+              34850: {
+                  'name': 'ExposureProgram',
+                  'type': 'Short'
+              },
+              34852: {
+                  'name': 'SpectralSensitivity',
+                  'type': 'Ascii'
+              },
+              34855: {
+                  'name': 'ISOSpeedRatings',
+                  'type': 'Short'
+              },
+              34856: {
+                  'name': 'OECF',
+                  'type': 'Undefined'
+              },
+              34864: {
+                  'name': 'SensitivityType',
+                  'type': 'Short'
+              },
+              34865: {
+                  'name': 'StandardOutputSensitivity',
+                  'type': 'Long'
+              },
+              34866: {
+                  'name': 'RecommendedExposureIndex',
+                  'type': 'Long'
+              },
+              34867: {
+                  'name': 'ISOSpeed',
+                  'type': 'Long'
+              },
+              34868: {
+                  'name': 'ISOSpeedLatitudeyyy',
+                  'type': 'Long'
+              },
+              34869: {
+                  'name': 'ISOSpeedLatitudezzz',
+                  'type': 'Long'
+              },
+              36864: {
+                  'name': 'ExifVersion',
+                  'type': 'Undefined'
+              },
+              36867: {
+                  'name': 'DateTimeOriginal',
+                  'type': 'Ascii'
+              },
+              36868: {
+                  'name': 'DateTimeDigitized',
+                  'type': 'Ascii'
+              },
+              37121: {
+                  'name': 'ComponentsConfiguration',
+                  'type': 'Undefined'
+              },
+              37122: {
+                  'name': 'CompressedBitsPerPixel',
+                  'type': 'Rational'
+              },
+              37377: {
+                  'name': 'ShutterSpeedValue',
+                  'type': 'SRational'
+              },
+              37378: {
+                  'name': 'ApertureValue',
+                  'type': 'Rational'
+              },
+              37379: {
+                  'name': 'BrightnessValue',
+                  'type': 'SRational'
+              },
+              37380: {
+                  'name': 'ExposureBiasValue',
+                  'type': 'SRational'
+              },
+              37381: {
+                  'name': 'MaxApertureValue',
+                  'type': 'Rational'
+              },
+              37382: {
+                  'name': 'SubjectDistance',
+                  'type': 'Rational'
+              },
+              37383: {
+                  'name': 'MeteringMode',
+                  'type': 'Short'
+              },
+              37384: {
+                  'name': 'LightSource',
+                  'type': 'Short'
+              },
+              37385: {
+                  'name': 'Flash',
+                  'type': 'Short'
+              },
+              37386: {
+                  'name': 'FocalLength',
+                  'type': 'Rational'
+              },
+              37396: {
+                  'name': 'SubjectArea',
+                  'type': 'Short'
+              },
+              37500: {
+                  'name': 'MakerNote',
+                  'type': 'Undefined'
+              },
+              37510: {
+                  'name': 'UserComment',
+                  'type': 'Ascii'
+              },
+              37520: {
+                  'name': 'SubSecTime',
+                  'type': 'Ascii'
+              },
+              37521: {
+                  'name': 'SubSecTimeOriginal',
+                  'type': 'Ascii'
+              },
+              37522: {
+                  'name': 'SubSecTimeDigitized',
+                  'type': 'Ascii'
+              },
+              40960: {
+                  'name': 'FlashpixVersion',
+                  'type': 'Undefined'
+              },
+              40961: {
+                  'name': 'ColorSpace',
+                  'type': 'Short'
+              },
+              40962: {
+                  'name': 'PixelXDimension',
+                  'type': 'Long'
+              },
+              40963: {
+                  'name': 'PixelYDimension',
+                  'type': 'Long'
+              },
+              40964: {
+                  'name': 'RelatedSoundFile',
+                  'type': 'Ascii'
+              },
+              40965: {
+                  'name': 'InteroperabilityTag',
+                  'type': 'Long'
+              },
+              41483: {
+                  'name': 'FlashEnergy',
+                  'type': 'Rational'
+              },
+              41484: {
+                  'name': 'SpatialFrequencyResponse',
+                  'type': 'Undefined'
+              },
+              41486: {
+                  'name': 'FocalPlaneXResolution',
+                  'type': 'Rational'
+              },
+              41487: {
+                  'name': 'FocalPlaneYResolution',
+                  'type': 'Rational'
+              },
+              41488: {
+                  'name': 'FocalPlaneResolutionUnit',
+                  'type': 'Short'
+              },
+              41492: {
+                  'name': 'SubjectLocation',
+                  'type': 'Short'
+              },
+              41493: {
+                  'name': 'ExposureIndex',
+                  'type': 'Rational'
+              },
+              41495: {
+                  'name': 'SensingMethod',
+                  'type': 'Short'
+              },
+              41728: {
+                  'name': 'FileSource',
+                  'type': 'Undefined'
+              },
+              41729: {
+                  'name': 'SceneType',
+                  'type': 'Undefined'
+              },
+              41730: {
+                  'name': 'CFAPattern',
+                  'type': 'Undefined'
+              },
+              41985: {
+                  'name': 'CustomRendered',
+                  'type': 'Short'
+              },
+              41986: {
+                  'name': 'ExposureMode',
+                  'type': 'Short'
+              },
+              41987: {
+                  'name': 'WhiteBalance',
+                  'type': 'Short'
+              },
+              41988: {
+                  'name': 'DigitalZoomRatio',
+                  'type': 'Rational'
+              },
+              41989: {
+                  'name': 'FocalLengthIn35mmFilm',
+                  'type': 'Short'
+              },
+              41990: {
+                  'name': 'SceneCaptureType',
+                  'type': 'Short'
+              },
+              41991: {
+                  'name': 'GainControl',
+                  'type': 'Short'
+              },
+              41992: {
+                  'name': 'Contrast',
+                  'type': 'Short'
+              },
+              41993: {
+                  'name': 'Saturation',
+                  'type': 'Short'
+              },
+              41994: {
+                  'name': 'Sharpness',
+                  'type': 'Short'
+              },
+              41995: {
+                  'name': 'DeviceSettingDescription',
+                  'type': 'Undefined'
+              },
+              41996: {
+                  'name': 'SubjectDistanceRange',
+                  'type': 'Short'
+              },
+              42016: {
+                  'name': 'ImageUniqueID',
+                  'type': 'Ascii'
+              },
+              42032: {
+                  'name': 'CameraOwnerName',
+                  'type': 'Ascii'
+              },
+              42033: {
+                  'name': 'BodySerialNumber',
+                  'type': 'Ascii'
+              },
+              42034: {
+                  'name': 'LensSpecification',
+                  'type': 'Rational'
+              },
+              42035: {
+                  'name': 'LensMake',
+                  'type': 'Ascii'
+              },
+              42036: {
+                  'name': 'LensModel',
+                  'type': 'Ascii'
+              },
+              42037: {
+                  'name': 'LensSerialNumber',
+                  'type': 'Ascii'
+              },
+              42240: {
+                  'name': 'Gamma',
+                  'type': 'Rational'
+              }
+          },
+          'GPS': {
+              0: {
+                  'name': 'GPSVersionID',
+                  'type': 'Byte'
+              },
+              1: {
+                  'name': 'GPSLatitudeRef',
+                  'type': 'Ascii'
+              },
+              2: {
+                  'name': 'GPSLatitude',
+                  'type': 'Rational'
+              },
+              3: {
+                  'name': 'GPSLongitudeRef',
+                  'type': 'Ascii'
+              },
+              4: {
+                  'name': 'GPSLongitude',
+                  'type': 'Rational'
+              },
+              5: {
+                  'name': 'GPSAltitudeRef',
+                  'type': 'Byte'
+              },
+              6: {
+                  'name': 'GPSAltitude',
+                  'type': 'Rational'
+              },
+              7: {
+                  'name': 'GPSTimeStamp',
+                  'type': 'Rational'
+              },
+              8: {
+                  'name': 'GPSSatellites',
+                  'type': 'Ascii'
+              },
+              9: {
+                  'name': 'GPSStatus',
+                  'type': 'Ascii'
+              },
+              10: {
+                  'name': 'GPSMeasureMode',
+                  'type': 'Ascii'
+              },
+              11: {
+                  'name': 'GPSDOP',
+                  'type': 'Rational'
+              },
+              12: {
+                  'name': 'GPSSpeedRef',
+                  'type': 'Ascii'
+              },
+              13: {
+                  'name': 'GPSSpeed',
+                  'type': 'Rational'
+              },
+              14: {
+                  'name': 'GPSTrackRef',
+                  'type': 'Ascii'
+              },
+              15: {
+                  'name': 'GPSTrack',
+                  'type': 'Rational'
+              },
+              16: {
+                  'name': 'GPSImgDirectionRef',
+                  'type': 'Ascii'
+              },
+              17: {
+                  'name': 'GPSImgDirection',
+                  'type': 'Rational'
+              },
+              18: {
+                  'name': 'GPSMapDatum',
+                  'type': 'Ascii'
+              },
+              19: {
+                  'name': 'GPSDestLatitudeRef',
+                  'type': 'Ascii'
+              },
+              20: {
+                  'name': 'GPSDestLatitude',
+                  'type': 'Rational'
+              },
+              21: {
+                  'name': 'GPSDestLongitudeRef',
+                  'type': 'Ascii'
+              },
+              22: {
+                  'name': 'GPSDestLongitude',
+                  'type': 'Rational'
+              },
+              23: {
+                  'name': 'GPSDestBearingRef',
+                  'type': 'Ascii'
+              },
+              24: {
+                  'name': 'GPSDestBearing',
+                  'type': 'Rational'
+              },
+              25: {
+                  'name': 'GPSDestDistanceRef',
+                  'type': 'Ascii'
+              },
+              26: {
+                  'name': 'GPSDestDistance',
+                  'type': 'Rational'
+              },
+              27: {
+                  'name': 'GPSProcessingMethod',
+                  'type': 'Undefined'
+              },
+              28: {
+                  'name': 'GPSAreaInformation',
+                  'type': 'Undefined'
+              },
+              29: {
+                  'name': 'GPSDateStamp',
+                  'type': 'Ascii'
+              },
+              30: {
+                  'name': 'GPSDifferential',
+                  'type': 'Short'
+              },
+              31: {
+                  'name': 'GPSHPositioningError',
+                  'type': 'Rational'
+              }
+          },
+          'Interop': {
+              1: {
+                  'name': 'InteroperabilityIndex',
+                  'type': 'Ascii'
+              }
+          },
+      };
+      TAGS["0th"] = TAGS["Image"];
+      TAGS["1st"] = TAGS["Image"];
+      that.TAGS = TAGS;
+  
+      
+      that.ImageIFD = {
+          ProcessingSoftware:11,
+          NewSubfileType:254,
+          SubfileType:255,
+          ImageWidth:256,
+          ImageLength:257,
+          BitsPerSample:258,
+          Compression:259,
+          PhotometricInterpretation:262,
+          Threshholding:263,
+          CellWidth:264,
+          CellLength:265,
+          FillOrder:266,
+          DocumentName:269,
+          ImageDescription:270,
+          Make:271,
+          Model:272,
+          StripOffsets:273,
+          Orientation:274,
+          SamplesPerPixel:277,
+          RowsPerStrip:278,
+          StripByteCounts:279,
+          XResolution:282,
+          YResolution:283,
+          PlanarConfiguration:284,
+          GrayResponseUnit:290,
+          GrayResponseCurve:291,
+          T4Options:292,
+          T6Options:293,
+          ResolutionUnit:296,
+          TransferFunction:301,
+          Software:305,
+          DateTime:306,
+          Artist:315,
+          HostComputer:316,
+          Predictor:317,
+          WhitePoint:318,
+          PrimaryChromaticities:319,
+          ColorMap:320,
+          HalftoneHints:321,
+          TileWidth:322,
+          TileLength:323,
+          TileOffsets:324,
+          TileByteCounts:325,
+          SubIFDs:330,
+          InkSet:332,
+          InkNames:333,
+          NumberOfInks:334,
+          DotRange:336,
+          TargetPrinter:337,
+          ExtraSamples:338,
+          SampleFormat:339,
+          SMinSampleValue:340,
+          SMaxSampleValue:341,
+          TransferRange:342,
+          ClipPath:343,
+          XClipPathUnits:344,
+          YClipPathUnits:345,
+          Indexed:346,
+          JPEGTables:347,
+          OPIProxy:351,
+          JPEGProc:512,
+          JPEGInterchangeFormat:513,
+          JPEGInterchangeFormatLength:514,
+          JPEGRestartInterval:515,
+          JPEGLosslessPredictors:517,
+          JPEGPointTransforms:518,
+          JPEGQTables:519,
+          JPEGDCTables:520,
+          JPEGACTables:521,
+          YCbCrCoefficients:529,
+          YCbCrSubSampling:530,
+          YCbCrPositioning:531,
+          ReferenceBlackWhite:532,
+          XMLPacket:700,
+          Rating:18246,
+          RatingPercent:18249,
+          ImageID:32781,
+          CFARepeatPatternDim:33421,
+          CFAPattern:33422,
+          BatteryLevel:33423,
+          Copyright:33432,
+          ExposureTime:33434,
+          ImageResources:34377,
+          ExifTag:34665,
+          InterColorProfile:34675,
+          GPSTag:34853,
+          Interlace:34857,
+          TimeZoneOffset:34858,
+          SelfTimerMode:34859,
+          FlashEnergy:37387,
+          SpatialFrequencyResponse:37388,
+          Noise:37389,
+          FocalPlaneXResolution:37390,
+          FocalPlaneYResolution:37391,
+          FocalPlaneResolutionUnit:37392,
+          ImageNumber:37393,
+          SecurityClassification:37394,
+          ImageHistory:37395,
+          ExposureIndex:37397,
+          TIFFEPStandardID:37398,
+          SensingMethod:37399,
+          XPTitle:40091,
+          XPComment:40092,
+          XPAuthor:40093,
+          XPKeywords:40094,
+          XPSubject:40095,
+          PrintImageMatching:50341,
+          DNGVersion:50706,
+          DNGBackwardVersion:50707,
+          UniqueCameraModel:50708,
+          LocalizedCameraModel:50709,
+          CFAPlaneColor:50710,
+          CFALayout:50711,
+          LinearizationTable:50712,
+          BlackLevelRepeatDim:50713,
+          BlackLevel:50714,
+          BlackLevelDeltaH:50715,
+          BlackLevelDeltaV:50716,
+          WhiteLevel:50717,
+          DefaultScale:50718,
+          DefaultCropOrigin:50719,
+          DefaultCropSize:50720,
+          ColorMatrix1:50721,
+          ColorMatrix2:50722,
+          CameraCalibration1:50723,
+          CameraCalibration2:50724,
+          ReductionMatrix1:50725,
+          ReductionMatrix2:50726,
+          AnalogBalance:50727,
+          AsShotNeutral:50728,
+          AsShotWhiteXY:50729,
+          BaselineExposure:50730,
+          BaselineNoise:50731,
+          BaselineSharpness:50732,
+          BayerGreenSplit:50733,
+          LinearResponseLimit:50734,
+          CameraSerialNumber:50735,
+          LensInfo:50736,
+          ChromaBlurRadius:50737,
+          AntiAliasStrength:50738,
+          ShadowScale:50739,
+          DNGPrivateData:50740,
+          MakerNoteSafety:50741,
+          CalibrationIlluminant1:50778,
+          CalibrationIlluminant2:50779,
+          BestQualityScale:50780,
+          RawDataUniqueID:50781,
+          OriginalRawFileName:50827,
+          OriginalRawFileData:50828,
+          ActiveArea:50829,
+          MaskedAreas:50830,
+          AsShotICCProfile:50831,
+          AsShotPreProfileMatrix:50832,
+          CurrentICCProfile:50833,
+          CurrentPreProfileMatrix:50834,
+          ColorimetricReference:50879,
+          CameraCalibrationSignature:50931,
+          ProfileCalibrationSignature:50932,
+          AsShotProfileName:50934,
+          NoiseReductionApplied:50935,
+          ProfileName:50936,
+          ProfileHueSatMapDims:50937,
+          ProfileHueSatMapData1:50938,
+          ProfileHueSatMapData2:50939,
+          ProfileToneCurve:50940,
+          ProfileEmbedPolicy:50941,
+          ProfileCopyright:50942,
+          ForwardMatrix1:50964,
+          ForwardMatrix2:50965,
+          PreviewApplicationName:50966,
+          PreviewApplicationVersion:50967,
+          PreviewSettingsName:50968,
+          PreviewSettingsDigest:50969,
+          PreviewColorSpace:50970,
+          PreviewDateTime:50971,
+          RawImageDigest:50972,
+          OriginalRawFileDigest:50973,
+          SubTileBlockSize:50974,
+          RowInterleaveFactor:50975,
+          ProfileLookTableDims:50981,
+          ProfileLookTableData:50982,
+          OpcodeList1:51008,
+          OpcodeList2:51009,
+          OpcodeList3:51022,
+          NoiseProfile:51041,
+      };
+  
+      
+      that.ExifIFD = {
+          ExposureTime:33434,
+          FNumber:33437,
+          ExposureProgram:34850,
+          SpectralSensitivity:34852,
+          ISOSpeedRatings:34855,
+          OECF:34856,
+          SensitivityType:34864,
+          StandardOutputSensitivity:34865,
+          RecommendedExposureIndex:34866,
+          ISOSpeed:34867,
+          ISOSpeedLatitudeyyy:34868,
+          ISOSpeedLatitudezzz:34869,
+          ExifVersion:36864,
+          DateTimeOriginal:36867,
+          DateTimeDigitized:36868,
+          ComponentsConfiguration:37121,
+          CompressedBitsPerPixel:37122,
+          ShutterSpeedValue:37377,
+          ApertureValue:37378,
+          BrightnessValue:37379,
+          ExposureBiasValue:37380,
+          MaxApertureValue:37381,
+          SubjectDistance:37382,
+          MeteringMode:37383,
+          LightSource:37384,
+          Flash:37385,
+          FocalLength:37386,
+          SubjectArea:37396,
+          MakerNote:37500,
+          UserComment:37510,
+          SubSecTime:37520,
+          SubSecTimeOriginal:37521,
+          SubSecTimeDigitized:37522,
+          FlashpixVersion:40960,
+          ColorSpace:40961,
+          PixelXDimension:40962,
+          PixelYDimension:40963,
+          RelatedSoundFile:40964,
+          InteroperabilityTag:40965,
+          FlashEnergy:41483,
+          SpatialFrequencyResponse:41484,
+          FocalPlaneXResolution:41486,
+          FocalPlaneYResolution:41487,
+          FocalPlaneResolutionUnit:41488,
+          SubjectLocation:41492,
+          ExposureIndex:41493,
+          SensingMethod:41495,
+          FileSource:41728,
+          SceneType:41729,
+          CFAPattern:41730,
+          CustomRendered:41985,
+          ExposureMode:41986,
+          WhiteBalance:41987,
+          DigitalZoomRatio:41988,
+          FocalLengthIn35mmFilm:41989,
+          SceneCaptureType:41990,
+          GainControl:41991,
+          Contrast:41992,
+          Saturation:41993,
+          Sharpness:41994,
+          DeviceSettingDescription:41995,
+          SubjectDistanceRange:41996,
+          ImageUniqueID:42016,
+          CameraOwnerName:42032,
+          BodySerialNumber:42033,
+          LensSpecification:42034,
+          LensMake:42035,
+          LensModel:42036,
+          LensSerialNumber:42037,
+          Gamma:42240,
+      };
+  
+  
+      that.GPSIFD = {
+          GPSVersionID:0,
+          GPSLatitudeRef:1,
+          GPSLatitude:2,
+          GPSLongitudeRef:3,
+          GPSLongitude:4,
+          GPSAltitudeRef:5,
+          GPSAltitude:6,
+          GPSTimeStamp:7,
+          GPSSatellites:8,
+          GPSStatus:9,
+          GPSMeasureMode:10,
+          GPSDOP:11,
+          GPSSpeedRef:12,
+          GPSSpeed:13,
+          GPSTrackRef:14,
+          GPSTrack:15,
+          GPSImgDirectionRef:16,
+          GPSImgDirection:17,
+          GPSMapDatum:18,
+          GPSDestLatitudeRef:19,
+          GPSDestLatitude:20,
+          GPSDestLongitudeRef:21,
+          GPSDestLongitude:22,
+          GPSDestBearingRef:23,
+          GPSDestBearing:24,
+          GPSDestDistanceRef:25,
+          GPSDestDistance:26,
+          GPSProcessingMethod:27,
+          GPSAreaInformation:28,
+          GPSDateStamp:29,
+          GPSDifferential:30,
+          GPSHPositioningError:31,
+      };
+  
+  
+      that.InteropIFD = {
+          InteroperabilityIndex:1,
+      };
+  
+      that.GPSHelper = {
+          degToDmsRational:function (degFloat) {
+              var degAbs = Math.abs(degFloat);
+              var minFloat = degAbs % 1 * 60;
+              var secFloat = minFloat % 1 * 60;
+              var deg = Math.floor(degAbs);
+              var min = Math.floor(minFloat);
+              var sec = Math.round(secFloat * 100);
+  
+              return [[deg, 1], [min, 1], [sec, 100]];
+          },
+  
+          dmsRationalToDeg:function (dmsArray, ref) {
+              var sign = (ref === 'S' || ref === 'W') ? -1.0 : 1.0;
+              var deg = dmsArray[0][0] / dmsArray[0][1] +
+                        dmsArray[1][0] / dmsArray[1][1] / 60.0 +
+                        dmsArray[2][0] / dmsArray[2][1] / 3600.0;
+  
+              return deg * sign;
+          }
+      };
+      
+      
+      if (typeof exports !== 'undefined') {
+          if (typeof module !== 'undefined' && module.exports) {
+              exports = module.exports = that;
+          }
+          exports.piexif = that;
+      } else {
+          window.piexif = that;
+      }
+  
+  })();
+  
+  // --- Fim de js/vendor/piexif.js ---
+
+  // --- Início de js/zip-writer.js ---
+  /**
+   * STAMP-CAMERA - Gerador de Arquivos ZIP 100% Client-Side
+   * Implementação padrão PKWare ZIP compatível com Windows, macOS, Linux e dispositivos móveis.
+   * Zero dependências externas, executa 100% localmente no navegador ou offline.
+   */
+  class ZipWriter {
+    constructor() {
+      this.files = [];
+    }
+  
+    /**
+     * Tabela CRC-32 calculada dinamicamente
+     */
+    static get crcTable() {
+      if (!ZipWriter._crcTable) {
+        const table = new Uint32Array(256);
+        for (let i = 0; i < 256; i++) {
+          let c = i;
+          for (let k = 0; k < 8; k++) {
+            c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+          }
+          table[i] = c >>> 0;
+        }
+        ZipWriter._crcTable = table;
+      }
+      return ZipWriter._crcTable;
+    }
+  
+    /**
+     * Calcula o hash CRC-32 de um buffer
+     * @param {Uint8Array} buffer
+     * @returns {number}
+     */
+    static crc32(buffer) {
+      const table = ZipWriter.crcTable;
+      let crc = 0 ^ (-1);
+      for (let i = 0; i < buffer.length; i++) {
+        crc = (crc >>> 8) ^ table[(crc ^ buffer[i]) & 0xFF];
+      }
+      return (crc ^ (-1)) >>> 0;
+    }
+  
+    /**
+     * Adiciona um arquivo ao arquivo ZIP
+     * @param {string} filename Nome do arquivo dentro do zip
+     * @param {Uint8Array|ArrayBuffer|Blob|string} data Conteúdo do arquivo
+     */
+    async addFile(filename, data) {
+      let uint8;
+      if (data instanceof Uint8Array) {
+        uint8 = data;
+      } else if (data instanceof ArrayBuffer) {
+        uint8 = new Uint8Array(data);
+      } else if (typeof Blob !== 'undefined' && data instanceof Blob) {
+        const buf = await data.arrayBuffer();
+        uint8 = new Uint8Array(buf);
+      } else if (typeof data === 'string') {
+        uint8 = new TextEncoder().encode(data);
+      } else {
+        throw new Error('Tipo de dado não suportado para arquivo ZIP');
+      }
+  
+      const now = new Date();
+      // Formato MS-DOS Time: bits 15-11 hora, 10-5 min, 4-0 seg/2
+      const dosTime = (now.getHours() << 11) | (now.getMinutes() << 5) | (Math.floor(now.getSeconds() / 2));
+      // Formato MS-DOS Date: bits 15-9 ano-1980, 8-5 mes, 4-0 dia
+      const dosDate = ((now.getFullYear() - 1980) << 9) | ((now.getMonth() + 1) << 5) | now.getDate();
+  
+      this.files.push({
+        name: filename,
+        data: uint8,
+        crc: ZipWriter.crc32(uint8),
+        dosTime,
+        dosDate
+      });
+    }
+  
+    /**
+     * Gera o Uint8Array contendo todo o arquivo ZIP estruturado
+     * @returns {Uint8Array}
+     */
+    generateUint8Array() {
+      const encoder = new TextEncoder();
+      const localHeaders = [];
+      const centralHeaders = [];
+      let offset = 0;
+  
+      for (const f of this.files) {
+        const nameBytes = encoder.encode(f.name);
+        const size = f.data.length;
+        const crc = f.crc;
+  
+        // Local file header (30 bytes + tamanho do nome)
+        const lh = new Uint8Array(30 + nameBytes.length);
+        const lv = new DataView(lh.buffer);
+        lv.setUint32(0, 0x04034b50, true);   // Signature PK\x03\x04
+        lv.setUint16(4, 20, true);           // Version needed (2.0)
+        lv.setUint16(6, 0x0800, true);       // General purpose bit flag (bit 11 = UTF-8 filename)
+        lv.setUint16(8, 0, true);            // Compression method (0 = Store / Sem compressão)
+        lv.setUint16(10, f.dosTime, true);   // Last mod file time
+        lv.setUint16(12, f.dosDate, true);   // Last mod file date
+        lv.setUint32(14, crc, true);         // CRC-32
+        lv.setUint32(18, size, true);        // Compressed size
+        lv.setUint32(22, size, true);        // Uncompressed size
+        lv.setUint16(26, nameBytes.length, true); // File name length
+        lv.setUint16(28, 0, true);           // Extra field length
+        lh.set(nameBytes, 30);
+  
+        localHeaders.push(lh, f.data);
+  
+        // Central directory file header (46 bytes + tamanho do nome)
+        const ch = new Uint8Array(46 + nameBytes.length);
+        const cv = new DataView(ch.buffer);
+        cv.setUint32(0, 0x02014b50, true);   // Signature PK\x01\x02
+        cv.setUint16(4, 20, true);           // Version made by (2.0)
+        cv.setUint16(6, 20, true);           // Version needed to extract (2.0)
+        cv.setUint16(8, 0x0800, true);       // General purpose bit flag (UTF-8)
+        cv.setUint16(10, 0, true);           // Compression method (0 = Store)
+        cv.setUint16(12, f.dosTime, true);   // Last mod file time
+        cv.setUint16(14, f.dosDate, true);   // Last mod file date
+        cv.setUint32(16, crc, true);         // CRC-32
+        cv.setUint32(20, size, true);        // Compressed size
+        cv.setUint32(24, size, true);        // Uncompressed size
+        cv.setUint16(28, nameBytes.length, true); // File name length
+        cv.setUint16(30, 0, true);           // Extra field length
+        cv.setUint16(32, 0, true);           // File comment length
+        cv.setUint16(34, 0, true);           // Disk number start
+        cv.setUint16(36, 0, true);           // Internal file attributes
+        cv.setUint32(38, 0, true);           // External file attributes
+        cv.setUint32(42, offset, true);      // Relative offset of local header
+        ch.set(nameBytes, 46);
+  
+        centralHeaders.push(ch);
+        offset += lh.length + size;
+      }
+  
+      const cdOffset = offset;
+      let cdSize = 0;
+      for (const ch of centralHeaders) cdSize += ch.length;
+  
+      // End of central directory record (22 bytes)
+      const eocd = new Uint8Array(22);
+      const ev = new DataView(eocd.buffer);
+      ev.setUint32(0, 0x06054b50, true);     // Signature PK\x05\x06
+      ev.setUint16(4, 0, true);              // Number of this disk
+      ev.setUint16(6, 0, true);              // Disk with central directory
+      ev.setUint16(8, this.files.length, true);  // Entries in this disk
+      ev.setUint16(10, this.files.length, true); // Total entries
+      ev.setUint32(12, cdSize, true);        // Size of central directory
+      ev.setUint32(16, cdOffset, true);      // Offset of central directory
+      ev.setUint16(20, 0, true);             // Comment length
+  
+      // Aloca buffer total e preenche partes
+      const totalLength = offset + cdSize + 22;
+      const finalBuffer = new Uint8Array(totalLength);
+      let cur = 0;
+      for (const part of localHeaders) {
+        finalBuffer.set(part, cur);
+        cur += part.length;
+      }
+      for (const ch of centralHeaders) {
+        finalBuffer.set(ch, cur);
+        cur += ch.length;
+      }
+      finalBuffer.set(eocd, cur);
+  
+      return finalBuffer;
+    }
+  
+    /**
+     * Gera um Blob pronto para download
+     * @param {string} mimeType
+     * @returns {Blob}
+     */
+    generateBlob(mimeType = 'application/zip') {
+      const uint8 = this.generateUint8Array();
+      return new Blob([uint8], { type: mimeType });
+    }
+  
+    /**
+     * Inicia o download do arquivo ZIP no navegador
+     * @param {string} filename Nome do arquivo ZIP
+     */
+    downloadZip(filename = 'fotos_carimbadas.zip') {
+      const blob = this.generateBlob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }, 150);
+    }
+  }
+  
+  // --- Fim de js/zip-writer.js ---
 
   // --- Início de js/geolocation.js ---
   /**
@@ -439,6 +3126,8 @@
             const tiffStart = segmentStart + 6;
             parseTiff(view, tiffStart, result);
             result.hasExif = true;
+            // Preservar bytes originais do APP1 (marcador FFE1 + 2 bytes tamanho + payload)
+            result.rawApp1Bytes = new Uint8Array(buffer.slice(offset - 2, offset + segmentLength));
             break;
           }
   
@@ -736,6 +3425,70 @@
   
     const date = new Date(Date.UTC(y, m, d, hh, mm, ss));
     return isNaN(date.getTime()) ? null : date;
+  }
+  
+  /**
+   * Injeta o segmento APP1 EXIF diretamente em um buffer JPEG gerado pelo Canvas
+   * Garante que os metadados fotográficos (GPS, data, câmera, modelo) sejam 100% preservados.
+   * @param {ArrayBuffer|Uint8Array} jpegBuffer
+   * @param {Uint8Array} rawApp1Bytes
+   * @returns {Uint8Array}
+   */
+  function injectApp1BytesIntoJpeg(jpegBuffer, rawApp1Bytes) {
+    if (!rawApp1Bytes || rawApp1Bytes.length < 4) {
+      return jpegBuffer instanceof Uint8Array ? jpegBuffer : new Uint8Array(jpegBuffer);
+    }
+  
+    const u8 = jpegBuffer instanceof Uint8Array ? jpegBuffer : new Uint8Array(jpegBuffer);
+    if (u8.length < 4 || u8[0] !== 0xFF || u8[1] !== 0xD8) {
+      return u8;
+    }
+  
+    // Verifica se o JPEG gerado pelo canvas já contém APP0 (0xFFE0) logo após SOI
+    let insertPos = 2; // logo após SOI (0xFFD8)
+    if (u8[2] === 0xFF && u8[3] === 0xE0) {
+      const app0Len = (u8[4] << 8) | u8[5];
+      insertPos = 4 + app0Len; // insere imediatamente após APP0
+    }
+  
+    // Se o buffer do canvas já possuir algum APP1, verifica se precisa ser substituído
+    let existingApp1Start = -1;
+    let existingApp1End = -1;
+    let offset = 2;
+    while (offset < u8.length - 4) {
+      if (u8[offset] === 0xFF && u8[offset + 1] === 0xE1) {
+        const segLen = (u8[offset + 2] << 8) | u8[offset + 3];
+        existingApp1Start = offset;
+        existingApp1End = offset + 2 + segLen;
+        break;
+      }
+      if (u8[offset] === 0xFF && (u8[offset + 1] === 0xDA || u8[offset + 1] === 0xD9)) {
+        break;
+      }
+      if (u8[offset] === 0xFF && (u8[offset + 1] & 0xF0) === 0xE0) {
+        const segLen = (u8[offset + 2] << 8) | u8[offset + 3];
+        offset += 2 + segLen;
+      } else {
+        break;
+      }
+    }
+  
+    if (existingApp1Start !== -1 && existingApp1End !== -1) {
+      // Substitui APP1 existente
+      const newLength = u8.length - (existingApp1End - existingApp1Start) + rawApp1Bytes.length;
+      const result = new Uint8Array(newLength);
+      result.set(u8.subarray(0, existingApp1Start), 0);
+      result.set(rawApp1Bytes, existingApp1Start);
+      result.set(u8.subarray(existingApp1End), existingApp1Start + rawApp1Bytes.length);
+      return result;
+    }
+  
+    // Insere novo APP1 na posição apropriada (após APP0 ou SOI)
+    const result = new Uint8Array(u8.length + rawApp1Bytes.length);
+    result.set(u8.subarray(0, insertPos), 0);
+    result.set(rawApp1Bytes, insertPos);
+    result.set(u8.subarray(insertPos), insertPos + rawApp1Bytes.length);
+    return result;
   }
   
   // --- Fim de js/exif-reader.js ---
@@ -1774,7 +4527,118 @@
    * STAMP-CAMERA - Módulo de Exportação de Fotografias
    * Gera imagem de alta fidelidade nos formatos JPG, PNG e WebP
    * preservando o arquivo original do usuário intacto.
+   * Suporta preservação de metadados EXIF e processamento em lote com download em ZIP.
    */
+  
+  
+  
+  
+  
+  /**
+   * Converte blob para ArrayBuffer
+   * @param {Blob} blob
+   * @returns {Promise<ArrayBuffer>}
+   */
+  async function blobToArrayBuffer(blob) {
+    if (typeof blob.arrayBuffer === 'function') {
+      return await blob.arrayBuffer();
+    }
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => reject(new Error('Falha ao ler blob'));
+      reader.readAsArrayBuffer(blob);
+    });
+  }
+  
+  /**
+   * Atualiza ou insere metadados EXIF em um JPEG usando piexifjs
+   * @param {ArrayBuffer} jpegBuffer
+   * @param {Object} exifData
+   * @param {Uint8Array} [rawApp1Bytes]
+   * @returns {ArrayBuffer|Uint8Array}
+   */
+  function applyExifToJpegBuffer(jpegBuffer, exifData = {}, rawApp1Bytes = null) {
+    const p = (typeof window !== 'undefined' && window.piexif) ? window.piexif : piexif;
+  
+    // Se piexif estiver disponível e houver coordenadas ou dados EXIF
+    if (p && typeof p.load === 'function') {
+      try {
+        const u8 = new Uint8Array(jpegBuffer);
+        let binary = '';
+        const len = u8.byteLength;
+        // Converte uint8 para binary string de forma otimizada em blocos
+        const chunkSize = 16384;
+        for (let i = 0; i < len; i += chunkSize) {
+          binary += String.fromCharCode.apply(null, u8.subarray(i, Math.min(i + chunkSize, len)));
+        }
+  
+        let exifObj = { '0th': {}, 'Exif': {}, 'GPS': {}, '1st': {}, 'thumbnail': null };
+  
+        // Se havia bytes brutos de APP1 do arquivo original, tenta carregar como base
+        if (rawApp1Bytes && rawApp1Bytes.length > 4) {
+          try {
+            // Cria JPEG dummy temporário para ler o exifObj completo do arquivo original
+            let origApp1Bin = '';
+            for (let i = 0; i < rawApp1Bytes.length; i += chunkSize) {
+              origApp1Bin += String.fromCharCode.apply(null, rawApp1Bytes.subarray(i, Math.min(i + chunkSize, rawApp1Bytes.length)));
+            }
+            const dummyJpeg = '\xff\xd8' + origApp1Bin + '\xff\xd9';
+            exifObj = p.load(dummyJpeg);
+          } catch {
+            // Usa objeto vazio padrão
+          }
+        }
+  
+        // Atualiza coordenadas GPS se válidas
+        if (typeof exifData.latitude === 'number' && typeof exifData.longitude === 'number' &&
+            !isNaN(exifData.latitude) && !isNaN(exifData.longitude)) {
+          exifObj['GPS'] = exifObj['GPS'] || {};
+          exifObj['GPS'][p.GPSIFD.GPSLatitudeRef] = exifData.latitude < 0 ? 'S' : 'N';
+          exifObj['GPS'][p.GPSIFD.GPSLatitude] = p.GPSHelper.degToDmsRational(exifData.latitude);
+          exifObj['GPS'][p.GPSIFD.GPSLongitudeRef] = exifData.longitude < 0 ? 'W' : 'E';
+          exifObj['GPS'][p.GPSIFD.GPSLongitude] = p.GPSHelper.degToDmsRational(exifData.longitude);
+  
+          if (typeof exifData.altitude === 'number' && !isNaN(exifData.altitude)) {
+            exifObj['GPS'][p.GPSIFD.GPSAltitudeRef] = exifData.altitude < 0 ? 1 : 0;
+            exifObj['GPS'][p.GPSIFD.GPSAltitude] = [Math.round(Math.abs(exifData.altitude) * 10), 10];
+          }
+        }
+  
+        // Atualiza data/hora se fornecida
+        if (exifData.dateStr) {
+          exifObj['0th'] = exifObj['0th'] || {};
+          exifObj['Exif'] = exifObj['Exif'] || {};
+          exifObj['0th'][p.ImageIFD.DateTime] = exifData.dateStr;
+          exifObj['Exif'][p.ExifIFD.DateTimeOriginal] = exifData.dateStr;
+          exifObj['Exif'][p.ExifIFD.DateTimeDigitized] = exifData.dateStr;
+        }
+  
+        // Adiciona software STAMP-CAMERA
+        exifObj['0th'] = exifObj['0th'] || {};
+        exifObj['0th'][p.ImageIFD.Software] = 'STAMP-CAMERA';
+  
+        const exifBytes = p.dump(exifObj);
+        const newBinary = p.insert(exifBytes, binary);
+  
+        // Converte binary string de volta para Uint8Array
+        const newU8 = new Uint8Array(newBinary.length);
+        for (let i = 0; i < newBinary.length; i++) {
+          newU8[i] = newBinary.charCodeAt(i);
+        }
+        return newU8;
+      } catch {
+        // Fallback silencioso para reinjeção direta de APP1 nativo
+      }
+    }
+  
+    // Fallback 100% binário nativo: reinjeta os bytes brutos do APP1 original
+    if (rawApp1Bytes && rawApp1Bytes.length > 4) {
+      return injectApp1BytesIntoJpeg(jpegBuffer, rawApp1Bytes);
+    }
+  
+    return jpegBuffer;
+  }
   
   /**
    * Exporta o canvas e inicia o download da imagem carimbada
@@ -1782,12 +4646,24 @@
    * @param {string} originalFilename
    * @param {'image/jpeg'|'image/png'|'image/webp'} mimeType
    * @param {number} quality (0.1 a 1.0, padrao 1.0 sem perda)
-   * @returns {Promise<string>} Nome do arquivo gerado
+   * @param {Object} [options]
+   * @param {boolean} [options.preserveExif=true] Se deve preservar/gravar metadados EXIF
+   * @param {Uint8Array} [options.rawApp1Bytes] Bytes originais do APP1
+   * @param {Object} [options.exifData] Metadados para enriquecimento
+   * @returns {Promise<{filename: string, exifPreserved: boolean}>}
    */
-  async function exportStampedPhoto(canvas, originalFilename = 'fotografia.jpg', mimeType = 'image/jpeg', quality = 1.0) {
+  async function exportStampedPhoto(
+    canvas,
+    originalFilename = 'fotografia.jpg',
+    mimeType = 'image/jpeg',
+    quality = 1.0,
+    options = {}
+  ) {
     if (!canvas) {
       throw new Error('Canvas não fornecido para exportação');
     }
+  
+    const preserveExif = options.preserveExif !== false;
   
     // Define extensão conforme o formato
     let ext = 'jpg';
@@ -1800,13 +4676,28 @@
   
     return new Promise((resolve, reject) => {
       canvas.toBlob(
-        (blob) => {
+        async (blob) => {
           if (!blob) {
             reject(new Error('Falha ao gerar arquivo de imagem'));
             return;
           }
   
-          const url = URL.createObjectURL(blob);
+          let finalBlob = blob;
+          let exifPreserved = false;
+  
+          // Regravação de EXIF apenas para o formato JPEG
+          if (mimeType === 'image/jpeg' && preserveExif) {
+            try {
+              const buf = await blobToArrayBuffer(blob);
+              const enrichedBuf = applyExifToJpegBuffer(buf, options.exifData, options.rawApp1Bytes);
+              finalBlob = new Blob([enrichedBuf], { type: 'image/jpeg' });
+              exifPreserved = true;
+            } catch (err) {
+              console.warn('[STAMP-CAMERA] Não foi possível regravar EXIF na imagem:', err);
+            }
+          }
+  
+          const url = URL.createObjectURL(finalBlob);
           const a = document.createElement('a');
           a.href = url;
           a.download = targetFilename;
@@ -1817,13 +4708,84 @@
           setTimeout(() => {
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
-            resolve(targetFilename);
+            resolve({ filename: targetFilename, exifPreserved });
           }, 100);
         },
         mimeType,
         quality
       );
     });
+  }
+  
+  /**
+   * Exporta múltiplas fotos em lote, agrupando tudo em um arquivo ZIP
+   * @param {Array<Object>} photos Lista de fotos { filename, canvas, exif, ... }
+   * @param {Function} renderPhotoFn Função (photo, index, total) => HTMLCanvasElement | Promise<HTMLCanvasElement>
+   * @param {Object} [options]
+   * @param {'image/jpeg'|'image/png'|'image/webp'} [options.mimeType='image/jpeg']
+   * @param {boolean} [options.preserveExif=true]
+   * @param {string} [options.zipFilename='fotos_carimbadas_lote.zip']
+   * @param {Function} [onProgress] Callback de progresso ({ current, total, filename })
+   * @returns {Promise<{ total: number, zipFilename: string }>}
+   */
+  async function exportStampedPhotosBatch(
+    photos,
+    renderPhotoFn,
+    options = {},
+    onProgress = null
+  ) {
+    if (!photos || photos.length === 0) {
+      throw new Error('Nenhuma foto selecionada para processamento em lote');
+    }
+  
+    const mimeType = options.mimeType || 'image/jpeg';
+    const preserveExif = options.preserveExif !== false;
+    const zipFilename = options.zipFilename || 'fotos_carimbadas_lote.zip';
+    let ext = 'jpg';
+    if (mimeType === 'image/png') ext = 'png';
+    if (mimeType === 'image/webp') ext = 'webp';
+  
+    const zip = new ZipWriter();
+    const total = photos.length;
+  
+    for (let i = 0; i < total; i++) {
+      const photo = photos[i];
+      const baseName = photo.filename ? (photo.filename.substring(0, photo.filename.lastIndexOf('.')) || photo.filename) : `foto_${i + 1}`;
+      const outName = `${baseName}_stamp.${ext}`;
+  
+      if (typeof onProgress === 'function') {
+        onProgress({ current: i + 1, total, filename: photo.filename || outName });
+      }
+  
+      // Renderiza a imagem através do callback
+      const renderedCanvas = await renderPhotoFn(photo, i, total);
+      if (!renderedCanvas) continue;
+  
+      // Converte canvas para Blob
+      const blob = await new Promise((resolve) => {
+        renderedCanvas.toBlob(resolve, mimeType, 1.0);
+      });
+  
+      if (!blob) continue;
+  
+      let finalData = blob;
+      if (mimeType === 'image/jpeg' && preserveExif) {
+        try {
+          const buf = await blobToArrayBuffer(blob);
+          const enriched = applyExifToJpegBuffer(buf, photo.exifData || photo.exif, photo.exif?.rawApp1Bytes);
+          finalData = enriched;
+        } catch (err) {
+          console.warn(`[STAMP-CAMERA] Falha ao injetar EXIF na foto em lote ${i + 1}:`, err);
+        }
+      }
+  
+      await zip.addFile(outName, finalData);
+    }
+  
+    // Realiza o download do arquivo ZIP
+    zip.downloadZip(zipFilename);
+  
+    return { total, zipFilename };
   }
   
   // --- Fim de js/export.js ---
@@ -2174,6 +5136,14 @@
    * Mantém o estado da foto, metadados EXIF, localização com rastreamento de origem (AUTO/MANUAL),
    * e compõe as linhas para renderização no StampEngine.
    */
+  const OPTIONAL_ON_DEMAND_FIELDS = [
+    'photo_id',
+    'project_name',
+    'process',
+    'report_num',
+    'responsible',
+    'custom_text'
+  ];
   class StampCameraTool {
     constructor() {
       this.photo = null;       // { canvas, width, height, filename, fileSize }
@@ -2294,6 +5264,7 @@
       if (model.fields) {
         for (const mf of model.fields) {
           const def = STANDARD_FIELD_DEFS.find(d => d.id === mf.id);
+          const isOpt = OPTIONAL_ON_DEMAND_FIELDS.includes(mf.id);
           orderedList.push({
             id: mf.id,
             name: def ? def.name : mf.label,
@@ -2301,6 +5272,8 @@
             enabled: mf.enabled !== false,
             showLabel: mf.showLabel !== false,
             isCustom: false,
+            isOptionalOnDemand: isOpt,
+            added: mf.enabled !== false,
             customValue: mf.defaultValue || '',
             order: orderedList.length
           });
@@ -2310,6 +5283,7 @@
       // 2. Todos os outros campos padrão disponíveis (adicionados após os do modelo, inicialmente desmarcados)
       for (const def of STANDARD_FIELD_DEFS) {
         if (!modelFieldMap.has(def.id)) {
+          const isOpt = OPTIONAL_ON_DEMAND_FIELDS.includes(def.id);
           remainingStandard.push({
             id: def.id,
             name: def.name,
@@ -2317,6 +5291,8 @@
             enabled: false,
             showLabel: true,
             isCustom: false,
+            isOptionalOnDemand: isOpt,
+            added: false,
             customValue: '',
             order: orderedList.length + remainingStandard.length
           });
@@ -2790,6 +5766,19 @@
     }
   
     /**
+     * Adiciona/ativa um campo padrão que estava oculto sob demanda
+     */
+    addStandardField(fieldId) {
+      const field = this.activeFields.find(f => f.id === fieldId);
+      if (field) {
+        field.added = true;
+        field.enabled = true;
+        return field;
+      }
+      return null;
+    }
+  
+    /**
      * Adiciona um campo customizado à lista
      */
     addCustomField(label = 'Novo Campo', defaultValue = '') {
@@ -2801,6 +5790,8 @@
         enabled: true,
         showLabel: true,
         isCustom: true,
+        isOptionalOnDemand: false,
+        added: true,
         customValue: defaultValue,
         order: this.activeFields.length
       };
@@ -2809,10 +5800,18 @@
     }
   
     /**
-     * Remove um campo da lista
+     * Remove um campo da lista (se customizado exclui, se padrão opcional oculta)
      */
     removeField(fieldId) {
-      this.activeFields = this.activeFields.filter(f => f.id !== fieldId);
+      const field = this.activeFields.find(f => f.id === fieldId);
+      if (!field) return;
+      if (field.isCustom) {
+        this.activeFields = this.activeFields.filter(f => f.id !== fieldId);
+        delete this.location.sources[fieldId];
+      } else {
+        field.added = false;
+        field.enabled = false;
+      }
     }
   
     /**
@@ -2908,6 +5907,7 @@
       // Lista de campos do carimbo (Painel Esquerdo)
       this.fieldsContainer = document.getElementById('fieldsContainer');
       this.btnAddField = document.getElementById('btnAddField');
+      this.addFieldMenu = document.getElementById('addFieldMenu');
   
       // Presets
       this.presetsSelect = document.getElementById('presetsSelect');
@@ -3147,11 +6147,20 @@
       // Eventos de movimentação do carimbo no Canvas
       this.bindCanvasStampDrag();
   
-      // Botão Adicionar Campo Personalizado
-      this.btnAddField.addEventListener('click', () => {
-        const field = this.tool.addCustomField('Campo Personalizado', 'Valor');
-        this.renderFieldsList();
-        this.app.requestRender();
+      // Botão Adicionar Campo (+ Novo Campo com Dropdown)
+      if (this.btnAddField) {
+        this.btnAddField.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.toggleAddFieldMenu();
+        });
+      }
+  
+      document.addEventListener('click', (e) => {
+        if (this.addFieldMenu && this.addFieldMenu.style.display !== 'none') {
+          if (!this.btnAddField?.contains(e.target) && !this.addFieldMenu.contains(e.target)) {
+            this.addFieldMenu.style.display = 'none';
+          }
+        }
       });
   
       // Seleção de Preset / Modelo
@@ -3595,10 +6604,102 @@
      * - Botões de reordenação (↑ e ↓)
      * - Botão de excluir se for campo customizado
      */
+    toggleAddFieldMenu() {
+      if (!this.addFieldMenu) {
+        this.tool.addCustomField('Campo Personalizado', 'Valor');
+        this.renderFieldsList();
+        this.app.requestRender();
+        return;
+      }
+  
+      const isVisible = this.addFieldMenu.style.display === 'flex';
+      if (isVisible) {
+        this.addFieldMenu.style.display = 'none';
+        return;
+      }
+  
+      this.renderAddFieldMenu();
+      this.addFieldMenu.style.display = 'flex';
+    }
+  
+    renderAddFieldMenu() {
+      if (!this.addFieldMenu) return;
+      this.addFieldMenu.innerHTML = '';
+  
+      // 1. Opção: Campo Personalizado
+      const btnCustom = document.createElement('button');
+      btnCustom.type = 'button';
+      btnCustom.className = 'add-field-menu-item';
+      btnCustom.innerHTML = `
+        <span class="menu-item-icon">
+          <svg class="svg-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </span>
+        <span><strong>+ Campo Personalizado</strong></span>
+      `;
+      btnCustom.addEventListener('click', () => {
+        this.tool.addCustomField('Campo Personalizado', 'Valor');
+        this.addFieldMenu.style.display = 'none';
+        this.renderFieldsList();
+        this.app.requestRender();
+      });
+      this.addFieldMenu.appendChild(btnCustom);
+  
+      // 2. Opções: Campos padrão opcionais sob demanda ainda não adicionados
+      const availableOnDemand = this.tool.activeFields.filter(f => f.isOptionalOnDemand && !f.added && !f.enabled);
+  
+      if (availableOnDemand.length > 0) {
+        const divider = document.createElement('div');
+        divider.className = 'add-field-menu-divider';
+        this.addFieldMenu.appendChild(divider);
+  
+        const title = document.createElement('div');
+        title.className = 'add-field-menu-title';
+        title.textContent = 'Campos Técnicos & Amostra';
+        this.addFieldMenu.appendChild(title);
+  
+        for (const field of availableOnDemand) {
+          const item = document.createElement('button');
+          item.type = 'button';
+          item.className = 'add-field-menu-item';
+          item.innerHTML = `
+            <span class="menu-item-icon">${getLineArtSvg(field.icon || field.id)}</span>
+            <span>+ ${field.name || field.label}</span>
+          `;
+          item.addEventListener('click', () => {
+            this.tool.addStandardField(field.id);
+            this.addFieldMenu.style.display = 'none';
+            this.renderFieldsList();
+            this.app.requestRender();
+            if (this.app && typeof this.app.showToast === 'function') {
+              this.app.showToast(`Campo "${field.label}" adicionado.`);
+            }
+          });
+          this.addFieldMenu.appendChild(item);
+        }
+      }
+    }
+  
+    /**
+     * Renderiza a lista de campos no painel esquerdo:
+     * Cada campo possui:
+     * - Checkbox de ativar/desativar
+     * - Rótulo editável
+     * - Valor editável diretamente na linha com sincronização bidirecional
+     * - Botão de mostrar/ocultar rótulo (🏷️)
+     * - Botões de reordenação (↑ e ↓)
+     * - Botão de excluir se for campo customizado ou campo sob demanda
+     */
     renderFieldsList() {
       this.fieldsContainer.innerHTML = '';
   
-      this.tool.activeFields.forEach((field, index) => {
+      const fieldsToRender = this.tool.activeFields.filter(f => {
+        if (f.isOptionalOnDemand && !f.added && !f.enabled) {
+          return false;
+        }
+        return true;
+      });
+  
+      fieldsToRender.forEach((field, index) => {
         const row = document.createElement('div');
         row.className = `field-item ${field.enabled ? 'enabled' : 'disabled'}`;
         row.dataset.id = field.id;
@@ -3682,7 +6783,7 @@
         btnDown.className = 'btn-icon';
         btnDown.innerHTML = '<svg class="svg-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>';
         btnDown.title = 'Mover campo para baixo';
-        btnDown.disabled = index === this.tool.activeFields.length - 1;
+        btnDown.disabled = index === fieldsToRender.length - 1;
         btnDown.addEventListener('click', () => {
           this.tool.moveField(field.id, 'down');
           this.renderFieldsList();
@@ -3693,12 +6794,12 @@
         actionsDiv.appendChild(btnUp);
         actionsDiv.appendChild(btnDown);
   
-        if (field.isCustom) {
+        if (field.isCustom || field.isOptionalOnDemand) {
           const btnDelete = document.createElement('button');
           btnDelete.type = 'button';
           btnDelete.className = 'btn-icon btn-delete';
           btnDelete.innerHTML = '<svg class="svg-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
-          btnDelete.title = 'Remover campo personalizado';
+          btnDelete.title = field.isCustom ? 'Remover campo personalizado' : 'Ocultar campo';
           btnDelete.addEventListener('click', () => {
             this.tool.removeField(field.id);
             this.renderFieldsList();

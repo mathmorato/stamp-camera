@@ -157,7 +157,10 @@
           <div class="tab-panel" id="tab-fields">
             <div class="section-title">
               <span>Campos Visíveis</span>
-              <button type="button" class="btn btn-secondary btn-sm" id="btnAddField">+ Novo Campo</button>
+              <div class="add-field-wrapper">
+                <button type="button" class="btn btn-secondary btn-sm" id="btnAddField">+ Novo Campo</button>
+                <div class="add-field-menu" id="addFieldMenu" style="display: none;"></div>
+              </div>
             </div>
             <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 12px; line-height: 1.4;">
               Ative ou desative itens, altere os rótulos ou edite os valores diretamente.
@@ -602,7 +605,7 @@
     <!-- Barra de Status Técnica (Status Bar) -->
     <footer class="app-footer">
       <div class="footer-left">
-        <span>STAMP-CAMERA v.1.1.0</span>
+        <span>STAMP-CAMERA v.1.1.1</span>
         <span>•</span>
         <span class="footer-privacy-text">100% Processamento Local (Cliente)</span>
         <span>•</span>

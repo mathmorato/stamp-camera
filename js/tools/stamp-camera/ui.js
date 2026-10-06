@@ -78,6 +78,7 @@ export class StampCameraUI {
     // Lista de campos do carimbo (Painel Esquerdo)
     this.fieldsContainer = document.getElementById('fieldsContainer');
     this.btnAddField = document.getElementById('btnAddField');
+    this.addFieldMenu = document.getElementById('addFieldMenu');
 
     // Presets
     this.presetsSelect = document.getElementById('presetsSelect');
@@ -317,11 +318,20 @@ export class StampCameraUI {
     // Eventos de movimentação do carimbo no Canvas
     this.bindCanvasStampDrag();
 
-    // Botão Adicionar Campo Personalizado
-    this.btnAddField.addEventListener('click', () => {
-      const field = this.tool.addCustomField('Campo Personalizado', 'Valor');
-      this.renderFieldsList();
-      this.app.requestRender();
+    // Botão Adicionar Campo (+ Novo Campo com Dropdown)
+    if (this.btnAddField) {
+      this.btnAddField.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.toggleAddFieldMenu();
+      });
+    }
+
+    document.addEventListener('click', (e) => {
+      if (this.addFieldMenu && this.addFieldMenu.style.display !== 'none') {
+        if (!this.btnAddField?.contains(e.target) && !this.addFieldMenu.contains(e.target)) {
+          this.addFieldMenu.style.display = 'none';
+        }
+      }
     });
 
     // Seleção de Preset / Modelo
@@ -765,10 +775,102 @@ export class StampCameraUI {
    * - Botões de reordenação (↑ e ↓)
    * - Botão de excluir se for campo customizado
    */
+  toggleAddFieldMenu() {
+    if (!this.addFieldMenu) {
+      this.tool.addCustomField('Campo Personalizado', 'Valor');
+      this.renderFieldsList();
+      this.app.requestRender();
+      return;
+    }
+
+    const isVisible = this.addFieldMenu.style.display === 'flex';
+    if (isVisible) {
+      this.addFieldMenu.style.display = 'none';
+      return;
+    }
+
+    this.renderAddFieldMenu();
+    this.addFieldMenu.style.display = 'flex';
+  }
+
+  renderAddFieldMenu() {
+    if (!this.addFieldMenu) return;
+    this.addFieldMenu.innerHTML = '';
+
+    // 1. Opção: Campo Personalizado
+    const btnCustom = document.createElement('button');
+    btnCustom.type = 'button';
+    btnCustom.className = 'add-field-menu-item';
+    btnCustom.innerHTML = `
+      <span class="menu-item-icon">
+        <svg class="svg-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </span>
+      <span><strong>+ Campo Personalizado</strong></span>
+    `;
+    btnCustom.addEventListener('click', () => {
+      this.tool.addCustomField('Campo Personalizado', 'Valor');
+      this.addFieldMenu.style.display = 'none';
+      this.renderFieldsList();
+      this.app.requestRender();
+    });
+    this.addFieldMenu.appendChild(btnCustom);
+
+    // 2. Opções: Campos padrão opcionais sob demanda ainda não adicionados
+    const availableOnDemand = this.tool.activeFields.filter(f => f.isOptionalOnDemand && !f.added && !f.enabled);
+
+    if (availableOnDemand.length > 0) {
+      const divider = document.createElement('div');
+      divider.className = 'add-field-menu-divider';
+      this.addFieldMenu.appendChild(divider);
+
+      const title = document.createElement('div');
+      title.className = 'add-field-menu-title';
+      title.textContent = 'Campos Técnicos & Amostra';
+      this.addFieldMenu.appendChild(title);
+
+      for (const field of availableOnDemand) {
+        const item = document.createElement('button');
+        item.type = 'button';
+        item.className = 'add-field-menu-item';
+        item.innerHTML = `
+          <span class="menu-item-icon">${getLineArtSvg(field.icon || field.id)}</span>
+          <span>+ ${field.name || field.label}</span>
+        `;
+        item.addEventListener('click', () => {
+          this.tool.addStandardField(field.id);
+          this.addFieldMenu.style.display = 'none';
+          this.renderFieldsList();
+          this.app.requestRender();
+          if (this.app && typeof this.app.showToast === 'function') {
+            this.app.showToast(`Campo "${field.label}" adicionado.`);
+          }
+        });
+        this.addFieldMenu.appendChild(item);
+      }
+    }
+  }
+
+  /**
+   * Renderiza a lista de campos no painel esquerdo:
+   * Cada campo possui:
+   * - Checkbox de ativar/desativar
+   * - Rótulo editável
+   * - Valor editável diretamente na linha com sincronização bidirecional
+   * - Botão de mostrar/ocultar rótulo (🏷️)
+   * - Botões de reordenação (↑ e ↓)
+   * - Botão de excluir se for campo customizado ou campo sob demanda
+   */
   renderFieldsList() {
     this.fieldsContainer.innerHTML = '';
 
-    this.tool.activeFields.forEach((field, index) => {
+    const fieldsToRender = this.tool.activeFields.filter(f => {
+      if (f.isOptionalOnDemand && !f.added && !f.enabled) {
+        return false;
+      }
+      return true;
+    });
+
+    fieldsToRender.forEach((field, index) => {
       const row = document.createElement('div');
       row.className = `field-item ${field.enabled ? 'enabled' : 'disabled'}`;
       row.dataset.id = field.id;
@@ -852,7 +954,7 @@ export class StampCameraUI {
       btnDown.className = 'btn-icon';
       btnDown.innerHTML = '<svg class="svg-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>';
       btnDown.title = 'Mover campo para baixo';
-      btnDown.disabled = index === this.tool.activeFields.length - 1;
+      btnDown.disabled = index === fieldsToRender.length - 1;
       btnDown.addEventListener('click', () => {
         this.tool.moveField(field.id, 'down');
         this.renderFieldsList();
@@ -863,12 +965,12 @@ export class StampCameraUI {
       actionsDiv.appendChild(btnUp);
       actionsDiv.appendChild(btnDown);
 
-      if (field.isCustom) {
+      if (field.isCustom || field.isOptionalOnDemand) {
         const btnDelete = document.createElement('button');
         btnDelete.type = 'button';
         btnDelete.className = 'btn-icon btn-delete';
         btnDelete.innerHTML = '<svg class="svg-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
-        btnDelete.title = 'Remover campo personalizado';
+        btnDelete.title = field.isCustom ? 'Remover campo personalizado' : 'Ocultar campo';
         btnDelete.addEventListener('click', () => {
           this.tool.removeField(field.id);
           this.renderFieldsList();

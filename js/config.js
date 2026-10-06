@@ -4,7 +4,7 @@
  * 100% Client-side - Nenhuma informação é enviada para servidores externos.
  */
 
-export const PNITE_VERSION = "v.1.1.0";
+export const PNITE_VERSION = "v.1.1.1";
 
 export const APP_CONFIG = {
   name: 'STAMP-CAMERA',
@@ -178,7 +178,9 @@ export const DEFAULT_STAMP_SETTINGS = {
   customCoordTemplate: '{lat}, {lon}',
   labelMode: LABEL_MODES.ICONS,          // Padrão: Somente ícones inline!
   inlineLayout: STAMP_LAYOUTS.MULTILINE,  // 'multiline' ou 'single_line'
-  inlineSeparator: ' • '
+  inlineSeparator: ' • ',
+  showOriginStampBadge: false,           // Exibe [EXIF] / [MANUAL] no carimbo
+  preserveExif: true                     // Preserva/reinjeta EXIF na exportação JPEG
 };
 
 export const DEFAULT_NUMBERING = {
