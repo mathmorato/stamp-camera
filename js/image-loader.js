@@ -207,8 +207,6 @@ export async function createDemoImage(type = 'with_gps') {
     number: '1',
     postalCode: '10004',
     projectName: 'Monumento da Estátua da Liberdade',
-    process: 'NPS-LI-2024/091',
-    responsible: 'Eng. Perito Especialista',
     reportNum: 'VIST-NY-2024/42',
     customText: 'Inspeção pericial in loco'
   } : null;

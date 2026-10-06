@@ -61,9 +61,7 @@ export class StampCameraTool {
       postalCode: '',
       referencePoint: '',
       projectName: '',
-      process: '',
       reportNum: '',
-      responsible: '',
       customText: '',
       photoId: '01',
       // Rastreamento explícito da origem de cada dado (AUTO vs MANUAL)
@@ -83,9 +81,7 @@ export class StampCameraTool {
         postalCode: 'MANUAL',
         referencePoint: 'MANUAL',
         projectName: 'MANUAL',
-        process: 'MANUAL',
         reportNum: 'MANUAL',
-        responsible: 'MANUAL',
         customText: 'MANUAL'
       }
     };
@@ -211,8 +207,6 @@ export class StampCameraTool {
       if (ld.number) this.location.number = ld.number;
       if (ld.postalCode) this.location.postalCode = ld.postalCode;
       if (ld.projectName) this.location.projectName = ld.projectName;
-      if (ld.process) this.location.process = ld.process;
-      if (ld.responsible) this.location.responsible = ld.responsible;
       if (ld.reportNum) this.location.reportNum = ld.reportNum;
       if (ld.customText) this.location.customText = ld.customText;
     }
@@ -445,19 +439,9 @@ export class StampCameraTool {
         this.location.sources.projectName = 'MANUAL';
         break;
 
-      case 'process':
-        this.location.process = value;
-        this.location.sources.process = 'MANUAL';
-        break;
-
       case 'report_num':
         this.location.reportNum = value;
         this.location.sources.reportNum = 'MANUAL';
-        break;
-
-      case 'responsible':
-        this.location.responsible = value;
-        this.location.sources.responsible = 'MANUAL';
         break;
 
       case 'custom_text':
@@ -642,14 +626,8 @@ export class StampCameraTool {
       case 'project_name':
         return this.location.projectName || fieldConfig.customValue || '';
 
-      case 'process':
-        return this.location.process || fieldConfig.customValue || '';
-
       case 'report_num':
         return this.location.reportNum || fieldConfig.customValue || '';
-
-      case 'responsible':
-        return this.location.responsible || fieldConfig.customValue || '';
 
       case 'custom_text':
         return this.location.customText || fieldConfig.customValue || '';

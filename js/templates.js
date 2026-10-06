@@ -94,7 +94,7 @@ export const BUILT_IN_MODELS = [
   {
     id: 'model_4_forensic',
     name: 'Modelo 4 - Fotografia Pericial',
-    description: 'Identificação pericial com número de fotografia, processo e responsável.',
+    description: 'Identificação pericial com número de fotografia, obra/local e laudo/relatório.',
     position: STAMP_POSITIONS.BOTTOM_LEFT,
     backgroundType: 'semitransparent',
     backgroundColor: '#0F172A',

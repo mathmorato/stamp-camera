@@ -220,13 +220,11 @@ bairroField.enabled = true;
 const linesWithBairro = tool.getStampRenderLines();
 assert(linesWithBairro.some(l => l.value === 'Setor Central'), 'Bairro ativado e renderizado nas linhas do carimbo');
 
-// Teste de Campos Técnicos (Obra, Processo, Responsável)
+// Teste de Campos Técnicos (Obra, Laudo / Relatório)
 tool.setFieldValue('project_name', 'Residência Jussara');
 assert(tool.location.projectName === 'Residência Jussara', 'Nome da Obra atualizado com sucesso');
-tool.setFieldValue('process', '5557293-56.2020.8.09.0097');
-assert(tool.location.process === '5557293-56.2020.8.09.0097', 'Número do Processo atualizado com sucesso');
-tool.setFieldValue('responsible', 'Eng. Perito Especialista');
-assert(tool.location.responsible === 'Eng. Perito Especialista', 'Responsável Técnico atualizado com sucesso');
+tool.setFieldValue('report_num', 'Laudo 01/2026');
+assert(tool.location.reportNum === 'Laudo 01/2026', 'Número do Laudo atualizado com sucesso');
 
 // Teste de Adição e Reordenação de Campo Personalizado
 const initialCount = tool.activeFields.length;
@@ -345,7 +343,7 @@ assert(tool.numbering.startNumber === 5, 'Contador avançado para 5 após lote d
 
 const backup = storage.getBackupData(tool);
 assert(backup.schema === 1, 'Backup gerado com Schema 1');
-assert(backup.version === 'v.1.1.8', 'Backup com versão atualizada v.1.1.8');
+assert(backup.version === 'v.1.1.9', 'Backup com versão atualizada v.1.1.9');
 assert(backup.config && backup.data && backup.counter, 'Estrutura completa de backup exportada sem fotos');
 
 const legacyData = {

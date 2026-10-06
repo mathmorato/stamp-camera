@@ -1186,8 +1186,6 @@ export class StampCameraUI {
     bindText(this.inputCountry, 'country', 'country', ['city_state_country']);
     bindText(this.inputPostalCode, 'postalCode', 'postal_code');
     bindText(this.inputProjectName, 'projectName', 'project_name');
-    bindText(this.inputProcess, 'process', 'process');
-    bindText(this.inputResponsible, 'responsible', 'responsible');
   }
 
   /**

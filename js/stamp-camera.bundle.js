@@ -11,7 +11,7 @@
    * Versão: 1.0.0
    * 100% Client-side - Nenhuma informação é enviada para servidores externos.
    */
-  const PNITE_VERSION = "v.1.1.8";
+  const PNITE_VERSION = "v.1.1.9";
   const APP_CONFIG = {
     name: 'STAMP-CAMERA',
     subtitle: 'Carimbo técnico e geográfico para fotografias',
@@ -79,9 +79,7 @@
     city_state_country: 'M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z M12 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6z',
     postal_code: 'M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z M22 6l-10 7L2 6',
     project_name: 'M2 22h20 M12 2v20 M12 5H6l-4 7h10 M12 5h6l4 7H12',
-    process: 'M12 3v18 M5 6h14 M2 13l3-7 3 7a3 3 0 0 1-6 0z M16 13l3-7 3 7a3 3 0 0 1-6 0z',
     report_num: 'M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2 M9 2h6a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z M9 12h6 M9 16h4',
-    responsible: 'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2 M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z',
     custom_text: 'M12 20h9 M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z',
     default: 'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z'
   };
@@ -105,9 +103,7 @@
     '🌍': 'country',
     '📮': 'postal_code',
     '🏗️': 'project_name',
-    '⚖️': 'process',
     '📋': 'report_num',
-    '👤': 'responsible',
     '📝': 'custom_text'
   };
   function getLineArtPath(iconOrFieldId) {
@@ -141,9 +137,7 @@
     city_state_country: 'city_state_country',
     postal_code: 'postal_code',
     project_name: 'project_name',
-    process: 'process',
     report_num: 'report_num',
-    responsible: 'responsible',
     custom_text: 'custom_text'
   };
   const DEFAULT_STAMP_SETTINGS = {
@@ -3708,8 +3702,6 @@
       number: '1',
       postalCode: '10004',
       projectName: 'Monumento da Estátua da Liberdade',
-      process: 'NPS-LI-2024/091',
-      responsible: 'Eng. Perito Especialista',
       reportNum: 'VIST-NY-2024/42',
       customText: 'Inspeção pericial in loco'
     } : null;
@@ -3821,7 +3813,7 @@
     {
       id: 'model_4_forensic',
       name: 'Modelo 4 - Fotografia Pericial',
-      description: 'Identificação pericial com número de fotografia, processo e responsável.',
+      description: 'Identificação pericial com número de fotografia, obra/local e laudo/relatório.',
       position: STAMP_POSITIONS.BOTTOM_LEFT,
       backgroundType: 'semitransparent',
       backgroundColor: '#0F172A',
@@ -5618,9 +5610,7 @@
         postalCode: '',
         referencePoint: '',
         projectName: '',
-        process: '',
         reportNum: '',
-        responsible: '',
         customText: '',
         photoId: '01',
         // Rastreamento explícito da origem de cada dado (AUTO vs MANUAL)
@@ -5640,9 +5630,7 @@
           postalCode: 'MANUAL',
           referencePoint: 'MANUAL',
           projectName: 'MANUAL',
-          process: 'MANUAL',
           reportNum: 'MANUAL',
-          responsible: 'MANUAL',
           customText: 'MANUAL'
         }
       };
@@ -5768,8 +5756,6 @@
         if (ld.number) this.location.number = ld.number;
         if (ld.postalCode) this.location.postalCode = ld.postalCode;
         if (ld.projectName) this.location.projectName = ld.projectName;
-        if (ld.process) this.location.process = ld.process;
-        if (ld.responsible) this.location.responsible = ld.responsible;
         if (ld.reportNum) this.location.reportNum = ld.reportNum;
         if (ld.customText) this.location.customText = ld.customText;
       }
@@ -6002,19 +5988,9 @@
           this.location.sources.projectName = 'MANUAL';
           break;
   
-        case 'process':
-          this.location.process = value;
-          this.location.sources.process = 'MANUAL';
-          break;
-  
         case 'report_num':
           this.location.reportNum = value;
           this.location.sources.reportNum = 'MANUAL';
-          break;
-  
-        case 'responsible':
-          this.location.responsible = value;
-          this.location.sources.responsible = 'MANUAL';
           break;
   
         case 'custom_text':
@@ -6199,14 +6175,8 @@
         case 'project_name':
           return this.location.projectName || fieldConfig.customValue || '';
   
-        case 'process':
-          return this.location.process || fieldConfig.customValue || '';
-  
         case 'report_num':
           return this.location.reportNum || fieldConfig.customValue || '';
-  
-        case 'responsible':
-          return this.location.responsible || fieldConfig.customValue || '';
   
         case 'custom_text':
           return this.location.customText || fieldConfig.customValue || '';
@@ -7835,8 +7805,6 @@
       bindText(this.inputCountry, 'country', 'country', ['city_state_country']);
       bindText(this.inputPostalCode, 'postalCode', 'postal_code');
       bindText(this.inputProjectName, 'projectName', 'project_name');
-      bindText(this.inputProcess, 'process', 'process');
-      bindText(this.inputResponsible, 'responsible', 'responsible');
     }
   
     /**

@@ -4,7 +4,7 @@
  * 100% Client-side - Nenhuma informação é enviada para servidores externos.
  */
 
-export const PNITE_VERSION = "v.1.1.8";
+export const PNITE_VERSION = "v.1.1.9";
 
 export const APP_CONFIG = {
   name: 'STAMP-CAMERA',
@@ -80,9 +80,7 @@ export const LINE_ART_PATHS = {
   city_state_country: 'M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z M12 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6z',
   postal_code: 'M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z M22 6l-10 7L2 6',
   project_name: 'M2 22h20 M12 2v20 M12 5H6l-4 7h10 M12 5h6l4 7H12',
-  process: 'M12 3v18 M5 6h14 M2 13l3-7 3 7a3 3 0 0 1-6 0z M16 13l3-7 3 7a3 3 0 0 1-6 0z',
   report_num: 'M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2 M9 2h6a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z M9 12h6 M9 16h4',
-  responsible: 'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2 M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z',
   custom_text: 'M12 20h9 M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z',
   default: 'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z'
 };
@@ -107,9 +105,7 @@ export const EMOJI_TO_LINE_ART = {
   '🌍': 'country',
   '📮': 'postal_code',
   '🏗️': 'project_name',
-  '⚖️': 'process',
   '📋': 'report_num',
-  '👤': 'responsible',
   '📝': 'custom_text'
 };
 
@@ -146,9 +142,7 @@ export const FIELD_ICONS = {
   city_state_country: 'city_state_country',
   postal_code: 'postal_code',
   project_name: 'project_name',
-  process: 'process',
   report_num: 'report_num',
-  responsible: 'responsible',
   custom_text: 'custom_text'
 };
 

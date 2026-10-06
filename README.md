@@ -15,7 +15,7 @@ Principais informações suportadas no carimbo:
 - Endereço físico (Logradouro, Número, Bairro, Cidade, Estado, País, CEP);
 - Data e horário precisos com suporte a padrões brasileiros e internacionais;
 - Identificação da fotografia com numeração automática sequencial;
-- Identificação da obra, vistoria, laudo, processo judicial e responsável técnico;
+- Identificação da obra, vistoria e laudo técnico;
 - Campos totalmente personalizáveis.
 
 ---
@@ -87,7 +87,7 @@ O sistema disponibiliza modelos pré-formatados prontos para uso:
 - **Modelo 1 (Simples):** Data, Hora e Coordenadas;
 - **Modelo 2 (Localização):** Data/Hora, Endereço completo, Bairro, Cidade/Estado e Coordenadas;
 - **Modelo 3 (Técnico):** Formatação em caixa alta para laudos (DATA, HORA, LOCAL, COORDENADAS);
-- **Modelo 4 (Fotografia Pericial):** Identificação completa com Número da Foto, Processo e Perito;
+- **Modelo 4 (Fotografia Pericial):** Identificação completa com Número da Foto, Obra e Laudo/Relatório;
 - **Modelo 5 (Personalizado):** Liberdade total para adição, reordenação e exclusão de blocos;
 - **Presets por área:** *Perícia Judicial*, *Obra & Construção Civil*, *Inspeção Predial*, *Fiscalização Ambiental/Urbana*, *Registro Fotográfico* e *Vistoria*.
 
