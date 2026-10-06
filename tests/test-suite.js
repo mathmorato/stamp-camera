@@ -37,6 +37,7 @@ if (typeof document === 'undefined') {
           getContext: () => ({
             translate: () => {},
             rotate: () => {},
+            scale: () => {},
             drawImage: () => {}
           }),
           toDataURL: () => 'data:image/jpeg;base64,mock'
@@ -327,6 +328,14 @@ assert(tool.photo.width === 1920 && tool.photo.height === 1080, 'Dimensões mant
 assert(Math.abs(tool.settings.customPosX - 0.8) < 0.001 && Math.abs(tool.settings.customPosY - 0.7) < 0.001, 'Posição proporcional invertida corretamente após rotação de 180°');
 tool.rotatePhoto(180);
 
+tool.flipPhoto('horizontal');
+assert(tool.photo.width === 1920 && tool.photo.height === 1080, 'Dimensões preservadas após espelhamento horizontal');
+assert(Math.abs(tool.settings.customPosX - 0.8) < 0.001, 'Posição X invertida proporcionalmente no espelhamento horizontal');
+tool.flipPhoto('horizontal');
+tool.flipPhoto('vertical');
+assert(Math.abs(tool.settings.customPosY - 0.7) < 0.001, 'Posição Y invertida proporcionalmente no espelhamento vertical');
+tool.flipPhoto('vertical');
+
 tool.resetNumbering();
 assert(tool.numbering.startNumber === 1, 'Contador redefinido para 1');
 tool.advanceNumbering(1);
@@ -336,7 +345,7 @@ assert(tool.numbering.startNumber === 5, 'Contador avançado para 5 após lote d
 
 const backup = storage.getBackupData(tool);
 assert(backup.schema === 1, 'Backup gerado com Schema 1');
-assert(backup.version === 'v.1.1.6', 'Backup com versão atualizada v.1.1.6');
+assert(backup.version === 'v.1.1.7', 'Backup com versão atualizada v.1.1.7');
 assert(backup.config && backup.data && backup.counter, 'Estrutura completa de backup exportada sem fotos');
 
 const legacyData = {
@@ -389,16 +398,23 @@ const requiredElementIds = [
   'badgeLon',
   'badgeDate',
   'badgeTime',
+  'btnHeaderRotate',
   'btnRotateLeft',
   'btnRotateRight',
   'btnRotate180',
+  'btnFlipH',
+  'btnFlipV',
   'floatingRotateBar',
   'btnFloatRotateLeft',
   'btnFloatRotateRight',
   'btnFloatRotate180',
+  'btnFloatFlipH',
+  'btnFloatFlipV',
   'btnSidebarRotateLeft',
   'btnSidebarRotateRight',
   'btnSidebarRotate180',
+  'btnSidebarFlipH',
+  'btnSidebarFlipV',
   'saveStatusIndicator',
   'draftRestoreBanner',
   'btnRestoreDraft',

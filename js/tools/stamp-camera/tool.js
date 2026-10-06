@@ -1035,6 +1035,39 @@ export class StampCameraTool {
   }
 
   /**
+   * Espelha a fotografia atual horizontalmente ou verticalmente.
+   * Preserva a resolução nativa e recalcula coordenadas proporcionais.
+   * @param {'horizontal'|'vertical'} axis
+   * @returns {Object|null} Objeto da foto atualizado
+   */
+  flipPhoto(axis = 'horizontal') {
+    if (!this.photo || !this.photo.canvas) return null;
+    const oldCanvas = this.photo.canvas;
+    const newCanvas = document.createElement('canvas');
+    newCanvas.width = oldCanvas.width;
+    newCanvas.height = oldCanvas.height;
+    const ctx = newCanvas.getContext('2d');
+
+    if (axis === 'horizontal') {
+      ctx.translate(newCanvas.width, 0);
+      ctx.scale(-1, 1);
+      if (this.settings.customPosX !== null && this.settings.customPosY !== null) {
+        this.settings.customPosX = 1 - this.settings.customPosX;
+      }
+    } else {
+      ctx.translate(0, newCanvas.height);
+      ctx.scale(1, -1);
+      if (this.settings.customPosX !== null && this.settings.customPosY !== null) {
+        this.settings.customPosY = 1 - this.settings.customPosY;
+      }
+    }
+    ctx.drawImage(oldCanvas, 0, 0);
+
+    this.photo.canvas = newCanvas;
+    return this.photo;
+  }
+
+  /**
    * Restaura o estado salvo a partir do Schema 1
    * @param {Object} state
    */

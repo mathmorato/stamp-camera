@@ -176,21 +176,30 @@ export class StampCameraUI {
     this.btnToggleSplitAddress = document.getElementById('btnToggleSplitAddress');
     this.btnToggleSplitLocality = document.getElementById('btnToggleSplitLocality');
 
-    // Botões de Rotação da Imagem (Barra Superior)
+    // Botão de Rotação Rápida no Cabeçalho Superior
+    this.btnHeaderRotate = document.getElementById('btnHeaderRotate');
+
+    // Botões de Rotação da Imagem (Barra Superior do Preview)
     this.btnRotateLeft = document.getElementById('btnRotateLeft');
     this.btnRotateRight = document.getElementById('btnRotateRight');
     this.btnRotate180 = document.getElementById('btnRotate180');
+    this.btnFlipH = document.getElementById('btnFlipH');
+    this.btnFlipV = document.getElementById('btnFlipV');
 
     // Barra Flutuante de Rotação sobre o Canvas
     this.floatingRotateBar = document.getElementById('floatingRotateBar');
     this.btnFloatRotateLeft = document.getElementById('btnFloatRotateLeft');
     this.btnFloatRotateRight = document.getElementById('btnFloatRotateRight');
     this.btnFloatRotate180 = document.getElementById('btnFloatRotate180');
+    this.btnFloatFlipH = document.getElementById('btnFloatFlipH');
+    this.btnFloatFlipV = document.getElementById('btnFloatFlipV');
 
     // Botões de Rotação na Aba de Modelos (Barra Lateral)
     this.btnSidebarRotateLeft = document.getElementById('btnSidebarRotateLeft');
     this.btnSidebarRotateRight = document.getElementById('btnSidebarRotateRight');
     this.btnSidebarRotate180 = document.getElementById('btnSidebarRotate180');
+    this.btnSidebarFlipH = document.getElementById('btnSidebarFlipH');
+    this.btnSidebarFlipV = document.getElementById('btnSidebarFlipV');
 
     // Indicador Discreto de Salvamento no Topo
     this.saveStatusIndicator = document.getElementById('saveStatusIndicator');
@@ -826,8 +835,10 @@ export class StampCameraUI {
       });
     }
 
-    // Rotação de Imagem (Horário, Anti-Horário e 180° Invertido)
-    // 1. Barra Superior (Info Bar)
+    // 1. Cabeçalho Superior e Barra Superior do Preview
+    if (this.btnHeaderRotate) {
+      this.btnHeaderRotate.addEventListener('click', () => this.handleRotatePhoto('right'));
+    }
     if (this.btnRotateLeft) {
       this.btnRotateLeft.addEventListener('click', () => this.handleRotatePhoto('left'));
     }
@@ -836,6 +847,12 @@ export class StampCameraUI {
     }
     if (this.btnRotate180) {
       this.btnRotate180.addEventListener('click', () => this.handleRotatePhoto(180));
+    }
+    if (this.btnFlipH) {
+      this.btnFlipH.addEventListener('click', () => this.handleFlipPhoto('horizontal'));
+    }
+    if (this.btnFlipV) {
+      this.btnFlipV.addEventListener('click', () => this.handleFlipPhoto('vertical'));
     }
 
     // 2. Barra Flutuante sobre o Canvas
@@ -848,6 +865,12 @@ export class StampCameraUI {
     if (this.btnFloatRotate180) {
       this.btnFloatRotate180.addEventListener('click', () => this.handleRotatePhoto(180));
     }
+    if (this.btnFloatFlipH) {
+      this.btnFloatFlipH.addEventListener('click', () => this.handleFlipPhoto('horizontal'));
+    }
+    if (this.btnFloatFlipV) {
+      this.btnFloatFlipV.addEventListener('click', () => this.handleFlipPhoto('vertical'));
+    }
 
     // 3. Barra Lateral (Card de Rotação em Modelos)
     if (this.btnSidebarRotateLeft) {
@@ -858,6 +881,12 @@ export class StampCameraUI {
     }
     if (this.btnSidebarRotate180) {
       this.btnSidebarRotate180.addEventListener('click', () => this.handleRotatePhoto(180));
+    }
+    if (this.btnSidebarFlipH) {
+      this.btnSidebarFlipH.addEventListener('click', () => this.handleFlipPhoto('horizontal'));
+    }
+    if (this.btnSidebarFlipV) {
+      this.btnSidebarFlipV.addEventListener('click', () => this.handleFlipPhoto('vertical'));
     }
 
     // 4. Atalhos de Teclado Rápidos (R = 90° horário, Shift+R = 90° anti-horário, Alt+R = 180°)
@@ -1305,7 +1334,12 @@ export class StampCameraUI {
    * @param {'left'|'right'|180|'180'} direction
    */
   async handleRotatePhoto(direction) {
-    if (!this.tool || !this.tool.photo) return;
+    if (!this.tool || !this.tool.photo) {
+      if (this.app && typeof this.app.showToast === 'function') {
+        this.app.showToast('Selecione uma fotografia antes de girar.');
+      }
+      return;
+    }
     this.tool.rotatePhoto(direction);
     this.syncPhotoState();
     this.app.requestRender();
@@ -1319,6 +1353,28 @@ export class StampCameraUI {
           ? 'Fotografia girada 90° à esquerda.'
           : 'Fotografia girada 90° à direita.';
       this.app.showToast(msg);
+    }
+  }
+
+  /**
+   * Executa espelhamento da fotografia atual
+   * @param {'horizontal'|'vertical'} axis
+   */
+  async handleFlipPhoto(axis = 'horizontal') {
+    if (!this.tool || !this.tool.photo) {
+      if (this.app && typeof this.app.showToast === 'function') {
+        this.app.showToast('Selecione uma fotografia antes de espelhar.');
+      }
+      return;
+    }
+    this.tool.flipPhoto(axis);
+    this.syncPhotoState();
+    this.app.requestRender();
+    if (this.app && typeof this.app.saveCurrentDraft === 'function') {
+      await this.app.saveCurrentDraft();
+    }
+    if (this.app && typeof this.app.showToast === 'function') {
+      this.app.showToast(axis === 'horizontal' ? 'Fotografia espelhada horizontalmente.' : 'Fotografia espelhada verticalmente.');
     }
   }
 
