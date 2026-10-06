@@ -4,7 +4,7 @@
  * 100% Client-side - Nenhuma informação é enviada para servidores externos.
  */
 
-export const PNITE_VERSION = "v.1.1.2";
+export const PNITE_VERSION = "v.1.1.3";
 
 export const APP_CONFIG = {
   name: 'STAMP-CAMERA',
@@ -71,6 +71,7 @@ export const LINE_ART_PATHS = {
   street: 'M4 19L8 5 M20 19L16 5 M12 5v3 M12 11v3 M12 17v3',
   number: 'M4 9h16 M4 15h16 M10 3L8 21 M16 3l-2 21',
   address_street_num: 'M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z M9 22V12h6v10',
+  address_neighborhood: 'M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z M9 22V12h6v10 M19 13v7 M15 13h4',
   neighborhood: 'M2 20h20 M4 20V8l6-4v16 M10 20V10l6-4v14 M16 20V6l4-2v16',
   locality: 'M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z M12 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6z',
   city: 'M2 20h20 M3 20V10h5v10 M8 20V4h8v16 M16 20v-8h5v8',
@@ -98,6 +99,7 @@ export const EMOJI_TO_LINE_ART = {
   '🛣️': 'street',
   '🔢': 'number',
   '🏠': 'address_street_num',
+  '🏡': 'address_neighborhood',
   '🏘️': 'neighborhood',
   '📌': 'locality',
   '🏙️': 'city',
@@ -135,6 +137,7 @@ export const FIELD_ICONS = {
   street: 'street',
   number: 'number',
   address_street_num: 'address_street_num',
+  address_neighborhood: 'address_neighborhood',
   neighborhood: 'neighborhood',
   locality: 'locality',
   city: 'city',

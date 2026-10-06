@@ -109,6 +109,9 @@ export class StampCameraUI {
     this.checkItalic = document.getElementById('checkItalic');
     this.selectTextAlign = document.getElementById('selectTextAlign');
     this.selectLabelMode = document.getElementById('selectLabelMode');
+    this.btnLabelModeTrigger = document.getElementById('btnLabelModeTrigger');
+    this.menuLabelMode = document.getElementById('menuLabelMode');
+    this.customLabelModeWrapper = document.getElementById('customLabelModeWrapper');
     this.selectInlineLayout = document.getElementById('selectInlineLayout');
 
     // Grid de Posições
@@ -294,7 +297,35 @@ export class StampCameraUI {
     if (this.selectLabelMode) {
       this.selectLabelMode.addEventListener('change', (e) => {
         this.tool.settings.labelMode = e.target.value;
+        this.syncLabelModeCustomUI(e.target.value);
         this.app.requestRender();
+      });
+    }
+
+    if (this.btnLabelModeTrigger) {
+      this.btnLabelModeTrigger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (this.menuLabelMode) {
+          const isOpen = this.menuLabelMode.style.display === 'flex';
+          this.menuLabelMode.style.display = isOpen ? 'none' : 'flex';
+        }
+      });
+    }
+
+    if (this.menuLabelMode) {
+      const items = this.menuLabelMode.querySelectorAll('.custom-label-mode-item');
+      items.forEach(item => {
+        item.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const val = item.dataset.value;
+          if (this.selectLabelMode) {
+            this.selectLabelMode.value = val;
+            this.selectLabelMode.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+          if (this.menuLabelMode) {
+            this.menuLabelMode.style.display = 'none';
+          }
+        });
       });
     }
 
@@ -366,6 +397,11 @@ export class StampCameraUI {
       if (this.addFieldMenu && this.addFieldMenu.style.display !== 'none') {
         if (!this.btnAddField?.contains(e.target) && !this.addFieldMenu.contains(e.target)) {
           this.addFieldMenu.style.display = 'none';
+        }
+      }
+      if (this.menuLabelMode && this.menuLabelMode.style.display !== 'none') {
+        if (!this.customLabelModeWrapper?.contains(e.target)) {
+          this.menuLabelMode.style.display = 'none';
         }
       }
     });
@@ -873,8 +909,38 @@ export class StampCameraUI {
     this.checkBold.checked = s.fontWeight === '700';
     this.checkItalic.checked = !!s.isItalic;
     this.selectTextAlign.value = s.textAlign || 'left';
-    if (this.selectLabelMode) this.selectLabelMode.value = s.labelMode || 'icons';
+    if (this.selectLabelMode) {
+      this.selectLabelMode.value = s.labelMode || 'icons';
+      this.syncLabelModeCustomUI(this.selectLabelMode.value);
+    }
     if (this.selectInlineLayout) this.selectInlineLayout.value = s.inlineLayout || 'multiline';
+  }
+
+  /**
+   * Sincroniza a interface visual do seletor customizado de modo de rótulo (Line Art)
+   */
+  syncLabelModeCustomUI(value = 'icons') {
+    if (!this.btnLabelModeTrigger) return;
+    const triggerText = this.btnLabelModeTrigger.querySelector('.custom-trigger-text');
+    const triggerIcons = this.btnLabelModeTrigger.querySelector('.custom-trigger-icons');
+    if (triggerText) {
+      if (value === 'icons') {
+        triggerText.textContent = 'Somente Ícones Line Art';
+        if (triggerIcons) triggerIcons.style.display = 'inline-flex';
+      } else if (value === 'text') {
+        triggerText.textContent = 'Rótulo em Texto (DATA:, LAT:, LOCAL:)';
+        if (triggerIcons) triggerIcons.style.display = 'none';
+      } else if (value === 'none') {
+        triggerText.textContent = 'Ocultar Rótulos (Apenas Valores)';
+        if (triggerIcons) triggerIcons.style.display = 'none';
+      }
+    }
+    if (this.menuLabelMode) {
+      const items = this.menuLabelMode.querySelectorAll('.custom-label-mode-item');
+      items.forEach(it => {
+        it.classList.toggle('active', it.dataset.value === value);
+      });
+    }
   }
 
   /**

@@ -461,6 +461,10 @@
             <div class="section-block">
               <div class="section-title">
                 <span>Notação de Coordenadas</span>
+                <button type="button" class="btn-split-unify" id="btnToggleSplitCoords" title="Alternar entre coordenadas juntas ou separadas em Lat e Long">
+                  <span class="btn-split-icon">⫽</span>
+                  <span class="btn-split-label">Separar Lat/Long</span>
+                </button>
               </div>
               <div class="form-group">
                 <select id="selectCoordFormat" class="form-select">
@@ -517,6 +521,10 @@
             <div class="section-block">
               <div class="section-title">
                 <span>Data & Horário</span>
+                <button type="button" class="btn-split-unify" id="btnToggleSplitDateTime" title="Alternar entre Data/Hora na mesma linha ou linhas separadas">
+                  <span class="btn-split-icon">⫽</span>
+                  <span class="btn-split-label">Separar Data/Hora</span>
+                </button>
               </div>
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
                 <div class="form-group">
@@ -559,6 +567,16 @@
             <div class="section-block">
               <div class="section-title">
                 <span>Logradouro & Localidade</span>
+                <div style="display: flex; gap: 4px; flex-wrap: wrap;">
+                  <button type="button" class="btn-split-unify" id="btnToggleSplitAddress" title="Alternar entre Endereço e Bairro unificados ou separados">
+                    <span class="btn-split-icon">⫽</span>
+                    <span class="btn-split-label">Separar Endereço/Bairro</span>
+                  </button>
+                  <button type="button" class="btn-split-unify" id="btnToggleSplitLocality" title="Alternar entre Cidade, Estado e País unificados ou separados">
+                    <span class="btn-split-icon">⫽</span>
+                    <span class="btn-split-label">Separar Localidade</span>
+                  </button>
+                </div>
               </div>
 
               <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 8px;">
@@ -693,7 +711,7 @@
     <!-- Barra de Status Técnica (Status Bar) -->
     <footer class="app-footer">
       <div class="footer-left">
-        <span>STAMP-CAMERA v.1.1.2</span>
+        <span>STAMP-CAMERA v.1.1.3</span>
         <span>•</span>
         <span class="footer-privacy-text" title="Processamento 100% no navegador. Nenhuma foto enviada para servidores.">Processamento de Fotos 100% Local (Navegador)</span>
         <span>•</span>

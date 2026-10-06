@@ -380,6 +380,20 @@ export class StampCameraTool {
         this.location.sources.neighborhood = 'MANUAL';
         break;
 
+      case 'address_neighborhood': {
+        this.location.sources.street = 'MANUAL';
+        this.location.sources.neighborhood = 'MANUAL';
+        const val = (value || '').trim();
+        if (val.includes(',')) {
+          const parts = val.split(',').map(s => s.trim());
+          this.location.neighborhood = parts.pop();
+          this.location.street = parts.join(', ');
+        } else {
+          this.location.street = val;
+        }
+        break;
+      }
+
       case 'locality':
         this.location.locality = value;
         this.location.sources.locality = 'MANUAL';
@@ -399,6 +413,29 @@ export class StampCameraTool {
         this.location.country = value;
         this.location.sources.country = 'MANUAL';
         break;
+
+      case 'city_state_country': {
+        this.location.sources.city = 'MANUAL';
+        this.location.sources.state = 'MANUAL';
+        this.location.sources.country = 'MANUAL';
+        const val = (value || '').trim();
+        if (val.includes(',')) {
+          const parts = val.split(',').map(s => s.trim());
+          if (parts.length >= 3) {
+            this.location.city = parts[0];
+            this.location.state = parts[1];
+            this.location.country = parts[2];
+          } else if (parts.length === 2) {
+            this.location.city = parts[0];
+            this.location.state = parts[1];
+          } else {
+            this.location.city = parts[0];
+          }
+        } else {
+          this.location.city = val;
+        }
+        break;
+      }
 
       case 'postal_code':
         this.location.postalCode = value;
@@ -568,6 +605,15 @@ export class StampCameraTool {
       case 'neighborhood':
         return this.location.neighborhood || '';
 
+      case 'address_neighborhood': {
+        const addr = this.getFieldValue('address_street_num');
+        const neigh = this.location.neighborhood;
+        if (addr && neigh) {
+          return `${addr}, ${neigh}`;
+        }
+        return addr || neigh || '';
+      }
+
       case 'locality': {
         if (this.location.locality) return this.location.locality;
         const parts = [this.location.city, this.location.state || this.location.stateCode].filter(Boolean);
@@ -735,5 +781,182 @@ export class StampCameraTool {
     const temp = this.activeFields[idx];
     this.activeFields[idx] = this.activeFields[targetIdx];
     this.activeFields[targetIdx] = temp;
+  }
+
+  /**
+   * Utilitários de Separação e Unificação de Campos
+   */
+  isFieldEnabled(fieldId) {
+    const f = this.activeFields.find(field => field.id === fieldId);
+    return !!(f && f.enabled);
+  }
+
+  isLocalityUnified() {
+    return this.isFieldEnabled('city_state_country');
+  }
+
+  splitLocality() {
+    const compField = this.activeFields.find(f => f.id === 'city_state_country');
+    if (compField) compField.enabled = false;
+
+    const cityField = this.activeFields.find(f => f.id === 'city');
+    const stateField = this.activeFields.find(f => f.id === 'state');
+    const countryField = this.activeFields.find(f => f.id === 'country');
+
+    const toInsert = [cityField, stateField, countryField].filter(Boolean);
+    toInsert.forEach(f => { f.enabled = true; f.added = true; });
+
+    const targetIdx = this.activeFields.findIndex(f => f.id === 'city_state_country');
+    if (targetIdx >= 0) {
+      this.activeFields = this.activeFields.filter(f => !toInsert.includes(f));
+      const newTargetIdx = this.activeFields.findIndex(f => f.id === 'city_state_country');
+      this.activeFields.splice(newTargetIdx + 1, 0, ...toInsert);
+    }
+    return true;
+  }
+
+  unifyLocality() {
+    const cityField = this.activeFields.find(f => f.id === 'city');
+    const stateField = this.activeFields.find(f => f.id === 'state');
+    const countryField = this.activeFields.find(f => f.id === 'country');
+    [cityField, stateField, countryField].forEach(f => { if (f) f.enabled = false; });
+
+    const compField = this.activeFields.find(f => f.id === 'city_state_country');
+    if (compField) {
+      compField.enabled = true;
+      compField.added = true;
+      const cityIdx = this.activeFields.findIndex(f => f.id === 'city');
+      if (cityIdx >= 0) {
+        this.activeFields = this.activeFields.filter(f => f.id !== 'city_state_country');
+        this.activeFields.splice(cityIdx, 0, compField);
+      }
+    }
+    return true;
+  }
+
+  isAddressUnified() {
+    return this.isFieldEnabled('address_neighborhood');
+  }
+
+  splitAddress() {
+    const compField = this.activeFields.find(f => f.id === 'address_neighborhood');
+    if (compField) compField.enabled = false;
+
+    const streetNumField = this.activeFields.find(f => f.id === 'address_street_num');
+    const neighField = this.activeFields.find(f => f.id === 'neighborhood');
+
+    const toInsert = [streetNumField, neighField].filter(Boolean);
+    toInsert.forEach(f => { f.enabled = true; f.added = true; });
+
+    const targetIdx = this.activeFields.findIndex(f => f.id === 'address_neighborhood');
+    if (targetIdx >= 0) {
+      this.activeFields = this.activeFields.filter(f => !toInsert.includes(f));
+      const newTargetIdx = this.activeFields.findIndex(f => f.id === 'address_neighborhood');
+      this.activeFields.splice(newTargetIdx + 1, 0, ...toInsert);
+    }
+    return true;
+  }
+
+  unifyAddress() {
+    const streetNumField = this.activeFields.find(f => f.id === 'address_street_num');
+    const streetField = this.activeFields.find(f => f.id === 'street');
+    const numField = this.activeFields.find(f => f.id === 'number');
+    const neighField = this.activeFields.find(f => f.id === 'neighborhood');
+
+    [streetNumField, streetField, numField, neighField].forEach(f => { if (f) f.enabled = false; });
+
+    const compField = this.activeFields.find(f => f.id === 'address_neighborhood');
+    if (compField) {
+      compField.enabled = true;
+      compField.added = true;
+      const posIdx = this.activeFields.findIndex(f => f.id === 'address_street_num' || f.id === 'neighborhood');
+      if (posIdx >= 0) {
+        this.activeFields = this.activeFields.filter(f => f.id !== 'address_neighborhood');
+        this.activeFields.splice(posIdx, 0, compField);
+      }
+    }
+    return true;
+  }
+
+  isCoordinatesUnified() {
+    return this.isFieldEnabled('coordinates');
+  }
+
+  splitCoordinates() {
+    const compField = this.activeFields.find(f => f.id === 'coordinates');
+    if (compField) compField.enabled = false;
+
+    const latField = this.activeFields.find(f => f.id === 'lat');
+    const lonField = this.activeFields.find(f => f.id === 'lon');
+
+    const toInsert = [latField, lonField].filter(Boolean);
+    toInsert.forEach(f => { f.enabled = true; f.added = true; });
+
+    const targetIdx = this.activeFields.findIndex(f => f.id === 'coordinates');
+    if (targetIdx >= 0) {
+      this.activeFields = this.activeFields.filter(f => !toInsert.includes(f));
+      const newTargetIdx = this.activeFields.findIndex(f => f.id === 'coordinates');
+      this.activeFields.splice(newTargetIdx + 1, 0, ...toInsert);
+    }
+    return true;
+  }
+
+  unifyCoordinates() {
+    const latField = this.activeFields.find(f => f.id === 'lat');
+    const lonField = this.activeFields.find(f => f.id === 'lon');
+    [latField, lonField].forEach(f => { if (f) f.enabled = false; });
+
+    const compField = this.activeFields.find(f => f.id === 'coordinates');
+    if (compField) {
+      compField.enabled = true;
+      compField.added = true;
+      const posIdx = this.activeFields.findIndex(f => f.id === 'lat');
+      if (posIdx >= 0) {
+        this.activeFields = this.activeFields.filter(f => f.id !== 'coordinates');
+        this.activeFields.splice(posIdx, 0, compField);
+      }
+    }
+    return true;
+  }
+
+  isDateTimeUnified() {
+    return this.isFieldEnabled('datetime');
+  }
+
+  splitDateTime() {
+    const compField = this.activeFields.find(f => f.id === 'datetime');
+    if (compField) compField.enabled = false;
+
+    const dateField = this.activeFields.find(f => f.id === 'date');
+    const timeField = this.activeFields.find(f => f.id === 'time');
+
+    const toInsert = [dateField, timeField].filter(Boolean);
+    toInsert.forEach(f => { f.enabled = true; f.added = true; });
+
+    const targetIdx = this.activeFields.findIndex(f => f.id === 'datetime');
+    if (targetIdx >= 0) {
+      this.activeFields = this.activeFields.filter(f => !toInsert.includes(f));
+      const newTargetIdx = this.activeFields.findIndex(f => f.id === 'datetime');
+      this.activeFields.splice(newTargetIdx + 1, 0, ...toInsert);
+    }
+    return true;
+  }
+
+  unifyDateTime() {
+    const dateField = this.activeFields.find(f => f.id === 'date');
+    const timeField = this.activeFields.find(f => f.id === 'time');
+    [dateField, timeField].forEach(f => { if (f) f.enabled = false; });
+
+    const compField = this.activeFields.find(f => f.id === 'datetime');
+    if (compField) {
+      compField.enabled = true;
+      compField.added = true;
+      const posIdx = this.activeFields.findIndex(f => f.id === 'date');
+      if (posIdx >= 0) {
+        this.activeFields = this.activeFields.filter(f => f.id !== 'datetime');
+        this.activeFields.splice(posIdx, 0, compField);
+      }
+    }
+    return true;
   }
 }

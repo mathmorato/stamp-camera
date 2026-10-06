@@ -10,7 +10,7 @@ export const BUILT_IN_MODELS = [
   {
     id: 'model_1_simple',
     name: 'Modelo 1 - Simples (Ícones)',
-    description: 'Data, hora e coordenadas com ícones inline modernos.',
+    description: 'Data e hora na mesma linha, coordenadas e localidade ativada.',
     position: STAMP_POSITIONS.BOTTOM_LEFT,
     backgroundType: 'semitransparent',
     backgroundColor: '#0F172A',
@@ -29,16 +29,15 @@ export const BUILT_IN_MODELS = [
     labelMode: LABEL_MODES.ICONS,
     inlineLayout: STAMP_LAYOUTS.MULTILINE,
     fields: [
-      { id: 'date', label: 'Data', enabled: true, showLabel: true },
-      { id: 'time', label: 'Hora', enabled: true, showLabel: true },
-      { id: 'lat', label: 'Lat', enabled: true, showLabel: true },
-      { id: 'lon', label: 'Long', enabled: true, showLabel: true }
+      { id: 'datetime', label: 'Data e Hora', enabled: true, showLabel: true },
+      { id: 'coordinates', label: 'Coordenadas', enabled: true, showLabel: true },
+      { id: 'city_state_country', label: 'Local', enabled: true, showLabel: true }
     ]
   },
   {
     id: 'model_2_location',
     name: 'Modelo 2 - Localização',
-    description: 'Data/Hora combinadas, endereço completo e coordenadas geográficas.',
+    description: 'Data/Hora combinadas, endereço e bairro unificados e coordenadas geográficas.',
     position: STAMP_POSITIONS.BOTTOM_LEFT,
     backgroundType: 'semitransparent',
     backgroundColor: '#0F172A',
@@ -59,8 +58,7 @@ export const BUILT_IN_MODELS = [
     inlineLayout: STAMP_LAYOUTS.MULTILINE,
     fields: [
       { id: 'datetime', label: 'Data e Hora', enabled: true, showLabel: false },
-      { id: 'address_street_num', label: 'Endereço', enabled: true, showLabel: false },
-      { id: 'neighborhood', label: 'Bairro', enabled: true, showLabel: false },
+      { id: 'address_neighborhood', label: 'Endereço', enabled: true, showLabel: false },
       { id: 'city_state_country', label: 'Localidade', enabled: true, showLabel: false },
       { id: 'coordinates', label: 'Coordenadas', enabled: true, showLabel: false }
     ]
@@ -88,10 +86,9 @@ export const BUILT_IN_MODELS = [
     labelMode: LABEL_MODES.TEXT,
     inlineLayout: STAMP_LAYOUTS.MULTILINE,
     fields: [
-      { id: 'date', label: 'DATA', enabled: true, showLabel: true },
-      { id: 'time', label: 'HORA', enabled: true, showLabel: true },
-      { id: 'locality', label: 'LOCAL', enabled: true, showLabel: true },
-      { id: 'coordinates', label: 'COORDENADAS', enabled: true, showLabel: true }
+      { id: 'datetime', label: 'DATA E HORA', enabled: true, showLabel: true },
+      { id: 'coordinates', label: 'COORDENADAS', enabled: true, showLabel: true },
+      { id: 'city_state_country', label: 'LOCAL', enabled: true, showLabel: true }
     ]
   },
   {
@@ -118,10 +115,9 @@ export const BUILT_IN_MODELS = [
     inlineLayout: STAMP_LAYOUTS.MULTILINE,
     fields: [
       { id: 'photo_id', label: 'FOTOGRAFIA Nº', enabled: true, showLabel: true, defaultValue: '01' },
-      { id: 'date', label: 'DATA', enabled: true, showLabel: true },
-      { id: 'time', label: 'HORA', enabled: true, showLabel: true },
-      { id: 'locality', label: 'LOCAL', enabled: true, showLabel: true },
+      { id: 'datetime', label: 'DATA E HORA', enabled: true, showLabel: true },
       { id: 'coordinates', label: 'COORDENADAS', enabled: true, showLabel: true },
+      { id: 'city_state_country', label: 'LOCAL', enabled: true, showLabel: true },
       { id: 'process', label: 'PROCESSO', enabled: true, showLabel: true, defaultValue: '5557293-56.2020.8.09.0097' },
       { id: 'responsible', label: 'PERITO RESPONSÁVEL', enabled: true, showLabel: true, defaultValue: 'Eng. Perito' }
     ]
@@ -150,7 +146,8 @@ export const BUILT_IN_MODELS = [
     fields: [
       { id: 'datetime', label: 'Data e Hora', enabled: true, showLabel: false },
       { id: 'coordinates', label: 'Coordenadas', enabled: true, showLabel: true },
-      { id: 'locality', label: 'Local', enabled: true, showLabel: true },
+      { id: 'city_state_country', label: 'Local', enabled: true, showLabel: true },
+      { id: 'address_neighborhood', label: 'Endereço', enabled: false, showLabel: true },
       { id: 'altitude', label: 'Altitude', enabled: false, showLabel: true },
       { id: 'project_name', label: 'Obra', enabled: false, showLabel: true, defaultValue: 'Residência Jussara' },
       { id: 'custom_text', label: 'Observação', enabled: false, showLabel: false, defaultValue: 'Inspeção de rotina' }
@@ -196,7 +193,7 @@ export const PRESET_CATEGORIES = [
     id: 'preset_obra',
     name: 'Obra & Construção Civil',
     baseModelId: 'model_3_technical',
-    enabledFields: ['project_name', 'responsible', 'date', 'time', 'locality', 'coordinates'],
+    enabledFields: ['project_name', 'responsible', 'datetime', 'coordinates', 'city_state_country'],
     fieldDefaults: {
       project_name: 'Residência Jussara',
       responsible: 'Engenheiro Civil'
@@ -206,7 +203,7 @@ export const PRESET_CATEGORIES = [
     id: 'preset_inspecao',
     name: 'Inspeção Predial',
     baseModelId: 'model_2_location',
-    enabledFields: ['custom_text', 'datetime', 'address_street_num', 'neighborhood', 'city_state_country', 'coordinates'],
+    enabledFields: ['custom_text', 'datetime', 'address_neighborhood', 'city_state_country', 'coordinates'],
     fieldDefaults: {
       custom_text: 'Vistoria Estrutural'
     }
@@ -215,7 +212,7 @@ export const PRESET_CATEGORIES = [
     id: 'preset_fiscalizacao',
     name: 'Fiscalização Ambiental / Urbana',
     baseModelId: 'model_3_technical',
-    enabledFields: ['report_num', 'date', 'time', 'locality', 'coordinates'],
+    enabledFields: ['report_num', 'datetime', 'coordinates', 'city_state_country'],
     fieldDefaults: {
       report_num: 'AI-2026/049'
     }
@@ -224,19 +221,19 @@ export const PRESET_CATEGORIES = [
     id: 'preset_registro',
     name: 'Registro Fotográfico',
     baseModelId: 'model_1_simple',
-    enabledFields: ['photo_id', 'date', 'time', 'coordinates']
+    enabledFields: ['photo_id', 'datetime', 'coordinates', 'city_state_country']
   },
   {
     id: 'preset_vistoria',
     name: 'Vistoria Imobiliária',
     baseModelId: 'model_2_location',
-    enabledFields: ['datetime', 'address_street_num', 'neighborhood', 'city_state_country', 'coordinates']
+    enabledFields: ['datetime', 'address_neighborhood', 'city_state_country', 'coordinates']
   },
   {
     id: 'preset_pessoal',
     name: 'Uso Pessoal / Viagem',
     baseModelId: 'model_1_simple',
-    enabledFields: ['date', 'time', 'locality', 'coordinates']
+    enabledFields: ['datetime', 'coordinates', 'city_state_country']
   }
 ];
 
@@ -256,6 +253,7 @@ export const STANDARD_FIELD_DEFS = [
   { id: 'number', name: 'Número', category: 'location', defaultLabel: 'Nº', placeholder: 'Ex: 100' },
   { id: 'address_street_num', name: 'Rua e Número combinados', category: 'location', defaultLabel: 'Endereço', placeholder: 'Ex: Av. José Vicente, nº 100' },
   { id: 'neighborhood', name: 'Bairro', category: 'location', defaultLabel: 'Bairro', placeholder: 'Ex: Setor Central' },
+  { id: 'address_neighborhood', name: 'Endereço e Bairro combinados', category: 'location', defaultLabel: 'Endereço', placeholder: 'Ex: Av. José Vicente, nº 100, Setor Central' },
   { id: 'locality', name: 'Local / Referência', category: 'location', defaultLabel: 'Local', placeholder: 'Ex: Jussara, GO' },
   { id: 'city', name: 'Cidade / Município', category: 'location', defaultLabel: 'Cidade', placeholder: 'Ex: Jussara' },
   { id: 'state', name: 'Estado / UF', category: 'location', defaultLabel: 'Estado', placeholder: 'Ex: Goiás' },

@@ -102,6 +102,24 @@ async function capture() {
     });
     await new Promise(r => setTimeout(r, 300));
 
+    // Switch to style tab and open label mode dropdown
+    await send('Runtime.evaluate', {
+      expression: `document.querySelector('[data-tab="style"]').click();`
+    });
+    await new Promise(r => setTimeout(r, 400));
+    await send('Runtime.evaluate', {
+      expression: `document.getElementById('btnLabelModeTrigger')?.click();`
+    });
+    await new Promise(r => setTimeout(r, 400));
+    const ssStyle = await send('Page.captureScreenshot', { format: 'png' });
+    fs.writeFileSync(path.join(ARTIFACT_DIR, 'redesign_style_line_art.png'), Buffer.from(ssStyle.data, 'base64'));
+    console.log('Saved redesign_style_line_art.png');
+
+    await send('Runtime.evaluate', {
+      expression: `document.body.click();`
+    });
+    await new Promise(r => setTimeout(r, 300));
+
     // Switch to light theme
     await send('Runtime.evaluate', {
       expression: `document.getElementById('themeToggleBtn').click();`

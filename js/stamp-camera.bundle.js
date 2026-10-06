@@ -11,7 +11,7 @@
    * Versão: 1.0.0
    * 100% Client-side - Nenhuma informação é enviada para servidores externos.
    */
-  const PNITE_VERSION = "v.1.1.2";
+  const PNITE_VERSION = "v.1.1.3";
   const APP_CONFIG = {
     name: 'STAMP-CAMERA',
     subtitle: 'Carimbo técnico e geográfico para fotografias',
@@ -70,6 +70,7 @@
     street: 'M4 19L8 5 M20 19L16 5 M12 5v3 M12 11v3 M12 17v3',
     number: 'M4 9h16 M4 15h16 M10 3L8 21 M16 3l-2 21',
     address_street_num: 'M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z M9 22V12h6v10',
+    address_neighborhood: 'M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z M9 22V12h6v10 M19 13v7 M15 13h4',
     neighborhood: 'M2 20h20 M4 20V8l6-4v16 M10 20V10l6-4v14 M16 20V6l4-2v16',
     locality: 'M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z M12 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6z',
     city: 'M2 20h20 M3 20V10h5v10 M8 20V4h8v16 M16 20v-8h5v8',
@@ -96,6 +97,7 @@
     '🛣️': 'street',
     '🔢': 'number',
     '🏠': 'address_street_num',
+    '🏡': 'address_neighborhood',
     '🏘️': 'neighborhood',
     '📌': 'locality',
     '🏙️': 'city',
@@ -130,6 +132,7 @@
     street: 'street',
     number: 'number',
     address_street_num: 'address_street_num',
+    address_neighborhood: 'address_neighborhood',
     neighborhood: 'neighborhood',
     locality: 'locality',
     city: 'city',
@@ -3734,7 +3737,7 @@
     {
       id: 'model_1_simple',
       name: 'Modelo 1 - Simples (Ícones)',
-      description: 'Data, hora e coordenadas com ícones inline modernos.',
+      description: 'Data e hora na mesma linha, coordenadas e localidade ativada.',
       position: STAMP_POSITIONS.BOTTOM_LEFT,
       backgroundType: 'semitransparent',
       backgroundColor: '#0F172A',
@@ -3753,16 +3756,15 @@
       labelMode: LABEL_MODES.ICONS,
       inlineLayout: STAMP_LAYOUTS.MULTILINE,
       fields: [
-        { id: 'date', label: 'Data', enabled: true, showLabel: true },
-        { id: 'time', label: 'Hora', enabled: true, showLabel: true },
-        { id: 'lat', label: 'Lat', enabled: true, showLabel: true },
-        { id: 'lon', label: 'Long', enabled: true, showLabel: true }
+        { id: 'datetime', label: 'Data e Hora', enabled: true, showLabel: true },
+        { id: 'coordinates', label: 'Coordenadas', enabled: true, showLabel: true },
+        { id: 'city_state_country', label: 'Local', enabled: true, showLabel: true }
       ]
     },
     {
       id: 'model_2_location',
       name: 'Modelo 2 - Localização',
-      description: 'Data/Hora combinadas, endereço completo e coordenadas geográficas.',
+      description: 'Data/Hora combinadas, endereço e bairro unificados e coordenadas geográficas.',
       position: STAMP_POSITIONS.BOTTOM_LEFT,
       backgroundType: 'semitransparent',
       backgroundColor: '#0F172A',
@@ -3783,8 +3785,7 @@
       inlineLayout: STAMP_LAYOUTS.MULTILINE,
       fields: [
         { id: 'datetime', label: 'Data e Hora', enabled: true, showLabel: false },
-        { id: 'address_street_num', label: 'Endereço', enabled: true, showLabel: false },
-        { id: 'neighborhood', label: 'Bairro', enabled: true, showLabel: false },
+        { id: 'address_neighborhood', label: 'Endereço', enabled: true, showLabel: false },
         { id: 'city_state_country', label: 'Localidade', enabled: true, showLabel: false },
         { id: 'coordinates', label: 'Coordenadas', enabled: true, showLabel: false }
       ]
@@ -3812,10 +3813,9 @@
       labelMode: LABEL_MODES.TEXT,
       inlineLayout: STAMP_LAYOUTS.MULTILINE,
       fields: [
-        { id: 'date', label: 'DATA', enabled: true, showLabel: true },
-        { id: 'time', label: 'HORA', enabled: true, showLabel: true },
-        { id: 'locality', label: 'LOCAL', enabled: true, showLabel: true },
-        { id: 'coordinates', label: 'COORDENADAS', enabled: true, showLabel: true }
+        { id: 'datetime', label: 'DATA E HORA', enabled: true, showLabel: true },
+        { id: 'coordinates', label: 'COORDENADAS', enabled: true, showLabel: true },
+        { id: 'city_state_country', label: 'LOCAL', enabled: true, showLabel: true }
       ]
     },
     {
@@ -3842,10 +3842,9 @@
       inlineLayout: STAMP_LAYOUTS.MULTILINE,
       fields: [
         { id: 'photo_id', label: 'FOTOGRAFIA Nº', enabled: true, showLabel: true, defaultValue: '01' },
-        { id: 'date', label: 'DATA', enabled: true, showLabel: true },
-        { id: 'time', label: 'HORA', enabled: true, showLabel: true },
-        { id: 'locality', label: 'LOCAL', enabled: true, showLabel: true },
+        { id: 'datetime', label: 'DATA E HORA', enabled: true, showLabel: true },
         { id: 'coordinates', label: 'COORDENADAS', enabled: true, showLabel: true },
+        { id: 'city_state_country', label: 'LOCAL', enabled: true, showLabel: true },
         { id: 'process', label: 'PROCESSO', enabled: true, showLabel: true, defaultValue: '5557293-56.2020.8.09.0097' },
         { id: 'responsible', label: 'PERITO RESPONSÁVEL', enabled: true, showLabel: true, defaultValue: 'Eng. Perito' }
       ]
@@ -3874,7 +3873,8 @@
       fields: [
         { id: 'datetime', label: 'Data e Hora', enabled: true, showLabel: false },
         { id: 'coordinates', label: 'Coordenadas', enabled: true, showLabel: true },
-        { id: 'locality', label: 'Local', enabled: true, showLabel: true },
+        { id: 'city_state_country', label: 'Local', enabled: true, showLabel: true },
+        { id: 'address_neighborhood', label: 'Endereço', enabled: false, showLabel: true },
         { id: 'altitude', label: 'Altitude', enabled: false, showLabel: true },
         { id: 'project_name', label: 'Obra', enabled: false, showLabel: true, defaultValue: 'Residência Jussara' },
         { id: 'custom_text', label: 'Observação', enabled: false, showLabel: false, defaultValue: 'Inspeção de rotina' }
@@ -3919,7 +3919,7 @@
       id: 'preset_obra',
       name: 'Obra & Construção Civil',
       baseModelId: 'model_3_technical',
-      enabledFields: ['project_name', 'responsible', 'date', 'time', 'locality', 'coordinates'],
+      enabledFields: ['project_name', 'responsible', 'datetime', 'coordinates', 'city_state_country'],
       fieldDefaults: {
         project_name: 'Residência Jussara',
         responsible: 'Engenheiro Civil'
@@ -3929,7 +3929,7 @@
       id: 'preset_inspecao',
       name: 'Inspeção Predial',
       baseModelId: 'model_2_location',
-      enabledFields: ['custom_text', 'datetime', 'address_street_num', 'neighborhood', 'city_state_country', 'coordinates'],
+      enabledFields: ['custom_text', 'datetime', 'address_neighborhood', 'city_state_country', 'coordinates'],
       fieldDefaults: {
         custom_text: 'Vistoria Estrutural'
       }
@@ -3938,7 +3938,7 @@
       id: 'preset_fiscalizacao',
       name: 'Fiscalização Ambiental / Urbana',
       baseModelId: 'model_3_technical',
-      enabledFields: ['report_num', 'date', 'time', 'locality', 'coordinates'],
+      enabledFields: ['report_num', 'datetime', 'coordinates', 'city_state_country'],
       fieldDefaults: {
         report_num: 'AI-2026/049'
       }
@@ -3947,19 +3947,19 @@
       id: 'preset_registro',
       name: 'Registro Fotográfico',
       baseModelId: 'model_1_simple',
-      enabledFields: ['photo_id', 'date', 'time', 'coordinates']
+      enabledFields: ['photo_id', 'datetime', 'coordinates', 'city_state_country']
     },
     {
       id: 'preset_vistoria',
       name: 'Vistoria Imobiliária',
       baseModelId: 'model_2_location',
-      enabledFields: ['datetime', 'address_street_num', 'neighborhood', 'city_state_country', 'coordinates']
+      enabledFields: ['datetime', 'address_neighborhood', 'city_state_country', 'coordinates']
     },
     {
       id: 'preset_pessoal',
       name: 'Uso Pessoal / Viagem',
       baseModelId: 'model_1_simple',
-      enabledFields: ['date', 'time', 'locality', 'coordinates']
+      enabledFields: ['datetime', 'coordinates', 'city_state_country']
     }
   ];
   
@@ -3979,6 +3979,7 @@
     { id: 'number', name: 'Número', category: 'location', defaultLabel: 'Nº', placeholder: 'Ex: 100' },
     { id: 'address_street_num', name: 'Rua e Número combinados', category: 'location', defaultLabel: 'Endereço', placeholder: 'Ex: Av. José Vicente, nº 100' },
     { id: 'neighborhood', name: 'Bairro', category: 'location', defaultLabel: 'Bairro', placeholder: 'Ex: Setor Central' },
+    { id: 'address_neighborhood', name: 'Endereço e Bairro combinados', category: 'location', defaultLabel: 'Endereço', placeholder: 'Ex: Av. José Vicente, nº 100, Setor Central' },
     { id: 'locality', name: 'Local / Referência', category: 'location', defaultLabel: 'Local', placeholder: 'Ex: Jussara, GO' },
     { id: 'city', name: 'Cidade / Município', category: 'location', defaultLabel: 'Cidade', placeholder: 'Ex: Jussara' },
     { id: 'state', name: 'Estado / UF', category: 'location', defaultLabel: 'Estado', placeholder: 'Ex: Goiás' },
@@ -5498,6 +5499,20 @@
           this.location.sources.neighborhood = 'MANUAL';
           break;
   
+        case 'address_neighborhood': {
+          this.location.sources.street = 'MANUAL';
+          this.location.sources.neighborhood = 'MANUAL';
+          const val = (value || '').trim();
+          if (val.includes(',')) {
+            const parts = val.split(',').map(s => s.trim());
+            this.location.neighborhood = parts.pop();
+            this.location.street = parts.join(', ');
+          } else {
+            this.location.street = val;
+          }
+          break;
+        }
+  
         case 'locality':
           this.location.locality = value;
           this.location.sources.locality = 'MANUAL';
@@ -5517,6 +5532,29 @@
           this.location.country = value;
           this.location.sources.country = 'MANUAL';
           break;
+  
+        case 'city_state_country': {
+          this.location.sources.city = 'MANUAL';
+          this.location.sources.state = 'MANUAL';
+          this.location.sources.country = 'MANUAL';
+          const val = (value || '').trim();
+          if (val.includes(',')) {
+            const parts = val.split(',').map(s => s.trim());
+            if (parts.length >= 3) {
+              this.location.city = parts[0];
+              this.location.state = parts[1];
+              this.location.country = parts[2];
+            } else if (parts.length === 2) {
+              this.location.city = parts[0];
+              this.location.state = parts[1];
+            } else {
+              this.location.city = parts[0];
+            }
+          } else {
+            this.location.city = val;
+          }
+          break;
+        }
   
         case 'postal_code':
           this.location.postalCode = value;
@@ -5685,6 +5723,15 @@
   
         case 'neighborhood':
           return this.location.neighborhood || '';
+  
+        case 'address_neighborhood': {
+          const addr = this.getFieldValue('address_street_num');
+          const neigh = this.location.neighborhood;
+          if (addr && neigh) {
+            return `${addr}, ${neigh}`;
+          }
+          return addr || neigh || '';
+        }
   
         case 'locality': {
           if (this.location.locality) return this.location.locality;
@@ -5960,6 +6007,9 @@
       this.checkItalic = document.getElementById('checkItalic');
       this.selectTextAlign = document.getElementById('selectTextAlign');
       this.selectLabelMode = document.getElementById('selectLabelMode');
+      this.btnLabelModeTrigger = document.getElementById('btnLabelModeTrigger');
+      this.menuLabelMode = document.getElementById('menuLabelMode');
+      this.customLabelModeWrapper = document.getElementById('customLabelModeWrapper');
       this.selectInlineLayout = document.getElementById('selectInlineLayout');
   
       // Grid de Posições
@@ -6145,7 +6195,35 @@
       if (this.selectLabelMode) {
         this.selectLabelMode.addEventListener('change', (e) => {
           this.tool.settings.labelMode = e.target.value;
+          this.syncLabelModeCustomUI(e.target.value);
           this.app.requestRender();
+        });
+      }
+  
+      if (this.btnLabelModeTrigger) {
+        this.btnLabelModeTrigger.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (this.menuLabelMode) {
+            const isOpen = this.menuLabelMode.style.display === 'flex';
+            this.menuLabelMode.style.display = isOpen ? 'none' : 'flex';
+          }
+        });
+      }
+  
+      if (this.menuLabelMode) {
+        const items = this.menuLabelMode.querySelectorAll('.custom-label-mode-item');
+        items.forEach(item => {
+          item.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const val = item.dataset.value;
+            if (this.selectLabelMode) {
+              this.selectLabelMode.value = val;
+              this.selectLabelMode.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+            if (this.menuLabelMode) {
+              this.menuLabelMode.style.display = 'none';
+            }
+          });
         });
       }
   
@@ -6217,6 +6295,11 @@
         if (this.addFieldMenu && this.addFieldMenu.style.display !== 'none') {
           if (!this.btnAddField?.contains(e.target) && !this.addFieldMenu.contains(e.target)) {
             this.addFieldMenu.style.display = 'none';
+          }
+        }
+        if (this.menuLabelMode && this.menuLabelMode.style.display !== 'none') {
+          if (!this.customLabelModeWrapper?.contains(e.target)) {
+            this.menuLabelMode.style.display = 'none';
           }
         }
       });
@@ -6724,8 +6807,38 @@
       this.checkBold.checked = s.fontWeight === '700';
       this.checkItalic.checked = !!s.isItalic;
       this.selectTextAlign.value = s.textAlign || 'left';
-      if (this.selectLabelMode) this.selectLabelMode.value = s.labelMode || 'icons';
+      if (this.selectLabelMode) {
+        this.selectLabelMode.value = s.labelMode || 'icons';
+        this.syncLabelModeCustomUI(this.selectLabelMode.value);
+      }
       if (this.selectInlineLayout) this.selectInlineLayout.value = s.inlineLayout || 'multiline';
+    }
+  
+    /**
+     * Sincroniza a interface visual do seletor customizado de modo de rótulo (Line Art)
+     */
+    syncLabelModeCustomUI(value = 'icons') {
+      if (!this.btnLabelModeTrigger) return;
+      const triggerText = this.btnLabelModeTrigger.querySelector('.custom-trigger-text');
+      const triggerIcons = this.btnLabelModeTrigger.querySelector('.custom-trigger-icons');
+      if (triggerText) {
+        if (value === 'icons') {
+          triggerText.textContent = 'Somente Ícones Line Art';
+          if (triggerIcons) triggerIcons.style.display = 'inline-flex';
+        } else if (value === 'text') {
+          triggerText.textContent = 'Rótulo em Texto (DATA:, LAT:, LOCAL:)';
+          if (triggerIcons) triggerIcons.style.display = 'none';
+        } else if (value === 'none') {
+          triggerText.textContent = 'Ocultar Rótulos (Apenas Valores)';
+          if (triggerIcons) triggerIcons.style.display = 'none';
+        }
+      }
+      if (this.menuLabelMode) {
+        const items = this.menuLabelMode.querySelectorAll('.custom-label-mode-item');
+        items.forEach(it => {
+          it.classList.toggle('active', it.dataset.value === value);
+        });
+      }
     }
   
     /**
